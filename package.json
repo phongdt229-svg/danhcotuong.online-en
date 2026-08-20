@@ -1,0 +1,39 @@
+{
+  "name": "danhcotuong-online",
+  "version": "1.0.0",
+  "description": "Website chơi Cờ Tướng (Xiangqi) online - chơi với AI, đăng nhập, lịch sử nước đi",
+  "main": "server/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node --watch server/server.js",
+    "init-db": "node server/scripts/init-db.js",
+    "prod": "cross-env NODE_ENV=production node server/server.js",
+    "pm2:start": "pm2 start ecosystem.config.js --env production",
+    "pm2:reload": "pm2 reload ecosystem.config.js --env production"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "xiangqi",
+    "co-tuong",
+    "chinese-chess",
+    "game",
+    "ai"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-mysql-session": "^3.0.3",
+    "express-session": "^1.18.0",
+    "mysql2": "^3.11.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0"
+  }
+}

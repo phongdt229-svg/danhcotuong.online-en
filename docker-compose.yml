@@ -1,0 +1,36 @@
+# docker-compose.yml — chay app Node + MySQL cung luc bang Docker.
+# Dung:  docker compose up -d --build
+# App se chay o cong 3000; tu tao bang khi khoi dong.
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"          # domain se reverse-proxy vao cong nay
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_USER: danhcotuong
+      DB_PASSWORD: DOI_MAT_KHAU_DB     # <-- doi mat khau (khop voi db ben duoi)
+      DB_NAME: danhcotuong
+      SESSION_SECRET: "dc2e895b6b44fabcd6be183920908ffc4d725ba1e180c1ed18d7fa61a436c31ed4d91eb92ab1ece3aa22992811a221f7"
+      COOKIE_SECURE: "false"           # co HTTPS roi thi doi 'true'
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_DATABASE: danhcotuong
+      MYSQL_USER: danhcotuong
+      MYSQL_PASSWORD: DOI_MAT_KHAU_DB        # <-- giong DB_PASSWORD o tren
+      MYSQL_ROOT_PASSWORD: DOI_MAT_KHAU_ROOT # <-- mat khau root MySQL
+    volumes:
+      - dbdata:/var/lib/mysql
+
+volumes:
+  dbdata:
