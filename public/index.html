@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#0f1620" />
+    <link rel="apple-touch-icon" href="images/icon.svg" />
+    <title>Đánh Cờ Tướng Online — Chơi cờ tướng với AI miễn phí</title>
+    <meta
+      name="description"
+      content="Chơi cờ tướng (Xiangqi) online miễn phí với máy (AI) 3 mức độ. Đầy đủ luật, lịch sử nước đi, đồng hồ thi đấu."
+    />
+    <link rel="stylesheet" href="css/style.css?v=12" />
+      <style>
+      /* Critical CSS: menu 2 cấp + nút nổi bật (nhúng để chạy kể cả khi style.css chưa cập nhật) */
+      .has-sub{position:relative}
+      .sub-menu{display:none;position:absolute;top:100%;left:0;min-width:190px;list-style:none;margin:0;padding:6px;padding-top:10px;background:var(--c-card,#1c2836);border:1px solid var(--c-border,#2a3a4d);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:50}
+      .has-sub:hover>.sub-menu,.has-sub.open>.sub-menu{display:block}
+      .sub-menu li{display:block}
+      .sub-menu a{display:block;white-space:nowrap}
+      .nav-menu a{white-space:nowrap}
+      .btn-up{background:linear-gradient(150deg,#10b981,#047857);color:#fff}
+      .btn-puzzle{background:linear-gradient(150deg,#8b5cf6,#6d28d9);color:#fff}
+      .badge-new{display:inline-block;background:#ef4444;color:#fff;font-size:.6rem;font-weight:800;line-height:1;padding:3px 6px;border-radius:999px;margin-left:4px;vertical-align:middle}
+      @media(max-width:980px){.nav-menu{display:none;position:absolute;top:64px;left:0;right:0;flex-direction:column;align-items:stretch;background:var(--c-bg-soft,#16202d);border-bottom:1px solid var(--c-border,#2a3a4d);padding:10px;gap:2px}.nav-menu.open{display:flex}.sub-menu{position:static;display:block;min-width:0;padding:0 0 0 16px;margin:2px 0;background:transparent;border:none;box-shadow:none}.nav-toggle{display:inline-block}}
+    </style>
+  </head>
+  <body>
+    <header class="navbar">
+      <div class="container nav-inner">
+        <a class="brand" href="index.html">
+          <span class="logo">將</span>
+          <span>Cờ Tướng Online</span>
+        </a>
+        <button class="nav-toggle" aria-label="Menu">☰</button>
+        <ul class="nav-menu">
+          <li><a href="index.html">Trang chủ</a></li>
+          <li class="has-sub">
+            <a href="play.html" class="sub-toggle">Chơi ▾</a>
+            <ul class="sub-menu">
+              <li><a href="play.html">Chơi với máy</a></li>
+              <li><a href="play-up.html">Cờ úp</a></li>
+              <li><a href="puzzles.html">Cờ thế</a></li>
+            </ul>
+          </li>
+          <li class="has-sub">
+            <a href="play-online.html" class="sub-toggle">Đấu online ▾</a>
+            <ul class="sub-menu">
+              <li><a href="play-online.html">Chơi với người</a></li>
+              <li><a href="rooms.html">Danh sách phòng</a></li>
+            </ul>
+          </li>
+          <li><a href="leaderboard.html">Xếp hạng</a></li>
+          <li><a href="profile.html" data-auth="user" style="display: none">Hồ sơ</a></li>
+        </ul>
+        <div class="nav-actions">
+          <a class="btn btn-ghost" href="login.html" data-auth="guest">Đăng nhập</a>
+          <a class="btn btn-primary" href="register.html" data-auth="guest">Đăng ký</a>
+          <span data-auth="user" style="display: none; font-weight: 700"
+            >Xin chào, <span data-user-name>bạn</span></span
+          >
+          <a class="btn btn-ghost" href="#" data-auth="user" data-action="logout" style="display: none"
+            >Đăng xuất</a
+          >
+        </div>
+      </div>
+    </header>
+    <!-- BANNER:top (thay ảnh images/banner.svg, đặt link ở href) -->
+    <div class="leaderboard-ad">
+      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Quảng cáo">
+        <img src="images/banner.svg?v=12" alt="Quảng cáo" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
+      </a>
+    </div>
+
+    <main>
+      <section class="hero container">
+        <h1>Đánh <span class="grad">Cờ Tướng</span> Online</h1>
+        <p>
+          Thử tài với máy thông minh qua 3 mức độ, đầy đủ luật cờ tướng, lịch sử nước đi và đồng hồ thi
+          đấu. Không cần cài đặt — chơi ngay trên trình duyệt.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary btn-lg" href="play.html">♟ Chơi với máy ngay</a>
+          <a class="btn btn-accent btn-lg" href="play-online.html">👥 Chơi với người</a>
+          <a class="btn btn-lg btn-up" href="play-up.html">🎴 Cờ úp <span class="badge-new">MỚI</span></a>
+          <a class="btn btn-lg btn-puzzle" href="puzzles.html">🧩 Cờ thế <span class="badge-new">MỚI</span></a>
+        </div>
+      </section>
+    <!-- BANNER:hero (thay ảnh images/banner.svg, đặt link ở href) -->
+    <div class="leaderboard-ad">
+      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Quảng cáo">
+        <img src="images/banner.svg?v=12" alt="Quảng cáo" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
+      </a>
+    </div>
+
+      <section class="section container">
+        <h2>Tính năng nổi bật</h2>
+        <p class="sub">Mọi thứ bạn cần cho một ván cờ tướng trọn vẹn</p>
+        <div class="grid grid-3">
+          <div class="card feature">
+            <div class="ico">🤖</div>
+            <h3>Đối thủ AI 3 mức</h3>
+            <p>Dễ, Trung bình, Khó — máy dùng thuật toán minimax + cắt tỉa alpha-beta.</p>
+          </div>
+          <div class="card feature">
+            <div class="ico">📜</div>
+            <h3>Luật cờ tướng đầy đủ</h3>
+            <p>Mã cản chân, pháo cần ngòi, tượng không qua sông, tướng không đối mặt, chiếu hết.</p>
+          </div>
+          <div class="card feature">
+            <div class="ico">🧩</div>
+            <h3>Cờ thế / Giải đố</h3>
+            <p>Luyện tập với các thế cờ có sẵn — tìm nước ăn quân, chiếu hết. Có gợi ý và đáp án.</p>
+          </div>
+          <div class="card feature">
+            <div class="ico">🎴</div>
+            <h3>Cờ úp với máy</h3>
+            <p>Biến thể hấp dẫn: quân úp xáo trộn, đi rồi mới lật lộ quân thật. Đấu trí với AI.</p>
+          </div>
+          <div class="card feature">
+            <div class="ico">⏱️</div>
+            <h3>Đồng hồ thi đấu</h3>
+            <p>Chọn 5, 10 hoặc 15 phút cho mỗi bên, đếm ngược theo lượt.</p>
+          </div>
+          <div class="card feature">
+            <div class="ico">🔁</div>
+            <h3>Lịch sử & hoàn nước</h3>
+            <p>Theo dõi toàn bộ nước đi, xem quân bị bắt, hoàn lại nước khi cần.</p>
+          </div>
+          <div class="card feature">
+            <div class="ico">🔊</div>
+            <h3>Hiệu ứng âm thanh</h3>
+            <p>Âm báo khi đi quân, ăn quân, chiếu tướng và kết thúc ván đấu.</p>
+          </div>
+          <div class="card feature">
+            <div class="ico">📊</div>
+            <h3>Hồ sơ & thống kê</h3>
+            <p>Đăng nhập để lưu kết quả, thống kê thắng/thua và lịch sử ván đấu.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section container center">
+        <div class="card" style="padding: 40px">
+          <h2>Sẵn sàng vào trận?</h2>
+          <p class="text-muted">Chọn mức độ và bắt đầu ngay, không cần đăng ký.</p>
+          <a class="btn btn-accent btn-lg" href="play.html">Bắt đầu chơi</a>
+        </div>
+      </section>
+    </main>
+
+    
+    <!-- BANNER:footer (thay ảnh images/banner.svg, đặt link ở href) -->
+    <div class="leaderboard-ad">
+      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Quảng cáo">
+        <img src="images/banner.svg?v=12" alt="Quảng cáo" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
+      </a>
+    </div>
+
+    <footer class="footer">
+      <div class="container">
+        © 2026 Đánh Cờ Tướng Online — Dự án học tập. Xây dựng bằng Node.js + MySQL.
+      </div>
+    </footer>
+
+    <script src="js/api.js?v=12"></script>
+    <script src="js/ui.js?v=12"></script>
+  </body>
+</html>

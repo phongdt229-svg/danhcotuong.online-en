@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#0f1620" />
+    <link rel="apple-touch-icon" href="images/icon.svg" />
+    <title>Hồ sơ — Đánh Cờ Tướng Online</title>
+    <link rel="stylesheet" href="css/style.css?v=12" />
+      <style>
+      /* Critical CSS: menu 2 cấp + nút nổi bật (nhúng để chạy kể cả khi style.css chưa cập nhật) */
+      .has-sub{position:relative}
+      .sub-menu{display:none;position:absolute;top:100%;left:0;min-width:190px;list-style:none;margin:0;padding:6px;padding-top:10px;background:var(--c-card,#1c2836);border:1px solid var(--c-border,#2a3a4d);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:50}
+      .has-sub:hover>.sub-menu,.has-sub.open>.sub-menu{display:block}
+      .sub-menu li{display:block}
+      .sub-menu a{display:block;white-space:nowrap}
+      .nav-menu a{white-space:nowrap}
+      .btn-up{background:linear-gradient(150deg,#10b981,#047857);color:#fff}
+      .btn-puzzle{background:linear-gradient(150deg,#8b5cf6,#6d28d9);color:#fff}
+      .badge-new{display:inline-block;background:#ef4444;color:#fff;font-size:.6rem;font-weight:800;line-height:1;padding:3px 6px;border-radius:999px;margin-left:4px;vertical-align:middle}
+      @media(max-width:980px){.nav-menu{display:none;position:absolute;top:64px;left:0;right:0;flex-direction:column;align-items:stretch;background:var(--c-bg-soft,#16202d);border-bottom:1px solid var(--c-border,#2a3a4d);padding:10px;gap:2px}.nav-menu.open{display:flex}.sub-menu{position:static;display:block;min-width:0;padding:0 0 0 16px;margin:2px 0;background:transparent;border:none;box-shadow:none}.nav-toggle{display:inline-block}}
+    </style>
+  </head>
+  <body>
+    <header class="navbar">
+      <div class="container nav-inner">
+        <a class="brand" href="index.html"><span class="logo">將</span><span>Cờ Tướng Online</span></a>
+        <button class="nav-toggle" aria-label="Menu">☰</button>
+        <ul class="nav-menu">
+          <li><a href="index.html">Trang chủ</a></li>
+          <li class="has-sub">
+            <a href="play.html" class="sub-toggle">Chơi ▾</a>
+            <ul class="sub-menu">
+              <li><a href="play.html">Chơi với máy</a></li>
+              <li><a href="play-up.html">Cờ úp</a></li>
+              <li><a href="puzzles.html">Cờ thế</a></li>
+            </ul>
+          </li>
+          <li class="has-sub">
+            <a href="play-online.html" class="sub-toggle">Đấu online ▾</a>
+            <ul class="sub-menu">
+              <li><a href="play-online.html">Chơi với người</a></li>
+              <li><a href="rooms.html">Danh sách phòng</a></li>
+            </ul>
+          </li>
+          <li><a href="leaderboard.html">Xếp hạng</a></li>
+          <li><a href="profile.html" data-auth="user" style="display: none">Hồ sơ</a></li>
+        </ul>
+        <div class="nav-actions">
+          <span style="font-weight: 700">Xin chào, <span data-user-name>bạn</span></span>
+          <a class="btn btn-ghost" href="#" data-action="logout">Đăng xuất</a>
+        </div>
+      </div>
+    </header>
+    <!-- BANNER:top (thay ảnh images/banner.svg, đặt link ở href) -->
+    <div class="leaderboard-ad">
+      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Quảng cáo">
+        <img src="images/banner.svg?v=12" alt="Quảng cáo" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
+      </a>
+    </div>
+
+    <main class="container" style="padding: 28px 20px 60px">
+      <div id="guard" class="card center" style="display: none">
+        <h2>Bạn chưa đăng nhập</h2>
+        <p class="text-muted">Vui lòng đăng nhập để xem hồ sơ.</p>
+        <a class="btn btn-primary" href="login.html">Đăng nhập</a>
+      </div>
+
+      <div id="content" style="display: none">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px">
+          <h1 id="hello" style="margin: 0">Hồ sơ</h1>
+          <a class="btn btn-ghost" href="clear-cache.php" title="Buộc trình duyệt tải lại CSS/JS mới">🔄 Xóa cache CSS/JS</a>
+        </div>
+
+        <div class="card" style="margin-bottom: 22px">
+          <h3 style="margin-top: 0; color: var(--c-muted)">Thống kê</h3>
+          <div class="stat-grid">
+            <div class="stat"><div class="num" id="s-elo">1000</div><div class="lbl">ELO</div></div>
+            <div class="stat"><div class="num" id="s-win">0</div><div class="lbl">Thắng</div></div>
+            <div class="stat"><div class="num" id="s-loss">0</div><div class="lbl">Thua</div></div>
+            <div class="stat"><div class="num" id="s-draw">0</div><div class="lbl">Hòa</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-top: 0; color: var(--c-muted)">Lịch sử ván đấu gần đây</h3>
+          <table class="games">
+            <thead>
+              <tr>
+                <th>Thời gian</th>
+                <th>Đối thủ</th>
+                <th>Kết quả</th>
+                <th>Số nước</th>
+                <th>Thời lượng</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="games-body">
+              <tr><td colspan="6" class="text-muted">Đang tải…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <script src="js/api.js?v=12"></script>
+    <script src="js/ui.js?v=12"></script>
+    <script>
+      (async function () {
+        const guard = document.getElementById('guard');
+        const content = document.getElementById('content');
+        let me = null;
+        try {
+          me = await window.API.me();
+        } catch (e) {}
+        if (!me || !me.user) {
+          guard.style.display = '';
+          return;
+        }
+        content.style.display = '';
+        const u = me.user;
+        document.getElementById('hello').textContent = 'Hồ sơ của ' + u.username;
+        document.getElementById('s-elo').textContent = u.elo;
+        document.getElementById('s-win').textContent = u.wins;
+        document.getElementById('s-loss').textContent = u.losses;
+        document.getElementById('s-draw').textContent = u.draws;
+
+        const body = document.getElementById('games-body');
+        try {
+          const { games } = await window.API.myGames();
+          if (!games.length) {
+            body.innerHTML = '<tr><td colspan="6" class="text-muted">Chưa có ván nào. Hãy chơi thử!</td></tr>';
+            return;
+          }
+          const fmt = (s) => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+          const badge = { win: ['win', 'Thắng'], loss: ['loss', 'Thua'], draw: ['draw', 'Hòa'] };
+          body.innerHTML = games
+            .map((g) => {
+              const b = badge[g.result] || ['draw', g.result];
+              const dt = new Date(g.created_at).toLocaleString('vi-VN');
+              return (
+                '<tr><td>' +
+                dt +
+                '</td><td>' +
+                g.opponent_type +
+                '</td><td><span class="badge ' +
+                b[0] +
+                '">' +
+                b[1] +
+                '</span></td><td>' +
+                g.moves_count +
+                '</td><td>' +
+                fmt(g.duration_sec) +
+                '</td><td><a class="btn btn-ghost" style="padding:4px 12px" href="replay.html?id=' +
+                g.id +
+                '">▶ Xem</a></td></tr>'
+              );
+            })
+            .join('');
+        } catch (e) {
+          body.innerHTML = '<tr><td colspan="5" class="text-muted">Không tải được lịch sử.</td></tr>';
+        }
+      })();
+    </script>
+  </body>
+</html>

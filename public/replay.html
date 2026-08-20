@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#0f1620" />
+    <link rel="apple-touch-icon" href="images/icon.svg" />
+    <title>Xem lại ván — Đánh Cờ Tướng Online</title>
+    <link rel="stylesheet" href="css/style.css?v=12" />
+    <link rel="stylesheet" href="css/board.css?v=12" />
+      <style>
+      /* Critical CSS: menu 2 cấp + nút nổi bật (nhúng để chạy kể cả khi style.css chưa cập nhật) */
+      .has-sub{position:relative}
+      .sub-menu{display:none;position:absolute;top:100%;left:0;min-width:190px;list-style:none;margin:0;padding:6px;padding-top:10px;background:var(--c-card,#1c2836);border:1px solid var(--c-border,#2a3a4d);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:50}
+      .has-sub:hover>.sub-menu,.has-sub.open>.sub-menu{display:block}
+      .sub-menu li{display:block}
+      .sub-menu a{display:block;white-space:nowrap}
+      .nav-menu a{white-space:nowrap}
+      .btn-up{background:linear-gradient(150deg,#10b981,#047857);color:#fff}
+      .btn-puzzle{background:linear-gradient(150deg,#8b5cf6,#6d28d9);color:#fff}
+      .badge-new{display:inline-block;background:#ef4444;color:#fff;font-size:.6rem;font-weight:800;line-height:1;padding:3px 6px;border-radius:999px;margin-left:4px;vertical-align:middle}
+      @media(max-width:980px){.nav-menu{display:none;position:absolute;top:64px;left:0;right:0;flex-direction:column;align-items:stretch;background:var(--c-bg-soft,#16202d);border-bottom:1px solid var(--c-border,#2a3a4d);padding:10px;gap:2px}.nav-menu.open{display:flex}.sub-menu{position:static;display:block;min-width:0;padding:0 0 0 16px;margin:2px 0;background:transparent;border:none;box-shadow:none}.nav-toggle{display:inline-block}}
+    </style>
+  </head>
+  <body>
+    <header class="navbar">
+      <div class="container nav-inner">
+        <a class="brand" href="index.html"><span class="logo">將</span><span>Cờ Tướng Online</span></a>
+        <button class="nav-toggle" aria-label="Menu">☰</button>
+        <ul class="nav-menu">
+          <li><a href="index.html">Trang chủ</a></li>
+          <li class="has-sub">
+            <a href="play.html" class="sub-toggle">Chơi ▾</a>
+            <ul class="sub-menu">
+              <li><a href="play.html">Chơi với máy</a></li>
+              <li><a href="play-up.html">Cờ úp</a></li>
+              <li><a href="puzzles.html">Cờ thế</a></li>
+            </ul>
+          </li>
+          <li class="has-sub">
+            <a href="play-online.html" class="sub-toggle">Đấu online ▾</a>
+            <ul class="sub-menu">
+              <li><a href="play-online.html">Chơi với người</a></li>
+              <li><a href="rooms.html">Danh sách phòng</a></li>
+            </ul>
+          </li>
+          <li><a href="leaderboard.html">Xếp hạng</a></li>
+          <li><a href="profile.html" data-auth="user" style="display: none">Hồ sơ</a></li>
+        </ul>
+        <div class="nav-actions">
+          <a class="btn btn-ghost" href="profile.html">← Hồ sơ</a>
+        </div>
+      </div>
+    </header>
+    <!-- BANNER:top (thay ảnh images/banner.svg, đặt link ở href) -->
+    <div class="leaderboard-ad">
+      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Quảng cáo">
+        <img src="images/banner.svg?v=12" alt="Quảng cáo" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
+      </a>
+    </div>
+
+    <main class="container">
+      <div class="play-layout">
+        <div class="board-col">
+          <div class="player-bar"><div class="who"><span class="dot black"></span> <span id="info-black">Đen</span></div></div>
+          <div id="board"></div>
+          <div class="player-bar"><div class="who"><span class="dot red"></span> <span id="info-red">Đỏ</span></div></div>
+        </div>
+
+        <aside class="side-panel">
+          <div class="panel">
+            <h3>Thông tin ván</h3>
+            <div id="game-info" class="text-muted">Đang tải…</div>
+          </div>
+
+          <div class="panel">
+            <h3>Xem lại (<span id="move-info">0 / 0</span>)</h3>
+            <div class="controls">
+              <button class="btn btn-ghost" id="btn-first" title="Về đầu">⏮</button>
+              <button class="btn btn-ghost" id="btn-prev" title="Lùi">◀</button>
+              <button class="btn btn-primary" id="btn-play" title="Tự chạy">▶</button>
+              <button class="btn btn-ghost" id="btn-next" title="Tiến">▶▶</button>
+              <button class="btn btn-ghost" id="btn-last" title="Tới cuối">⏭</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3>Lịch sử nước đi</h3>
+            <div id="move-list"></div>
+          </div>
+        </aside>
+      </div>
+    </main>
+
+    <script src="js/engine/xiangqi.js?v=12"></script>
+    <script src="js/board.js?v=12"></script>
+    <script src="js/api.js?v=12"></script>
+    <script src="js/replay.js?v=12"></script>
+    <script src="js/ui.js?v=12"></script>
+  </body>
+</html>

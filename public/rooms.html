@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#0f1620" />
+    <link rel="apple-touch-icon" href="images/icon.svg" />
+    <title>Danh sách phòng — Đánh Cờ Tướng Online</title>
+    <link rel="stylesheet" href="css/style.css?v=12" />
+      <style>
+      /* Critical CSS: menu 2 cấp + nút nổi bật (nhúng để chạy kể cả khi style.css chưa cập nhật) */
+      .has-sub{position:relative}
+      .sub-menu{display:none;position:absolute;top:100%;left:0;min-width:190px;list-style:none;margin:0;padding:6px;padding-top:10px;background:var(--c-card,#1c2836);border:1px solid var(--c-border,#2a3a4d);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:50}
+      .has-sub:hover>.sub-menu,.has-sub.open>.sub-menu{display:block}
+      .sub-menu li{display:block}
+      .sub-menu a{display:block;white-space:nowrap}
+      .nav-menu a{white-space:nowrap}
+      .btn-up{background:linear-gradient(150deg,#10b981,#047857);color:#fff}
+      .btn-puzzle{background:linear-gradient(150deg,#8b5cf6,#6d28d9);color:#fff}
+      .badge-new{display:inline-block;background:#ef4444;color:#fff;font-size:.6rem;font-weight:800;line-height:1;padding:3px 6px;border-radius:999px;margin-left:4px;vertical-align:middle}
+      @media(max-width:980px){.nav-menu{display:none;position:absolute;top:64px;left:0;right:0;flex-direction:column;align-items:stretch;background:var(--c-bg-soft,#16202d);border-bottom:1px solid var(--c-border,#2a3a4d);padding:10px;gap:2px}.nav-menu.open{display:flex}.sub-menu{position:static;display:block;min-width:0;padding:0 0 0 16px;margin:2px 0;background:transparent;border:none;box-shadow:none}.nav-toggle{display:inline-block}}
+    </style>
+  </head>
+  <body>
+    <header class="navbar">
+      <div class="container nav-inner">
+        <a class="brand" href="index.html"><span class="logo">將</span><span>Cờ Tướng Online</span></a>
+        <button class="nav-toggle" aria-label="Menu">☰</button>
+        <ul class="nav-menu">
+          <li><a href="index.html">Trang chủ</a></li>
+          <li class="has-sub">
+            <a href="play.html" class="sub-toggle">Chơi ▾</a>
+            <ul class="sub-menu">
+              <li><a href="play.html">Chơi với máy</a></li>
+              <li><a href="play-up.html">Cờ úp</a></li>
+              <li><a href="puzzles.html">Cờ thế</a></li>
+            </ul>
+          </li>
+          <li class="has-sub">
+            <a href="play-online.html" class="sub-toggle">Đấu online ▾</a>
+            <ul class="sub-menu">
+              <li><a href="play-online.html">Chơi với người</a></li>
+              <li><a href="rooms.html">Danh sách phòng</a></li>
+            </ul>
+          </li>
+          <li><a href="leaderboard.html">Xếp hạng</a></li>
+          <li><a href="profile.html" data-auth="user" style="display: none">Hồ sơ</a></li>
+        </ul>
+        <div class="nav-actions">
+          <a class="btn btn-ghost" href="login.html" data-auth="guest">Đăng nhập</a>
+          <a class="btn btn-primary" href="register.html" data-auth="guest">Đăng ký</a>
+          <span data-auth="user" style="display: none; font-weight: 700">Xin chào, <span data-user-name>bạn</span></span>
+          <a class="btn btn-ghost" href="#" data-auth="user" data-action="logout" style="display: none">Đăng xuất</a>
+        </div>
+      </div>
+    </header>
+    <!-- BANNER:top (thay ảnh images/banner.svg, đặt link ở href) -->
+    <div class="leaderboard-ad">
+      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Quảng cáo">
+        <img src="images/banner.svg?v=12" alt="Quảng cáo" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
+      </a>
+    </div>
+
+    <main class="container" style="max-width: 720px">
+      <section class="section">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px">
+          <h1 style="margin: 0">♟ Phòng đang mở</h1>
+          <button class="btn btn-ghost" id="btn-refresh">↻ Làm mới</button>
+        </div>
+        <p class="sub">Tự cập nhật vài giây một lần</p>
+
+        <div class="hero-actions" style="margin: 16px 0 22px">
+          <button class="btn btn-primary btn-lg" id="btn-quick">⚡ Tìm trận nhanh</button>
+          <button class="btn btn-accent btn-lg" id="btn-create">＋ Tạo phòng mới</button>
+        </div>
+
+        <div class="panel">
+          <h3>Phòng chờ người vào (<span id="room-count">0</span>)</h3>
+          <div id="room-list" class="room-list"><div class="room-empty">Đang tải…</div></div>
+        </div>
+
+        <div class="panel" style="margin-top: 16px">
+          <h3>👁 Trận đang đánh (<span id="live-count">0</span>)</h3>
+          <div id="live-list" class="room-list"><div class="room-empty">Chưa có trận nào.</div></div>
+        </div>
+
+        <div class="panel" style="margin-top: 16px">
+          <h3>Vào bằng mã phòng</h3>
+          <div class="chat-row">
+            <input type="text" id="join-code" placeholder="VD: AB12" maxlength="4" style="text-transform: uppercase" />
+            <button class="btn btn-primary" id="btn-join">Vào</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="js/api.js?v=12"></script>
+    <script src="js/rooms.js?v=12"></script>
+    <script src="js/ui.js?v=12"></script>
+  </body>
+</html>
