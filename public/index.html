@@ -1,17 +1,17 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#0f1620" />
     <link rel="apple-touch-icon" href="images/icon.svg" />
-    <title>Đánh Cờ Tướng Online — Chơi cờ tướng với AI miễn phí</title>
+    <title>Xiangqi Online — Play Chinese Chess against AI for free</title>
     <meta
       name="description"
-      content="Chơi cờ tướng (Xiangqi) online miễn phí với máy (AI) 3 mức độ. Đầy đủ luật, lịch sử nước đi, đồng hồ thi đấu."
+      content="Play Xiangqi (Chinese Chess) online for free against the computer at 3 difficulty levels. Full rules, move history and a game clock."
     />
-    <link rel="stylesheet" href="css/style.css?v=12" />
+    <link rel="stylesheet" href="css/style.css?v=13" />
       <style>
       /* Critical CSS: menu 2 cấp + nút nổi bật (nhúng để chạy kể cả khi style.css chưa cập nhật) */
       .has-sub{position:relative}
@@ -31,140 +31,141 @@
       <div class="container nav-inner">
         <a class="brand" href="index.html">
           <span class="logo">將</span>
-          <span>Cờ Tướng Online</span>
+          <span>Xiangqi Online</span>
         </a>
         <button class="nav-toggle" aria-label="Menu">☰</button>
         <ul class="nav-menu">
-          <li><a href="index.html">Trang chủ</a></li>
+          <li><a href="index.html">Home</a></li>
           <li class="has-sub">
-            <a href="play.html" class="sub-toggle">Chơi ▾</a>
+            <a href="play.html" class="sub-toggle">Play ▾</a>
             <ul class="sub-menu">
-              <li><a href="play.html">Chơi với máy</a></li>
-              <li><a href="play-up.html">Cờ úp</a></li>
-              <li><a href="puzzles.html">Cờ thế</a></li>
+              <li><a href="play.html">Play vs Computer</a></li>
+              <li><a href="play-up.html">Flip Xiangqi</a></li>
+              <li><a href="puzzles.html">Puzzles</a></li>
             </ul>
           </li>
           <li class="has-sub">
-            <a href="play-online.html" class="sub-toggle">Đấu online ▾</a>
+            <a href="play-online.html" class="sub-toggle">Online ▾</a>
             <ul class="sub-menu">
-              <li><a href="play-online.html">Chơi với người</a></li>
-              <li><a href="rooms.html">Danh sách phòng</a></li>
+              <li><a href="play-online.html">Play vs Human</a></li>
+              <li><a href="rooms.html">Room List</a></li>
             </ul>
           </li>
-          <li><a href="leaderboard.html">Xếp hạng</a></li>
-          <li><a href="profile.html" data-auth="user" style="display: none">Hồ sơ</a></li>
+          <li><a href="leaderboard.html">Leaderboard</a></li>
+          <li><a href="topup.html">Buy Points</a></li>
+          <li><a href="profile.html" data-auth="user" style="display: none">Profile</a></li>
         </ul>
         <div class="nav-actions">
-          <a class="btn btn-ghost" href="login.html" data-auth="guest">Đăng nhập</a>
-          <a class="btn btn-primary" href="register.html" data-auth="guest">Đăng ký</a>
+          <a class="btn btn-ghost" href="login.html" data-auth="guest">Sign in</a>
+          <a class="btn btn-primary" href="register.html" data-auth="guest">Sign up</a>
           <span data-auth="user" style="display: none; font-weight: 700"
-            >Xin chào, <span data-user-name>bạn</span></span
+            >Hi, <span data-user-name>there</span></span
           >
           <a class="btn btn-ghost" href="#" data-auth="user" data-action="logout" style="display: none"
-            >Đăng xuất</a
+            >Log out</a
           >
         </div>
       </div>
     </header>
     <!-- BANNER:top (thay ảnh images/banner.svg, đặt link ở href) -->
     <div class="leaderboard-ad">
-      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Quảng cáo">
-        <img src="images/banner.svg?v=12" alt="Quảng cáo" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
+      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Advertisement">
+        <img src="images/banner.svg?v=13" alt="Advertisement" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
       </a>
     </div>
 
     <main>
       <section class="hero container">
-        <h1>Đánh <span class="grad">Cờ Tướng</span> Online</h1>
+        <h1>Play <span class="grad">Xiangqi</span> Online</h1>
         <p>
-          Thử tài với máy thông minh qua 3 mức độ, đầy đủ luật cờ tướng, lịch sử nước đi và đồng hồ thi
-          đấu. Không cần cài đặt — chơi ngay trên trình duyệt.
+          Test yourself against a smart engine across 3 difficulty levels, with the complete rules of
+          Chinese Chess, move history and a game clock. Nothing to install — play right in your browser.
         </p>
         <div class="hero-actions">
-          <a class="btn btn-primary btn-lg" href="play.html">♟ Chơi với máy ngay</a>
-          <a class="btn btn-accent btn-lg" href="play-online.html">👥 Chơi với người</a>
-          <a class="btn btn-lg btn-up" href="play-up.html">🎴 Cờ úp <span class="badge-new">MỚI</span></a>
-          <a class="btn btn-lg btn-puzzle" href="puzzles.html">🧩 Cờ thế <span class="badge-new">MỚI</span></a>
+          <a class="btn btn-primary btn-lg" href="play.html">♟ Play vs Computer</a>
+          <a class="btn btn-accent btn-lg" href="play-online.html">👥 Play vs Human</a>
+          <a class="btn btn-lg btn-up" href="play-up.html">🎴 Flip Xiangqi <span class="badge-new">NEW</span></a>
+          <a class="btn btn-lg btn-puzzle" href="puzzles.html">🧩 Puzzles <span class="badge-new">NEW</span></a>
         </div>
       </section>
     <!-- BANNER:hero (thay ảnh images/banner.svg, đặt link ở href) -->
     <div class="leaderboard-ad">
-      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Quảng cáo">
-        <img src="images/banner.svg?v=12" alt="Quảng cáo" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
+      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Advertisement">
+        <img src="images/banner.svg?v=13" alt="Advertisement" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
       </a>
     </div>
 
       <section class="section container">
-        <h2>Tính năng nổi bật</h2>
-        <p class="sub">Mọi thứ bạn cần cho một ván cờ tướng trọn vẹn</p>
+        <h2>Features</h2>
+        <p class="sub">Everything you need for a complete game of Xiangqi</p>
         <div class="grid grid-3">
           <div class="card feature">
             <div class="ico">🤖</div>
-            <h3>Đối thủ AI 3 mức</h3>
-            <p>Dễ, Trung bình, Khó — máy dùng thuật toán minimax + cắt tỉa alpha-beta.</p>
+            <h3>AI opponent, 3 levels</h3>
+            <p>Easy, Medium and Hard — the engine uses minimax search with alpha-beta pruning.</p>
           </div>
           <div class="card feature">
             <div class="ico">📜</div>
-            <h3>Luật cờ tướng đầy đủ</h3>
-            <p>Mã cản chân, pháo cần ngòi, tượng không qua sông, tướng không đối mặt, chiếu hết.</p>
+            <h3>Complete Xiangqi rules</h3>
+            <p>Blocked horse legs, cannons needing a screen, elephants staying home, flying general, checkmate.</p>
           </div>
           <div class="card feature">
             <div class="ico">🧩</div>
-            <h3>Cờ thế / Giải đố</h3>
-            <p>Luyện tập với các thế cờ có sẵn — tìm nước ăn quân, chiếu hết. Có gợi ý và đáp án.</p>
+            <h3>Puzzles</h3>
+            <p>Train on prepared positions — win material or find the mate. Hints and solutions included.</p>
           </div>
           <div class="card feature">
             <div class="ico">🎴</div>
-            <h3>Cờ úp với máy</h3>
-            <p>Biến thể hấp dẫn: quân úp xáo trộn, đi rồi mới lật lộ quân thật. Đấu trí với AI.</p>
+            <h3>Flip Xiangqi vs Computer</h3>
+            <p>A fun variant: pieces start face down and only reveal their identity once moved. Outwit the AI.</p>
           </div>
           <div class="card feature">
             <div class="ico">⏱️</div>
-            <h3>Đồng hồ thi đấu</h3>
-            <p>Chọn 5, 10 hoặc 15 phút cho mỗi bên, đếm ngược theo lượt.</p>
+            <h3>Game clock</h3>
+            <p>Pick 5, 10 or 15 minutes per side, counting down on each turn.</p>
           </div>
           <div class="card feature">
             <div class="ico">🔁</div>
-            <h3>Lịch sử & hoàn nước</h3>
-            <p>Theo dõi toàn bộ nước đi, xem quân bị bắt, hoàn lại nước khi cần.</p>
+            <h3>History &amp; undo</h3>
+            <p>Follow every move, see captured pieces and take a move back when you need to.</p>
           </div>
           <div class="card feature">
             <div class="ico">🔊</div>
-            <h3>Hiệu ứng âm thanh</h3>
-            <p>Âm báo khi đi quân, ăn quân, chiếu tướng và kết thúc ván đấu.</p>
+            <h3>Sound effects</h3>
+            <p>Audio cues for moves, captures, checks and the end of the game.</p>
           </div>
           <div class="card feature">
             <div class="ico">📊</div>
-            <h3>Hồ sơ & thống kê</h3>
-            <p>Đăng nhập để lưu kết quả, thống kê thắng/thua và lịch sử ván đấu.</p>
+            <h3>Profile &amp; stats</h3>
+            <p>Sign in to save results, track wins and losses, and review your game history.</p>
           </div>
         </div>
       </section>
 
       <section class="section container center">
         <div class="card" style="padding: 40px">
-          <h2>Sẵn sàng vào trận?</h2>
-          <p class="text-muted">Chọn mức độ và bắt đầu ngay, không cần đăng ký.</p>
-          <a class="btn btn-accent btn-lg" href="play.html">Bắt đầu chơi</a>
+          <h2>Ready to play?</h2>
+          <p class="text-muted">Pick a difficulty and start right away — no sign-up required.</p>
+          <a class="btn btn-accent btn-lg" href="play.html">Start playing</a>
         </div>
       </section>
     </main>
 
-    
+
     <!-- BANNER:footer (thay ảnh images/banner.svg, đặt link ở href) -->
     <div class="leaderboard-ad">
-      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Quảng cáo">
-        <img src="images/banner.svg?v=12" alt="Quảng cáo" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
+      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Advertisement">
+        <img src="images/banner.svg?v=13" alt="Advertisement" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
       </a>
     </div>
 
     <footer class="footer">
       <div class="container">
-        © 2026 Đánh Cờ Tướng Online — Dự án học tập. Xây dựng bằng Node.js + MySQL.
+        © 2026 chinesechess.online — Play Xiangqi (Chinese Chess) free in your browser.
       </div>
     </footer>
 
-    <script src="js/api.js?v=12"></script>
-    <script src="js/ui.js?v=12"></script>
+    <script src="js/api.js?v=13"></script>
+    <script src="js/ui.js?v=13"></script>
   </body>
 </html>

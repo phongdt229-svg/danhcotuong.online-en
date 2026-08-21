@@ -13,7 +13,7 @@
     r: { K: '帥', A: '仕', E: '相', H: '傌', R: '俥', C: '炮', P: '兵' },
     b: { K: '將', A: '士', E: '象', H: '馬', R: '車', C: '砲', P: '卒' },
   };
-  const NAME = { K: 'Tướng', A: 'Sĩ', E: 'Tượng', H: 'Mã', R: 'Xe', C: 'Pháo', P: 'Tốt' };
+  const NAME = { K: 'General', A: 'Advisor', E: 'Elephant', H: 'Horse', R: 'Chariot', C: 'Cannon', P: 'Soldier' };
   const sq = (x, y) => String.fromCharCode(65 + x) + (10 - y);
   const status = (m) => { const e = $('status-msg'); if (e) e.textContent = m; };
 
@@ -116,7 +116,7 @@
     if (!state.worker) { state.worker = new Worker('js/engine/ai.worker.js?v=11'); state.worker.onmessage = onAiReply; }
 
     renderCaptured(); renderHistory(); updateBars();
-    status('Tới lượt bạn (Đỏ). Quân úp đi theo vị trí — đi rồi mới lật!');
+    status('Your turn (Red). Face-down pieces move by their square — they flip once moved!');
     const ov = $('setup-overlay'); if (ov) ov.classList.add('hidden');
   }
 
@@ -164,16 +164,16 @@
     if (st.over) {
       const winner = st.loser === X.RED ? X.BLACK : X.RED;
       Sound.end();
-      endGame(winner, st.reason === 'checkmate' ? 'Chiếu hết' : 'Hết nước đi');
+      endGame(winner, st.reason === 'checkmate' ? 'Checkmate' : 'Stalemate');
       return;
     }
     // Hoà do lặp lại thế cờ 3 lần (tránh treo ván)
     if (repeatCount() >= 3) {
       Sound.end();
-      endDraw('Lặp lại thế cờ 3 lần');
+      endDraw('Threefold repetition');
       return;
     }
-    if (st.check) { Sound.check(); status((st.check === X.RED ? 'Đỏ' : 'Đen') + ' đang bị chiếu!'); }
+    if (st.check) { Sound.check(); status((st.check === X.RED ? 'Red' : 'Black') + ' is in check!'); }
     else if (flipped) Sound.flip();
     else if (rec.captured) Sound.capture();
     else Sound.move();
@@ -192,7 +192,7 @@
   function triggerAi() {
     state.thinking = true;
     state.board.setInteractive(false);
-    status('Máy đang suy nghĩ…');
+    status('The computer is thinking…');
     const snapshot = state.game.board.map((r) => r.slice());
     setTimeout(() => {
       if (state.over) return;
@@ -204,11 +204,11 @@
     state.thinking = false;
     if (state.over) return;
     const mv = e.data.move;
-    if (!mv) { endGame(X.RED, 'Chiếu hết'); return; }
+    if (!mv) { endGame(X.RED, 'Checkmate'); return; }
     applyMove(mv.from, mv.to);
     if (!state.over) {
       state.board.setInteractive(true);
-      if (!state.game.status().check) status('Tới lượt bạn (Đỏ)');
+      if (!state.game.status().check) status('Your turn (Red)');
     }
   }
 
@@ -218,7 +218,7 @@
     state.over = true; state.thinking = false;
     state.board.setInteractive(false);
     const humanWon = winnerColor === X.RED;
-    const title = humanWon ? 'Bạn THẮNG! 🎉' : 'Bạn THUA';
+    const title = humanWon ? 'You WIN! 🎉' : 'You LOSE';
     status(title + ' — ' + reason);
     $('result-title').textContent = title;
     $('result-reason').textContent = reason;
@@ -230,8 +230,8 @@
     if (state.over) return;
     state.over = true; state.thinking = false;
     state.board.setInteractive(false);
-    status('Hoà cờ 🤝 — ' + reason);
-    $('result-title').textContent = 'Hoà cờ 🤝';
+    status('Draw 🤝 — ' + reason);
+    $('result-title').textContent = 'Draw 🤝';
     $('result-reason').textContent = reason;
     $('result-modal').classList.remove('hidden');
     saveResult('draw');
@@ -303,7 +303,7 @@
       startGame(state.difficulty);
     });
     const resignBtn = $('btn-resign');
-    if (resignBtn) resignBtn.addEventListener('click', () => { if (!state.over && state.game) endGame(X.BLACK, 'Bạn xin thua'); });
+    if (resignBtn) resignBtn.addEventListener('click', () => { if (!state.over && state.game) endGame(X.BLACK, 'You resigned'); });
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

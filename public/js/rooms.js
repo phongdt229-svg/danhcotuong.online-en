@@ -8,7 +8,7 @@
   'use strict';
   const $ = (id) => document.getElementById(id);
   let ws = null;
-  let myName = 'Khách';
+  let myName = 'Guest';
 
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -26,10 +26,10 @@
       ws.send(JSON.stringify({ type: 'hello', name: myName }));
       ws.send(JSON.stringify({ type: 'list' }));
       enable(true);
-      connStatus('Đã kết nối. Chọn phòng để vào hoặc tạo phòng mới.');
+      connStatus('Connected. Join a room or create a new one.');
     };
-    ws.onclose = () => { enable(false); connStatus('Mất kết nối máy chủ. Bấm Làm mới để thử lại.'); };
-    ws.onerror = () => connStatus('Lỗi kết nối máy chủ.');
+    ws.onclose = () => { enable(false); connStatus('Lost connection to the server. Press Refresh to retry.'); };
+    ws.onerror = () => connStatus('Could not reach the server.');
     ws.onmessage = (ev) => {
       let msg;
       try { msg = JSON.parse(ev.data); } catch (e) { return; }
@@ -48,7 +48,7 @@
     if (!box) return;
     box.innerHTML = '';
     if (!list.length) {
-      box.innerHTML = '<div class="room-empty">Chưa có phòng nào đang mở. Hãy tạo phòng mới!</div>';
+      box.innerHTML = '<div class="room-empty">No open rooms yet. Create one!</div>';
       return;
     }
     list.forEach((r) => {
@@ -59,7 +59,7 @@
       info.innerHTML = '<b>' + escapeHtml(r.host) + '</b><span class="room-code-sm">#' + escapeHtml(r.code) + '</span>';
       const btn = document.createElement('button');
       btn.className = 'btn btn-primary';
-      btn.textContent = 'Vào';
+      btn.textContent = 'Join';
       btn.addEventListener('click', () => { location.href = 'play-online.html?join=' + encodeURIComponent(r.code); });
       row.appendChild(info);
       row.appendChild(btn);
@@ -74,7 +74,7 @@
     if (!box) return;
     box.innerHTML = '';
     if (!list.length) {
-      box.innerHTML = '<div class="room-empty">Chưa có trận nào đang diễn ra.</div>';
+      box.innerHTML = '<div class="room-empty">No games in progress.</div>';
       return;
     }
     list.forEach((m) => {
@@ -83,11 +83,11 @@
       const info = document.createElement('span');
       info.className = 'room-info';
       info.innerHTML =
-        '<b>' + escapeHtml(m.red) + '</b> <span class="room-code-sm">đấu</span> <b>' + escapeHtml(m.black) +
-        '</b><span class="room-code-sm">' + (m.moves || 0) + ' nước</span>';
+        '<b>' + escapeHtml(m.red) + '</b> <span class="room-code-sm">vs</span> <b>' + escapeHtml(m.black) +
+        '</b><span class="room-code-sm">' + (m.moves || 0) + ' moves</span>';
       const btn = document.createElement('button');
       btn.className = 'btn btn-accent';
-      btn.textContent = '👁 Xem';
+      btn.textContent = '👁 Watch';
       btn.addEventListener('click', () => { location.href = 'spectate.html?code=' + encodeURIComponent(m.code); });
       row.appendChild(info);
       row.appendChild(btn);
@@ -106,7 +106,7 @@
     $('btn-refresh').addEventListener('click', requestList);
     $('btn-join').addEventListener('click', () => {
       const code = ($('join-code').value || '').toUpperCase().trim();
-      if (code.length < 3) { connStatus('Nhập mã phòng hợp lệ.'); return; }
+      if (code.length < 3) { connStatus('Enter a valid room code.'); return; }
       location.href = 'play-online.html?join=' + encodeURIComponent(code);
     });
     $('join-code').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('btn-join').click(); });

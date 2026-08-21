@@ -27,7 +27,7 @@
     r: { K: '帥', A: '仕', E: '相', H: '傌', R: '俥', C: '炮', P: '兵' },
     b: { K: '將', A: '士', E: '象', H: '馬', R: '車', C: '砲', P: '卒' },
   };
-  const NAME = { K: 'Tướng', A: 'Sĩ', E: 'Tượng', H: 'Mã', R: 'Xe', C: 'Pháo', P: 'Tốt' };
+  const NAME = { K: 'General', A: 'Advisor', E: 'Elephant', H: 'Horse', R: 'Chariot', C: 'Cannon', P: 'Soldier' };
 
   /* ---------------- Âm thanh (Web Audio, không cần file) ---------------- */
   const Sound = (() => {
@@ -120,7 +120,7 @@
 
     renderHistory();
     renderCaptured();
-    updateStatus('Tới lượt bạn (Đỏ)');
+    updateStatus('Your turn (Red)');
     startTimer();
     const ov = $('setup-overlay');
     if (ov) ov.classList.add('hidden');
@@ -135,7 +135,7 @@
       state.timeLeft[side] -= 1;
       renderTimers();
       if (state.timeLeft[side] <= 0) {
-        endGame(side === 'r' ? X.BLACK : X.RED, 'Hết giờ');
+        endGame(side === 'r' ? X.BLACK : X.RED, 'Out of time');
       }
     }, 1000);
   }
@@ -165,7 +165,7 @@
   function triggerAi() {
     state.thinking = true;
     state.board.setInteractive(false);
-    updateStatus('AI đang suy nghĩ…');
+    updateStatus('The computer is thinking…');
     // gửi bản sao bàn cờ cho worker
     const snapshot = state.game.board.map((r) => r.slice());
     // Tra "sổ tay tự học" trước (trừ mức Dễ, chỉ ở giai đoạn khai cuộc <30 nước —
@@ -215,7 +215,7 @@
     afterMove(rec);
     if (!state.over) {
       state.board.setInteractive(true);
-      updateStatus('Tới lượt bạn (Đỏ)');
+      updateStatus('Your turn (Red)');
     }
   }
 
@@ -226,9 +226,9 @@
       const hv = e.data.move;
       if (hv && state.board && state.board.setHint && !state.over) {
         state.board.setHint({ from: hv.from, to: hv.to });
-        updateStatus('💡 Gợi ý: ' + NAME[X.typeOf(state.game.board[hv.from.y][hv.from.x])] + ' ' + sq(hv.from.x, hv.from.y) + '→' + sq(hv.to.x, hv.to.y));
+        updateStatus('💡 Hint: ' + NAME[X.typeOf(state.game.board[hv.from.y][hv.from.x])] + ' ' + sq(hv.from.x, hv.from.y) + '→' + sq(hv.to.x, hv.to.y));
       } else {
-        updateStatus('Không tìm được gợi ý.');
+        updateStatus('No hint available.');
       }
       const hb = $('btn-hint');
       if (hb) hb.disabled = false;
@@ -239,7 +239,7 @@
     if (state.over) return;
     if (!mv) {
       // AI hết nước -> người thắng
-      endGame(X.RED, 'Chiếu hết');
+      endGame(X.RED, 'Checkmate');
       return;
     }
     applyAiMove(mv);
@@ -252,7 +252,7 @@
     state.hinting = true;
     const hb = $('btn-hint');
     if (hb) hb.disabled = true;
-    updateStatus('Đang tìm gợi ý…');
+    updateStatus('Looking for a hint…');
     const snapshot = state.game.board.map((r) => r.slice());
     state.worker.postMessage({ board: snapshot, difficulty: 'hard', color: 'r', tag: 'hint' });
   }
@@ -277,7 +277,7 @@
     if (st.over) {
       Sound.end();
       const winner = st.loser === X.RED ? X.BLACK : X.RED;
-      endGame(winner, st.reason === 'checkmate' ? 'Chiếu hết' : 'Hết nước đi');
+      endGame(winner, st.reason === 'checkmate' ? 'Checkmate' : 'Stalemate');
       return;
     }
     // Hoà do lặp lại thế cờ 3 lần
@@ -286,12 +286,12 @@
     for (const k of state.positions) if (k === curKey) rep++;
     if (rep >= 3) {
       Sound.end();
-      endDraw('Lặp lại thế cờ 3 lần');
+      endDraw('Threefold repetition');
       return;
     }
     if (st.check) {
       Sound.check();
-      updateStatus((st.check === X.RED ? 'Đỏ' : 'Đen') + ' đang bị chiếu!');
+      updateStatus((st.check === X.RED ? 'Red' : 'Black') + ' is in check!');
     } else if (rec.captured) {
       Sound.capture();
     } else {
@@ -308,7 +308,7 @@
     stopTimer();
     state.board.setInteractive(false);
     const humanWon = winnerColor === X.RED;
-    const result = humanWon ? 'Bạn THẮNG! 🎉' : 'Bạn THUA';
+    const result = humanWon ? 'You WIN! 🎉' : 'You LOSE';
     updateStatus(result + ' — ' + reason);
     showResultModal(result, reason);
     saveResult(humanWon ? 'win' : 'loss');
@@ -321,8 +321,8 @@
     state.thinking = false;
     stopTimer();
     state.board.setInteractive(false);
-    updateStatus('Hoà cờ 🤝 — ' + reason);
-    showResultModal('Hoà cờ 🤝', reason);
+    updateStatus('Draw 🤝 — ' + reason);
+    showResultModal('Draw 🤝', reason);
     saveResult('draw');
   }
 
@@ -392,11 +392,11 @@
     if (state.analysis && state.analysis[idx] === 'blunder') {
       s.classList.add('mv-blunder');
       label = '❌ ' + label;
-      s.title = 'Nước hỏng: mất quân sau nước này';
+      s.title = 'Blunder: material lost after this move';
     } else if (state.analysis && state.analysis[idx] === 'good') {
       s.classList.add('mv-good');
       label = '⭐ ' + label;
-      s.title = 'Nước hay: ăn quân/thắng thế';
+      s.title = 'Good move: wins material or position';
     }
     s.textContent = label;
     return s;
@@ -418,7 +418,7 @@
   function analyzeGame() {
     const h = state.game.history;
     if (!h.length) {
-      updateStatus('Chưa có nước nào để phân tích.');
+      updateStatus('No moves to analyse yet.');
       return;
     }
     const g = new X.Game();
@@ -445,9 +445,9 @@
     }
     state.analysis = ann;
     renderHistory();
-    let msg = '🔍 Phân tích: ' + blunders + ' nước hỏng, ' + goods + ' nước hay';
-    if (worst) msg += '. Nặng nhất: nước ' + (worst.i / 2 + 1);
-    msg += '. (❌ mất quân, ⭐ ăn quân)';
+    let msg = '🔍 Analysis: ' + blunders + ' blunders, ' + goods + ' good moves';
+    if (worst) msg += '. Worst: move ' + (worst.i / 2 + 1);
+    msg += '. (❌ lost material, ⭐ won material)';
     updateStatus(msg);
   }
 
@@ -484,7 +484,7 @@
     state.board.render(state.game);
     renderHistory();
     renderCaptured();
-    updateStatus('Đã hoàn nước. Tới lượt bạn (Đỏ)');
+    updateStatus('Move taken back. Your turn (Red)');
   }
   function popCaptured(rec) {
     if (!rec || !rec.captured) return;
@@ -547,7 +547,7 @@
 
     const resignBtn = $('btn-resign');
     if (resignBtn) resignBtn.addEventListener('click', () => {
-      if (!state.over && state.game) endGame(X.BLACK, 'Bạn xin thua');
+      if (!state.over && state.game) endGame(X.BLACK, 'You resigned');
     });
 
     // nếu có preset từ URL, vào thẳng

@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#0f1620" />
     <link rel="apple-touch-icon" href="images/icon.svg" />
-    <title>Bảng xếp hạng — Đánh Cờ Tướng Online</title>
-    <link rel="stylesheet" href="css/style.css?v=12" />
+    <title>Leaderboard — Xiangqi Online</title>
+    <link rel="stylesheet" href="css/style.css?v=13" />
       <style>
       /* Critical CSS: menu 2 cấp + nút nổi bật (nhúng để chạy kể cả khi style.css chưa cập nhật) */
       .has-sub{position:relative}
@@ -27,74 +27,75 @@
       <div class="container nav-inner">
         <a class="brand" href="index.html">
           <span class="logo">將</span>
-          <span>Cờ Tướng Online</span>
+          <span>Xiangqi Online</span>
         </a>
         <button class="nav-toggle" aria-label="Menu">☰</button>
         <ul class="nav-menu">
-          <li><a href="index.html">Trang chủ</a></li>
+          <li><a href="index.html">Home</a></li>
           <li class="has-sub">
-            <a href="play.html" class="sub-toggle">Chơi ▾</a>
+            <a href="play.html" class="sub-toggle">Play ▾</a>
             <ul class="sub-menu">
-              <li><a href="play.html">Chơi với máy</a></li>
-              <li><a href="play-up.html">Cờ úp</a></li>
-              <li><a href="puzzles.html">Cờ thế</a></li>
+              <li><a href="play.html">Play vs Computer</a></li>
+              <li><a href="play-up.html">Flip Xiangqi</a></li>
+              <li><a href="puzzles.html">Puzzles</a></li>
             </ul>
           </li>
           <li class="has-sub">
-            <a href="play-online.html" class="sub-toggle">Đấu online ▾</a>
+            <a href="play-online.html" class="sub-toggle">Online ▾</a>
             <ul class="sub-menu">
-              <li><a href="play-online.html">Chơi với người</a></li>
-              <li><a href="rooms.html">Danh sách phòng</a></li>
+              <li><a href="play-online.html">Play vs Human</a></li>
+              <li><a href="rooms.html">Room List</a></li>
             </ul>
           </li>
-          <li><a href="leaderboard.html">Xếp hạng</a></li>
-          <li><a href="profile.html" data-auth="user" style="display: none">Hồ sơ</a></li>
+          <li><a href="leaderboard.html">Leaderboard</a></li>
+          <li><a href="topup.html">Buy Points</a></li>
+          <li><a href="profile.html" data-auth="user" style="display: none">Profile</a></li>
         </ul>
         <div class="nav-actions">
-          <a class="btn btn-ghost" href="login.html" data-auth="guest">Đăng nhập</a>
-          <a class="btn btn-primary" href="register.html" data-auth="guest">Đăng ký</a>
+          <a class="btn btn-ghost" href="login.html" data-auth="guest">Sign in</a>
+          <a class="btn btn-primary" href="register.html" data-auth="guest">Sign up</a>
           <span data-auth="user" style="display: none; font-weight: 700"
-            >Xin chào, <span data-user-name>bạn</span></span
+            >Hi, <span data-user-name>there</span></span
           >
           <a class="btn btn-ghost" href="#" data-auth="user" data-action="logout" style="display: none"
-            >Đăng xuất</a
+            >Log out</a
           >
         </div>
       </div>
     </header>
     <!-- BANNER:top (thay ảnh images/banner.svg, đặt link ở href) -->
     <div class="leaderboard-ad">
-      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Quảng cáo">
-        <img src="images/banner.svg?v=12" alt="Quảng cáo" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
+      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Advertisement">
+        <img src="images/banner.svg?v=13" alt="Advertisement" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
       </a>
     </div>
 
     <main class="container" style="max-width: 720px">
       <section class="section">
-        <h1 style="margin: 0 0 4px">🏆 Bảng xếp hạng</h1>
-        <p class="sub">Cao thủ cờ tướng theo điểm ELO</p>
+        <h1 style="margin: 0 0 4px">🏆 Leaderboard</h1>
+        <p class="sub">Top Xiangqi players by ELO rating</p>
         <div class="panel">
           <table class="games" id="lb-table">
             <thead>
               <tr>
                 <th style="width: 48px">#</th>
-                <th>Người chơi</th>
+                <th>Player</th>
                 <th style="width: 70px">ELO</th>
-                <th style="width: 60px">Thắng</th>
+                <th style="width: 60px">Wins</th>
                 <th style="width: 60px">Thua</th>
-                <th style="width: 60px">Hòa</th>
+                <th style="width: 60px">Draws</th>
               </tr>
             </thead>
             <tbody id="lb-body">
-              <tr><td colspan="6" style="text-align: center; color: var(--c-muted)">Đang tải…</td></tr>
+              <tr><td colspan="6" style="text-align: center; color: var(--c-muted)">Loading…</td></tr>
             </tbody>
           </table>
         </div>
       </section>
     </main>
 
-    <script src="js/api.js?v=12"></script>
-    <script src="js/ui.js?v=12"></script>
+    <script src="js/api.js?v=13"></script>
+    <script src="js/ui.js?v=13"></script>
     <script>
       (async function () {
         const body = document.getElementById('lb-body');
@@ -103,7 +104,7 @@
           const data = await window.API.leaderboard();
           const players = (data && data.players) || [];
           if (!players.length) {
-            body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--c-muted)">Chưa có người chơi nào.</td></tr>';
+            body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--c-muted)">No players yet.</td></tr>';
             return;
           }
           const medal = ['🥇', '🥈', '🥉'];
@@ -117,7 +118,7 @@
             })
             .join('');
         } catch (e) {
-          body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#ff6b6b">Không tải được bảng xếp hạng.</td></tr>';
+          body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#ff6b6b">Could not load the leaderboard.</td></tr>';
         }
       })();
     </script>

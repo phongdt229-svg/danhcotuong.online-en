@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#0f1620" />
     <link rel="apple-touch-icon" href="images/icon.svg" />
-    <title>Chơi với người — Đánh Cờ Tướng Online</title>
-    <link rel="stylesheet" href="css/style.css?v=12" />
-    <link rel="stylesheet" href="css/board.css?v=12" />
+    <title>Play vs Human — Xiangqi Online</title>
+    <link rel="stylesheet" href="css/style.css?v=13" />
+    <link rel="stylesheet" href="css/board.css?v=13" />
       <style>
       /* Critical CSS: menu 2 cấp + nút nổi bật (nhúng để chạy kể cả khi style.css chưa cập nhật) */
       .has-sub{position:relative}
@@ -26,40 +26,41 @@
   <body>
     <header class="navbar">
       <div class="container nav-inner">
-        <a class="brand" href="index.html"><span class="logo">將</span><span>Cờ Tướng Online</span></a>
+        <a class="brand" href="index.html"><span class="logo">將</span><span>Xiangqi Online</span></a>
         <button class="nav-toggle" aria-label="Menu">☰</button>
         <ul class="nav-menu">
-          <li><a href="index.html">Trang chủ</a></li>
+          <li><a href="index.html">Home</a></li>
           <li class="has-sub">
-            <a href="play.html" class="sub-toggle">Chơi ▾</a>
+            <a href="play.html" class="sub-toggle">Play ▾</a>
             <ul class="sub-menu">
-              <li><a href="play.html">Chơi với máy</a></li>
-              <li><a href="play-up.html">Cờ úp</a></li>
-              <li><a href="puzzles.html">Cờ thế</a></li>
+              <li><a href="play.html">Play vs Computer</a></li>
+              <li><a href="play-up.html">Flip Xiangqi</a></li>
+              <li><a href="puzzles.html">Puzzles</a></li>
             </ul>
           </li>
           <li class="has-sub">
-            <a href="play-online.html" class="sub-toggle">Đấu online ▾</a>
+            <a href="play-online.html" class="sub-toggle">Online ▾</a>
             <ul class="sub-menu">
-              <li><a href="play-online.html">Chơi với người</a></li>
-              <li><a href="rooms.html">Danh sách phòng</a></li>
+              <li><a href="play-online.html">Play vs Human</a></li>
+              <li><a href="rooms.html">Room List</a></li>
             </ul>
           </li>
-          <li><a href="leaderboard.html">Xếp hạng</a></li>
-          <li><a href="profile.html" data-auth="user" style="display: none">Hồ sơ</a></li>
+          <li><a href="leaderboard.html">Leaderboard</a></li>
+          <li><a href="topup.html">Buy Points</a></li>
+          <li><a href="profile.html" data-auth="user" style="display: none">Profile</a></li>
         </ul>
         <div class="nav-actions">
-          <a class="btn btn-ghost" href="login.html" data-auth="guest">Đăng nhập</a>
-          <a class="btn btn-primary" href="register.html" data-auth="guest">Đăng ký</a>
-          <span data-auth="user" style="display: none; font-weight: 700">Xin chào, <span data-user-name>bạn</span></span>
-          <a class="btn btn-ghost" href="#" data-auth="user" data-action="logout" style="display: none">Đăng xuất</a>
+          <a class="btn btn-ghost" href="login.html" data-auth="guest">Sign in</a>
+          <a class="btn btn-primary" href="register.html" data-auth="guest">Sign up</a>
+          <span data-auth="user" style="display: none; font-weight: 700">Hi, <span data-user-name>there</span></span>
+          <a class="btn btn-ghost" href="#" data-auth="user" data-action="logout" style="display: none">Log out</a>
         </div>
       </div>
     </header>
     <!-- BANNER:top (thay ảnh images/banner.svg, đặt link ở href) -->
     <div class="leaderboard-ad">
-      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Quảng cáo">
-        <img src="images/banner.svg?v=12" alt="Quảng cáo" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
+      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Advertisement">
+        <img src="images/banner.svg?v=13" alt="Advertisement" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
       </a>
     </div>
 
@@ -67,49 +68,49 @@
       <div class="play-layout">
         <div class="board-col">
           <div class="player-bar" id="bar-black">
-            <div class="who"><span class="dot black"></span> <span id="name-black">Đối thủ (Đen)</span></div>
+            <div class="who"><span class="dot black"></span> <span id="name-black">Opponent (Black)</span></div>
             <div class="captured" id="captured-black"></div>
           </div>
           <div id="board"></div>
           <div class="player-bar active" id="bar-red">
-            <div class="who"><span class="dot red"></span> <span id="name-red">Bạn (Đỏ)</span></div>
+            <div class="who"><span class="dot red"></span> <span id="name-red">You (Red)</span></div>
             <div class="captured" id="captured-red"></div>
           </div>
         </div>
 
         <aside class="side-panel">
           <div class="panel">
-            <h3>Trạng thái</h3>
-            <div id="status-msg">Đang tải…</div>
+            <h3>Status</h3>
+            <div id="status-msg">Loading…</div>
           </div>
           <div class="panel">
-            <h3>Điều khiển</h3>
+            <h3>Controls</h3>
             <div class="controls">
-              <button class="btn btn-ghost" id="btn-resign" disabled>🏳 Xin thua</button>
-              <button class="btn btn-primary" id="btn-new">＋ Trận mới</button>
+              <button class="btn btn-ghost" id="btn-resign" disabled>🏳 Resign</button>
+              <button class="btn btn-primary" id="btn-new">＋ New game</button>
             </div>
           </div>
           <div class="panel">
-            <h3>Lịch sử nước đi</h3>
+            <h3>Move history</h3>
             <div id="move-list"></div>
           </div>
 
           <div class="panel">
-            <h3>Trò chuyện</h3>
+            <h3>Chat</h3>
             <div id="chat-box" class="chat-box"></div>
             <div class="chat-row">
-              <input type="text" id="chat-input" maxlength="200" placeholder="Nhắn tin…" autocomplete="off" />
-              <button class="btn btn-ghost" id="chat-send">Gửi</button>
+              <input type="text" id="chat-input" maxlength="200" placeholder="Type a message…" autocomplete="off" />
+              <button class="btn btn-ghost" id="chat-send">Send</button>
             </div>
           </div>
 
           <!-- Quảng cáo: thay ảnh ở images/ad.svg (hoặc đổi src), đặt link ở href -->
           <div class="panel ad-panel" id="ad-slot">
-            <a href="#" target="_blank" rel="noopener sponsored" aria-label="Quảng cáo">
+            <a href="#" target="_blank" rel="noopener sponsored" aria-label="Advertisement">
               <img
                 class="ad-image"
-                src="images/ad.svg?v=12"
-                alt="Quảng cáo"
+                src="images/ad.svg?v=13"
+                alt="Advertisement"
                 loading="lazy"
                 onerror="var s=document.getElementById('ad-slot'); if(s) s.style.display='none';"
               />
@@ -120,45 +121,45 @@
     </main>
     <!-- BANNER:bottom (thay ảnh images/banner.svg, đặt link ở href) -->
     <div class="leaderboard-ad">
-      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Quảng cáo">
-        <img src="images/banner.svg?v=12" alt="Quảng cáo" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
+      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Advertisement">
+        <img src="images/banner.svg?v=13" alt="Advertisement" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
       </a>
     </div>
 
     <!-- Sảnh -->
     <div class="overlay" id="lobby-overlay">
       <div class="modal">
-        <button class="modal-close" aria-label="Đóng" title="Về trang chủ" data-close-href="index.html">×</button>
-        <h2>♟ Chơi với người</h2>
-        <p class="text-muted" id="lobby-status">Đang kết nối…</p>
+        <button class="modal-close" aria-label="Close" title="Back to home" data-close-href="index.html">×</button>
+        <h2>♟ Play vs Human</h2>
+        <p class="text-muted" id="lobby-status">Connecting…</p>
         <div class="opt-group">
-          <button class="btn btn-primary btn-block btn-lg" id="btn-quick">⚡ Tìm trận nhanh</button>
+          <button class="btn btn-primary btn-block btn-lg" id="btn-quick">⚡ Quick match</button>
         </div>
         <div class="opt-group">
-          <button class="btn btn-accent btn-block btn-lg" id="btn-create">＋ Tạo phòng mới</button>
+          <button class="btn btn-accent btn-block btn-lg" id="btn-create">＋ Create a room</button>
         </div>
         <div class="opt-group">
           <label style="display: flex; justify-content: space-between; align-items: center">
-            <span>Phòng đang mở</span>
-            <button class="btn btn-ghost" id="btn-refresh" style="padding: 4px 12px; font-size: 0.8rem">↻ Làm mới</button>
+            <span>Open rooms</span>
+            <button class="btn btn-ghost" id="btn-refresh" style="padding: 4px 12px; font-size: 0.8rem">↻ Refresh</button>
           </label>
-          <div id="room-list" class="room-list"><div class="room-empty">Đang tải…</div></div>
+          <div id="room-list" class="room-list"><div class="room-empty">Loading…</div></div>
         </div>
         <div class="opt-group">
-          <label>Hoặc vào bằng mã phòng</label>
+          <label>Or join with a room code</label>
           <div class="chat-row">
             <input type="text" id="join-code" placeholder="VD: AB12" maxlength="4" style="text-transform: uppercase" />
-            <button class="btn btn-ghost" id="btn-join">Vào</button>
+            <button class="btn btn-ghost" id="btn-join">Join</button>
           </div>
         </div>
         <div id="waiting-box" class="hidden" style="margin-top: 14px; text-align: center">
           <p id="waiting-msg" class="text-muted"></p>
           <div id="code-box" class="hidden">
-            <div style="font-size: 13px; color: var(--c-muted)">Gửi mã này cho bạn bè:</div>
+            <div style="font-size: 13px; color: var(--c-muted)">Send this code to a friend:</div>
             <div id="room-code" class="room-code"></div>
-            <button class="btn btn-ghost" id="btn-copy-invite" style="margin-top: 8px">📋 Copy link mời</button>
+            <button class="btn btn-ghost" id="btn-copy-invite" style="margin-top: 8px">📋 Copy invite link</button>
           </div>
-          <button class="btn btn-ghost" id="btn-cancel" style="margin-top: 10px">Huỷ</button>
+          <button class="btn btn-ghost" id="btn-cancel" style="margin-top: 10px">Cancel</button>
         </div>
       </div>
     </div>
@@ -166,12 +167,12 @@
     <!-- Kết quả -->
     <div class="overlay hidden" id="result-modal">
       <div class="modal center">
-        <button class="modal-close" aria-label="Đóng" title="Đóng">×</button>
-        <h2 id="result-title">Kết thúc</h2>
+        <button class="modal-close" aria-label="Close" title="Close">×</button>
+        <h2 id="result-title">Game over</h2>
         <p class="text-muted" id="result-reason"></p>
         <div class="controls" style="margin-top: 18px">
-          <button class="btn btn-primary" id="btn-again">Trận mới</button>
-          <a class="btn btn-ghost" href="index.html">Về trang chủ</a>
+          <button class="btn btn-primary" id="btn-again">New game</button>
+          <a class="btn btn-ghost" href="index.html">Back to home</a>
         </div>
       </div>
     </div>
@@ -179,20 +180,20 @@
     <!-- Thông báo cần đăng nhập -->
     <div class="overlay hidden" id="login-modal">
       <div class="modal center">
-        <button class="modal-close" aria-label="Đóng" title="Đóng">×</button>
-        <h2>🔒 Cần đăng nhập</h2>
-        <p class="text-muted">Bạn cần đăng nhập (hoặc đăng ký) để chơi với người khác.</p>
+        <button class="modal-close" aria-label="Close" title="Close">×</button>
+        <h2>🔒 Sign-in required</h2>
+        <p class="text-muted">You need to sign in (or create an account) to play against other people.</p>
         <div class="controls" style="margin-top: 18px">
-          <a class="btn btn-primary" href="login.html">Đăng nhập</a>
-          <a class="btn btn-accent" href="register.html">Đăng ký</a>
+          <a class="btn btn-primary" href="login.html">Sign in</a>
+          <a class="btn btn-accent" href="register.html">Sign up</a>
         </div>
       </div>
     </div>
 
-    <script src="js/engine/xiangqi.js?v=12"></script>
-    <script src="js/board.js?v=12"></script>
-    <script src="js/api.js?v=12"></script>
-    <script src="js/play-online.js?v=12"></script>
-    <script src="js/ui.js?v=12"></script>
+    <script src="js/engine/xiangqi.js?v=13"></script>
+    <script src="js/board.js?v=13"></script>
+    <script src="js/api.js?v=13"></script>
+    <script src="js/play-online.js?v=13"></script>
+    <script src="js/ui.js?v=13"></script>
   </body>
 </html>

@@ -4,7 +4,7 @@
 const bcrypt = require('bcryptjs');
 const pool = require('../config/db');
 
-const PUBLIC_FIELDS = 'id, username, email, elo, wins, losses, draws, created_at';
+const PUBLIC_FIELDS = 'id, username, email, elo, wins, losses, draws, points, created_at';
 
 async function findByUsername(username) {
   const [rows] = await pool.query('SELECT * FROM users WHERE username = ? LIMIT 1', [username]);

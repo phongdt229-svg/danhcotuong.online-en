@@ -13,7 +13,7 @@ router.post('/', requireAuth, async (req, res) => {
   try {
     const result = req.body.result;
     if (!VALID_RESULTS.includes(result))
-      return res.status(400).json({ error: 'Kết quả không hợp lệ' });
+      return res.status(400).json({ error: 'Invalid result' });
 
     const game = {
       opponent_type: String(req.body.opponent_type || 'ai').slice(0, 40),
@@ -27,7 +27,7 @@ router.post('/', requireAuth, async (req, res) => {
     res.status(201).json({ id });
   } catch (err) {
     console.error('save game error:', err.message);
-    res.status(500).json({ error: 'Không lưu được ván đấu' });
+    res.status(500).json({ error: 'Could not save the game' });
   }
 });
 
@@ -37,7 +37,7 @@ router.get('/', requireAuth, async (req, res) => {
     res.json({ games });
   } catch (err) {
     console.error('list games error:', err.message);
-    res.status(500).json({ error: 'Không tải được lịch sử' });
+    res.status(500).json({ error: 'Could not load your history' });
   }
 });
 
@@ -45,11 +45,11 @@ router.get('/', requireAuth, async (req, res) => {
 router.get('/:id', requireAuth, async (req, res) => {
   try {
     const game = await gameService.getById(req.session.userId, parseInt(req.params.id, 10));
-    if (!game) return res.status(404).json({ error: 'Không tìm thấy ván đấu' });
+    if (!game) return res.status(404).json({ error: 'Game not found' });
     res.json({ game });
   } catch (err) {
     console.error('get game error:', err.message);
-    res.status(500).json({ error: 'Lỗi máy chủ' });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 

@@ -19,6 +19,7 @@
  */
 const { WebSocketServer } = require('ws');
 const X = require('../../public/js/engine/xiangqi.js'); // engine luật cờ dùng chung (chống gian lận)
+const stakeService = require('../services/stake.service');
 
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // bỏ ký tự dễ nhầm (I,O,0,1)
 
@@ -28,10 +29,11 @@ function makeCode() {
   return s;
 }
 
-module.exports = function attachMatch(server) {
+module.exports = function attachMatch(server, sessionParser) {
   const wss = new WebSocketServer({ server, path: '/ws' });
-  let quickWaiting = null; // ws đang chờ ghép trận nhanh
-  const rooms = new Map(); // code -> { players:[ws,...], code, host, started, turn }
+  // Mỗi mức cược có một hàng chờ riêng — chỉ ghép người cược bằng nhau.
+  const quickWaiting = new Map(); // stake -> ws đang chờ ghép trận nhanh
+  const rooms = new Map(); // code -> { players:[ws,...], code, host, started, turn, stake, matchId }
   const lobby = new Set(); // các ws đang ở sảnh (xem danh sách phòng)
 
   const isOpen = (ws) => ws && ws.readyState === ws.OPEN;
@@ -43,7 +45,7 @@ module.exports = function attachMatch(server) {
     const list = [];
     for (const room of rooms.values()) {
       if (!room.started && room.players.length === 1) {
-        list.push({ code: room.code, host: room.players[0].name || 'Khách' });
+        list.push({ code: room.code, host: room.players[0].name || 'Guest', stake: room.stake || 0 });
       }
     }
     return list;
@@ -60,6 +62,7 @@ module.exports = function attachMatch(server) {
           red: red ? red.name : '?',
           black: black ? black.name : '?',
           moves: room.moves ? room.moves.length : 0,
+          stake: room.stake || 0,
         });
       }
     }
@@ -80,44 +83,200 @@ module.exports = function attachMatch(server) {
     for (const s of room.spectators) if (isOpen(s)) s.send(payload);
   }
 
-  function startRoom(room) {
+  // Rời hàng chờ ghép nhanh (mỗi mức cược một hàng riêng).
+  function leaveQuickQueue(ws) {
+    if (ws.quickStake != null && quickWaiting.get(ws.quickStake) === ws) {
+      quickWaiting.delete(ws.quickStake);
+    }
+    ws.quickStake = null;
+  }
+
+  // Mọi trận với người đều có cược -> bắt buộc đăng nhập.
+  function requireLogin(ws) {
+    if (ws.userId) return true;
+    send(ws, { type: 'need-login', message: 'Sign in to play staked games against other players.' });
+    return false;
+  }
+
+  // Đọc & kiểm mức cược do client gửi. Trả null (và đã báo lỗi) nếu không hợp lệ.
+  function readStake(ws, msg) {
+    const stake = Math.floor(Number(msg.stake));
+    if (!stakeService.isValidStake(stake)) {
+      send(ws, { type: 'stake-error', message: `Stake must be a whole number of at least ${stakeService.MIN_STAKE} points.` });
+      return null;
+    }
+    return stake;
+  }
+
+  // Giải tán phòng khi không mở được ván (vd một bên thiếu điểm cược).
+  function dissolveRoom(room) {
+    if (room.code) rooms.delete(room.code);
+    room.players.forEach((p) => {
+      p.room = null;
+      p.color = null;
+      lobby.add(p);
+    });
+    room.players.length = 0;
+    broadcastRooms();
+  }
+
+  /*
+   * Bắt đầu ván: TRỪ điểm cược của cả hai trước, chỉ khi trừ thành công mới mở ván.
+   * Bất đồng bộ vì phải ghi DB — mọi nơi gọi đều phải await/bắt lỗi.
+   */
+  async function startRoom(room) {
+    const [a, b] = room.players;
+    if (!a || !b) return false;
+
+    try {
+      const opened = await stakeService.openMatch({
+        code: room.code,
+        stake: room.stake,
+        redUserId: a.userId,
+        blackUserId: b.userId,
+      });
+      room.matchId = opened.matchId;
+      room.pot = opened.pot;
+      room.settled = false;
+    } catch (err) {
+      // Báo riêng cho người thiếu điểm, người kia chỉ biết ván không mở được.
+      for (const p of room.players) {
+        const mine = err.code === 'INSUFFICIENT' && p.userId === err.userId;
+        send(p, {
+          type: 'stake-error',
+          message: mine
+            ? `You need ${room.stake} points for this game — you have ${err.balance}.`
+            : err.code === 'INSUFFICIENT'
+            ? 'Your opponent does not have enough points for this stake.'
+            : err.message || 'Could not start the staked game.',
+        });
+      }
+      dissolveRoom(room);
+      return false;
+    }
+
     room.started = true;
     room.ended = false;
     room.turn = 'r'; // Đỏ đi trước
     room.moves = []; // nước đi để khán giả vào giữa chừng dựng lại
     room.game = new X.Game(); // ván trên server để kiểm tra luật & phát hiện hết ván
     if (!room.spectators) room.spectators = new Set();
-    const [a, b] = room.players;
     a.color = 'r';
     b.color = 'b';
     lobby.delete(a);
     lobby.delete(b);
-    send(a, { type: 'start', color: 'r', opponent: b.name });
-    send(b, { type: 'start', color: 'b', opponent: a.name });
+    send(a, { type: 'start', color: 'r', opponent: b.name, stake: room.stake, pot: room.pot });
+    send(b, { type: 'start', color: 'b', opponent: a.name, stake: room.stake, pot: room.pot });
+    sendBalances(room);
     // Khán giả (nếu có, vd sau khi chơi lại) xem ván mới
     toSpectators(room, { type: 'spectate-start', red: a.name, black: b.name, moves: [], turn: 'r' });
     broadcastRooms(); // phòng này không còn mở -> cập nhật danh sách
+    return true;
+  }
+
+  // Gửi số dư điểm mới nhất cho hai người trong phòng.
+  async function sendBalances(room) {
+    for (const p of room.players) {
+      if (!p.userId || !isOpen(p)) continue;
+      try {
+        send(p, { type: 'balance', balance: await stakeService.getPoints(p.userId) });
+      } catch (e) {}
+    }
+  }
+
+  /*
+   * Chia điểm khi ván kết thúc. Gọi đúng một lần cho mỗi ván (chốt bằng room.settled
+   * ở đây và bằng cột status trong DB ở tầng service).
+   */
+  async function settleRoom(room, outcome, winnerWs) {
+    if (!room || !room.matchId || room.settled) return;
+    room.settled = true;
+    const winnerUserId = winnerWs ? winnerWs.userId : null;
+    const players = room.players.slice(); // giữ lại vì phòng có thể bị dọn ngay sau đó
+
+    try {
+      const r = await stakeService.settle(room.matchId, outcome, winnerUserId);
+      for (const p of players) {
+        if (!p.userId || !isOpen(p)) continue;
+        send(p, {
+          type: 'stake-settled',
+          outcome,
+          stake: room.stake,
+          pot: room.pot,
+          won: Boolean(winnerUserId) && p.userId === winnerUserId,
+          winnerPoints: r ? r.winnerPoints : 0,
+          housePoints: r ? r.housePoints : 0,
+          balance: await stakeService.getPoints(p.userId),
+        });
+      }
+    } catch (e) {
+      console.error('settle stake error:', e.message);
+    }
   }
 
   function endRoomNotify(ws) {
     const room = ws.room;
     if (!room) return;
     const other = opponent(room, ws);
+    // Bỏ trận giữa chừng bị xử THUA — nếu không thì thua là rút mạng để khỏi mất điểm.
+    if (room.started && !room.ended && room.matchId) {
+      room.ended = true;
+      settleRoom(room, 'win', other);
+    }
     if (other && room.started) send(other, { type: 'opponent-left' });
-    toSpectators(room, { type: 'spectate-end', text: 'Trận đã kết thúc (người chơi thoát).' });
+    toSpectators(room, { type: 'spectate-end', text: 'The game ended (a player left).' });
     if (room.code) rooms.delete(room.code);
     room.players.forEach((p) => { p.room = null; });
     broadcastRooms(); // trận biến mất khỏi danh sách đang đánh
   }
 
-  wss.on('connection', (ws) => {
-    ws.name = 'Khách';
+  /*
+   * Đọc phiên đăng nhập từ cookie của request nâng cấp WebSocket.
+   * Danh tính PHẢI lấy từ đây, không được tin `name` do client tự khai —
+   * ván có cược điểm nên mạo danh là lấy được điểm của người khác.
+   */
+  function authenticate(req) {
+    return new Promise((resolve) => {
+      if (typeof sessionParser !== 'function') return resolve(null);
+      try {
+        sessionParser(req, {}, () => {
+          const s = req.session;
+          resolve(s && s.userId ? Number(s.userId) : null);
+        });
+      } catch (e) {
+        resolve(null);
+      }
+    });
+  }
+
+  wss.on('connection', async (ws, req) => {
+    ws.name = 'Guest';
+    ws.userId = null;
     ws.room = null;
     ws.color = null;
     ws.wantRematch = false;
     ws.spectating = null;
     lobby.add(ws);
-    send(ws, { type: 'welcome' });
+
+    ws.userId = await authenticate(req);
+    if (ws.userId) {
+      try {
+        const userService = require('../services/user.service');
+        const u = await userService.findById(ws.userId);
+        if (u) {
+          ws.name = u.username;
+          ws.points = u.points;
+        }
+      } catch (e) {}
+    }
+
+    send(ws, {
+      type: 'welcome',
+      loggedIn: Boolean(ws.userId),
+      name: ws.name,
+      balance: ws.points || 0,
+      ...stakeService.rules(),
+    });
     send(ws, roomsPayload()); // gửi danh sách phòng + trận đang đánh ngay
 
     ws.on('message', (data) => {
@@ -125,43 +284,55 @@ module.exports = function attachMatch(server) {
       try { msg = JSON.parse(data); } catch (e) { return; }
       switch (msg && msg.type) {
         case 'hello':
-          ws.name = String(msg.name || 'Khách').slice(0, 24) || 'Khách';
+          // Tên hiển thị lấy từ phiên đăng nhập, không nhận từ client nữa.
           break;
-        case 'quick':
+        case 'quick': {
           if (ws.room) return;
-          if (isOpen(quickWaiting) && quickWaiting !== ws) {
+          if (!requireLogin(ws)) return;
+          const stake = readStake(ws, msg);
+          if (stake === null) return;
+
+          const waiting = quickWaiting.get(stake);
+          // Không tự ghép với chính mình, và bỏ qua socket đã đóng.
+          if (isOpen(waiting) && waiting !== ws && waiting.userId !== ws.userId) {
+            quickWaiting.delete(stake);
             let qcode;
             do { qcode = makeCode(); } while (rooms.has(qcode));
-            const room = { players: [quickWaiting, ws], code: qcode, host: quickWaiting.name, spectators: new Set() };
+            const room = { players: [waiting, ws], code: qcode, host: waiting.name, stake, spectators: new Set() };
             rooms.set(qcode, room); // có mã -> khán giả xem được
-            quickWaiting.room = room;
+            waiting.room = room;
             ws.room = room;
-            quickWaiting = null;
             startRoom(room);
           } else {
-            quickWaiting = ws;
-            send(ws, { type: 'waiting' });
+            quickWaiting.set(stake, ws);
+            ws.quickStake = stake;
+            send(ws, { type: 'waiting', stake });
           }
           break;
+        }
         case 'list':
           lobby.add(ws); // yêu cầu danh sách = đang ở sảnh
           send(ws, roomsPayload());
           break;
         case 'create': {
           if (ws.room) return;
+          if (!requireLogin(ws)) return;
+          const stake = readStake(ws, msg);
+          if (stake === null) return;
+
           let code;
           do { code = makeCode(); } while (rooms.has(code));
-          const room = { players: [ws], code, host: ws.name, spectators: new Set() };
+          const room = { players: [ws], code, host: ws.name, stake, spectators: new Set() };
           ws.room = room;
           rooms.set(code, room);
-          send(ws, { type: 'created', code });
+          send(ws, { type: 'created', code, stake });
           broadcastRooms(); // có phòng mới -> báo cho mọi người ở sảnh
           break;
         }
         case 'spectate': {
           const code = String(msg.code || '').toUpperCase().trim();
           const room = rooms.get(code);
-          if (!room || !room.started) return send(ws, { type: 'error', message: 'Trận không tồn tại hoặc đã kết thúc' });
+          if (!room || !room.started) return send(ws, { type: 'error', message: 'That game does not exist or has already ended' });
           if (!room.spectators) room.spectators = new Set();
           lobby.delete(ws);
           if (ws.spectating && ws.spectating.spectators) ws.spectating.spectators.delete(ws);
@@ -180,10 +351,14 @@ module.exports = function attachMatch(server) {
         }
         case 'join': {
           if (ws.room) return;
+          if (!requireLogin(ws)) return;
           const code = String(msg.code || '').toUpperCase().trim();
           const room = rooms.get(code);
-          if (!room) return send(ws, { type: 'error', message: 'Không tìm thấy phòng với mã này' });
-          if (room.players.length >= 2) return send(ws, { type: 'error', message: 'Phòng đã đủ 2 người' });
+          if (!room) return send(ws, { type: 'error', message: 'No room found with that code' });
+          if (room.players.length >= 2) return send(ws, { type: 'error', message: 'That room is already full' });
+          if (room.players[0] && room.players[0].userId === ws.userId) {
+            return send(ws, { type: 'error', message: 'You cannot join your own room' });
+          }
           room.players.push(ws);
           ws.room = room;
           startRoom(room);
@@ -206,36 +381,41 @@ module.exports = function attachMatch(server) {
           if (st.over) {
             room.ended = true;
             const winner = st.loser === 'r' ? 'b' : 'r';
-            const wName = (room.players.find((p) => p.color === winner) || {}).name || (winner === 'r' ? 'Đỏ' : 'Đen');
-            toSpectators(room, { type: 'spectate-end', text: wName + ' thắng (' + (st.reason === 'checkmate' ? 'chiếu hết' : 'hết nước') + ').' });
+            const winnerWs = room.players.find((p) => p.color === winner);
+            const wName = (winnerWs || {}).name || (winner === 'r' ? 'Red' : 'Black');
+            settleRoom(room, 'win', winnerWs);
+            toSpectators(room, { type: 'spectate-end', text: wName + ' won (' + (st.reason === 'checkmate' ? 'checkmate' : 'stalemate') + ').' });
             broadcastRooms();
           }
           break;
         }
         case 'resign': {
           const room = ws.room;
-          if (!room || !room.started) return;
+          if (!room || !room.started || room.ended) return;
           send(opponent(room, ws), { type: 'resign' });
           room.ended = true;
-          toSpectators(room, { type: 'spectate-end', text: (ws.name || 'Một bên') + ' đã xin thua.' });
+          settleRoom(room, 'win', opponent(room, ws)); // người xin thua mất cược
+          toSpectators(room, { type: 'spectate-end', text: (ws.name || 'A player') + ' resigned.' });
           broadcastRooms();
           break;
         }
         case 'timeout': {
           const room = ws.room;
-          if (!room || !room.started) return;
+          if (!room || !room.started || room.ended) return;
           send(opponent(room, ws), { type: 'opponent-timeout' });
           room.ended = true;
-          toSpectators(room, { type: 'spectate-end', text: (ws.name || 'Một bên') + ' đã hết giờ.' });
+          settleRoom(room, 'win', opponent(room, ws)); // hết giờ = thua
+          toSpectators(room, { type: 'spectate-end', text: (ws.name || 'A player') + ' ran out of time.' });
           broadcastRooms();
           break;
         }
         case 'draw-accept': {
           const room = ws.room;
-          if (!room || !room.started) return;
+          if (!room || !room.started || room.ended) return;
           send(opponent(room, ws), { type: 'draw-accept' });
           room.ended = true;
-          toSpectators(room, { type: 'spectate-end', text: 'Hai bên đồng ý hòa.' });
+          settleRoom(room, 'draw', null); // hòa -> hoàn cược cho cả hai
+          toSpectators(room, { type: 'spectate-end', text: 'Both players agreed to a draw.' });
           broadcastRooms();
           break;
         }
@@ -304,7 +484,7 @@ module.exports = function attachMatch(server) {
           break;
         }
         case 'cancel':
-          if (quickWaiting === ws) quickWaiting = null;
+          leaveQuickQueue(ws);
           if (ws.room && !ws.room.started) {
             if (ws.room.code) rooms.delete(ws.room.code);
             ws.room = null;
@@ -317,7 +497,7 @@ module.exports = function attachMatch(server) {
     ws.on('close', () => {
       lobby.delete(ws);
       if (ws.spectating && ws.spectating.spectators) { ws.spectating.spectators.delete(ws); ws.spectating = null; }
-      if (quickWaiting === ws) quickWaiting = null;
+      leaveQuickQueue(ws);
       if (ws.room) {
         const wasOpen = !ws.room.started;
         if (ws.room.started) endRoomNotify(ws);

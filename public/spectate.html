@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#0f1620" />
     <link rel="apple-touch-icon" href="images/icon.svg" />
-    <title>Xem trận trực tiếp — Đánh Cờ Tướng Online</title>
-    <link rel="stylesheet" href="css/style.css?v=12" />
-    <link rel="stylesheet" href="css/board.css?v=12" />
+    <title>Live game — Xiangqi Online</title>
+    <link rel="stylesheet" href="css/style.css?v=13" />
+    <link rel="stylesheet" href="css/board.css?v=13" />
       <style>
       /* Critical CSS: menu 2 cấp + nút nổi bật (nhúng để chạy kể cả khi style.css chưa cập nhật) */
       .has-sub{position:relative}
@@ -26,64 +26,65 @@
   <body>
     <header class="navbar">
       <div class="container nav-inner">
-        <a class="brand" href="index.html"><span class="logo">將</span><span>Cờ Tướng Online</span></a>
+        <a class="brand" href="index.html"><span class="logo">將</span><span>Xiangqi Online</span></a>
         <button class="nav-toggle" aria-label="Menu">☰</button>
         <ul class="nav-menu">
-          <li><a href="index.html">Trang chủ</a></li>
+          <li><a href="index.html">Home</a></li>
           <li class="has-sub">
-            <a href="play.html" class="sub-toggle">Chơi ▾</a>
+            <a href="play.html" class="sub-toggle">Play ▾</a>
             <ul class="sub-menu">
-              <li><a href="play.html">Chơi với máy</a></li>
-              <li><a href="play-up.html">Cờ úp</a></li>
-              <li><a href="puzzles.html">Cờ thế</a></li>
+              <li><a href="play.html">Play vs Computer</a></li>
+              <li><a href="play-up.html">Flip Xiangqi</a></li>
+              <li><a href="puzzles.html">Puzzles</a></li>
             </ul>
           </li>
           <li class="has-sub">
-            <a href="play-online.html" class="sub-toggle">Đấu online ▾</a>
+            <a href="play-online.html" class="sub-toggle">Online ▾</a>
             <ul class="sub-menu">
-              <li><a href="play-online.html">Chơi với người</a></li>
-              <li><a href="rooms.html">Danh sách phòng</a></li>
+              <li><a href="play-online.html">Play vs Human</a></li>
+              <li><a href="rooms.html">Room List</a></li>
             </ul>
           </li>
-          <li><a href="leaderboard.html">Xếp hạng</a></li>
-          <li><a href="profile.html" data-auth="user" style="display: none">Hồ sơ</a></li>
+          <li><a href="leaderboard.html">Leaderboard</a></li>
+          <li><a href="topup.html">Buy Points</a></li>
+          <li><a href="profile.html" data-auth="user" style="display: none">Profile</a></li>
         </ul>
         <div class="nav-actions">
-          <a class="btn btn-ghost" href="rooms.html">← Danh sách phòng</a>
+          <a class="btn btn-ghost" href="rooms.html">← Room list</a>
         </div>
       </div>
     </header>
     <!-- BANNER:top (thay ảnh images/banner.svg, đặt link ở href) -->
     <div class="leaderboard-ad">
-      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Quảng cáo">
-        <img src="images/banner.svg?v=12" alt="Quảng cáo" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
+      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Advertisement">
+        <img src="images/banner.svg?v=13" alt="Advertisement" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
       </a>
     </div>
 
     <main class="container">
       <div class="play-layout">
         <div class="board-col">
-          <div class="player-bar" id="bar-black"><div class="who"><span class="dot black"></span> <span id="name-black">Đen</span></div></div>
+          <div class="player-bar" id="bar-black"><div class="who"><span class="dot black"></span> <span id="name-black">Black</span></div></div>
           <div id="board"></div>
-          <div class="player-bar active" id="bar-red"><div class="who"><span class="dot red"></span> <span id="name-red">Đỏ</span></div></div>
+          <div class="player-bar active" id="bar-red"><div class="who"><span class="dot red"></span> <span id="name-red">Red</span></div></div>
         </div>
         <aside class="side-panel">
           <div class="panel">
-            <h3>👁 Xem trực tiếp <span id="live-dot" class="live-dot"></span></h3>
-            <div id="status-msg">Đang kết nối…</div>
+            <h3>👁 Watching live <span id="live-dot" class="live-dot"></span></h3>
+            <div id="status-msg">Connecting…</div>
           </div>
           <div class="panel">
-            <h3>Lịch sử nước đi</h3>
+            <h3>Move history</h3>
             <div id="move-list"></div>
           </div>
         </aside>
       </div>
     </main>
 
-    <script src="js/engine/xiangqi.js?v=12"></script>
-    <script src="js/board.js?v=12"></script>
-    <script src="js/api.js?v=12"></script>
-    <script src="js/spectate.js?v=12"></script>
-    <script src="js/ui.js?v=12"></script>
+    <script src="js/engine/xiangqi.js?v=13"></script>
+    <script src="js/board.js?v=13"></script>
+    <script src="js/api.js?v=13"></script>
+    <script src="js/spectate.js?v=13"></script>
+    <script src="js/ui.js?v=13"></script>
   </body>
 </html>

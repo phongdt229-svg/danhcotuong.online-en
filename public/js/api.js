@@ -19,7 +19,7 @@
       data = null;
     }
     if (!res.ok) {
-      const err = new Error((data && data.error) || 'Lỗi máy chủ');
+      const err = new Error((data && data.error) || 'Server error');
       err.status = res.status;
       err.data = data;
       throw err;
@@ -50,6 +50,13 @@
     matchResign: (code, token) => req('POST', '/api/match/resign', { code, token }),
     matchOver: (code, token, text, winner) => req('POST', '/api/match/over', { code, token, text, winner }),
     matchChat: (code, token, text) => req('POST', '/api/match/chat', { code, token, text }),
+
+    // Nạp điểm qua PayPal
+    payConfig: () => req('GET', '/api/payments/config'),
+    pointsBalance: () => req('GET', '/api/payments/balance'),
+    payHistory: () => req('GET', '/api/payments/history'),
+    payCreateOrder: (amount) => req('POST', '/api/payments/paypal/order', { amount }),
+    payCapture: (orderId) => req('POST', '/api/payments/paypal/capture', { orderId }),
 
     // Sổ tay tự học của AI (chơi với máy)
     bookLookup: (board) => req('POST', '/api/book/lookup', { board }),

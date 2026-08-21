@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#0f1620" />
     <link rel="apple-touch-icon" href="images/icon.svg" />
-    <title>Cờ thế — Đánh Cờ Tướng Online</title>
-    <link rel="stylesheet" href="css/style.css?v=12" />
-    <link rel="stylesheet" href="css/board.css?v=12" />
+    <title>Puzzles — Xiangqi Online</title>
+    <link rel="stylesheet" href="css/style.css?v=13" />
+    <link rel="stylesheet" href="css/board.css?v=13" />
       <style>
       /* Critical CSS: menu 2 cấp + nút nổi bật (nhúng để chạy kể cả khi style.css chưa cập nhật) */
       .has-sub{position:relative}
@@ -26,40 +26,41 @@
   <body>
     <header class="navbar">
       <div class="container nav-inner">
-        <a class="brand" href="index.html"><span class="logo">將</span><span>Cờ Tướng Online</span></a>
+        <a class="brand" href="index.html"><span class="logo">將</span><span>Xiangqi Online</span></a>
         <button class="nav-toggle" aria-label="Menu">☰</button>
         <ul class="nav-menu">
-          <li><a href="index.html">Trang chủ</a></li>
+          <li><a href="index.html">Home</a></li>
           <li class="has-sub">
-            <a href="play.html" class="sub-toggle">Chơi ▾</a>
+            <a href="play.html" class="sub-toggle">Play ▾</a>
             <ul class="sub-menu">
-              <li><a href="play.html">Chơi với máy</a></li>
-              <li><a href="play-up.html">Cờ úp</a></li>
-              <li><a href="puzzles.html">Cờ thế</a></li>
+              <li><a href="play.html">Play vs Computer</a></li>
+              <li><a href="play-up.html">Flip Xiangqi</a></li>
+              <li><a href="puzzles.html">Puzzles</a></li>
             </ul>
           </li>
           <li class="has-sub">
-            <a href="play-online.html" class="sub-toggle">Đấu online ▾</a>
+            <a href="play-online.html" class="sub-toggle">Online ▾</a>
             <ul class="sub-menu">
-              <li><a href="play-online.html">Chơi với người</a></li>
-              <li><a href="rooms.html">Danh sách phòng</a></li>
+              <li><a href="play-online.html">Play vs Human</a></li>
+              <li><a href="rooms.html">Room List</a></li>
             </ul>
           </li>
-          <li><a href="leaderboard.html">Xếp hạng</a></li>
-          <li><a href="profile.html" data-auth="user" style="display: none">Hồ sơ</a></li>
+          <li><a href="leaderboard.html">Leaderboard</a></li>
+          <li><a href="topup.html">Buy Points</a></li>
+          <li><a href="profile.html" data-auth="user" style="display: none">Profile</a></li>
         </ul>
         <div class="nav-actions">
-          <a class="btn btn-ghost" href="login.html" data-auth="guest">Đăng nhập</a>
-          <a class="btn btn-primary" href="register.html" data-auth="guest">Đăng ký</a>
-          <span data-auth="user" style="display: none; font-weight: 700">Xin chào, <span data-user-name>bạn</span></span>
-          <a class="btn btn-ghost" href="#" data-auth="user" data-action="logout" style="display: none">Đăng xuất</a>
+          <a class="btn btn-ghost" href="login.html" data-auth="guest">Sign in</a>
+          <a class="btn btn-primary" href="register.html" data-auth="guest">Sign up</a>
+          <span data-auth="user" style="display: none; font-weight: 700">Hi, <span data-user-name>there</span></span>
+          <a class="btn btn-ghost" href="#" data-auth="user" data-action="logout" style="display: none">Log out</a>
         </div>
       </div>
     </header>
     <!-- BANNER:top (thay ảnh images/banner.svg, đặt link ở href) -->
     <div class="leaderboard-ad">
-      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Quảng cáo">
-        <img src="images/banner.svg?v=12" alt="Quảng cáo" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
+      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Advertisement">
+        <img src="images/banner.svg?v=13" alt="Advertisement" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
       </a>
     </div>
 
@@ -67,43 +68,43 @@
       <div class="play-layout">
         <div class="board-col">
           <div class="player-bar" id="bar-top">
-            <div class="who"><span id="side-label">Tìm nước hay nhất</span></div>
+            <div class="who"><span id="side-label">Find the best move</span></div>
           </div>
           <div id="board"></div>
           <div class="player-bar active" id="bar-bottom">
-            <div class="who"><span class="dot red"></span> <span id="turn-label">Đến lượt bạn</span></div>
+            <div class="who"><span class="dot red"></span> <span id="turn-label">Your turn</span></div>
           </div>
         </div>
 
         <aside class="side-panel">
           <div class="panel">
-            <h3>Cờ thế</h3>
-            <div id="status-msg">Đang tải câu đố…</div>
+            <h3>Puzzles</h3>
+            <div id="status-msg">Loading puzzle…</div>
             <div id="progress" class="text-muted" style="margin-top: 8px; font-size: 0.9rem"></div>
           </div>
 
           <div class="panel">
-            <h3>Điều khiển</h3>
+            <h3>Controls</h3>
             <div class="controls">
-              <button class="btn btn-ghost" id="btn-hint">💡 Gợi ý</button>
-              <button class="btn btn-ghost" id="btn-solution">👁 Đáp án</button>
-              <button class="btn btn-ghost" id="btn-retry">↺ Làm lại</button>
-              <button class="btn btn-primary" id="btn-next">Câu tiếp →</button>
+              <button class="btn btn-ghost" id="btn-hint">💡 Hint</button>
+              <button class="btn btn-ghost" id="btn-solution">👁 Solution</button>
+              <button class="btn btn-ghost" id="btn-retry">↺ Retry</button>
+              <button class="btn btn-primary" id="btn-next">Next puzzle →</button>
             </div>
           </div>
 
           <div class="panel">
-            <h3>Hướng dẫn</h3>
+            <h3>How to play</h3>
             <p class="text-muted" style="font-size: 0.9rem; margin: 0">
-              Mỗi câu là một thế cờ có <b>một nước hay nhất</b> (ăn quân hoặc chiếu hết). Bấm chọn quân của
-              bạn rồi đi tới ô đích. Đi đúng sẽ được tính điểm!
+              Each puzzle is a position with <b>one best move</b> (win material or deliver mate). Click one of
+              your pieces, then click the target square. Get it right to score!
             </p>
           </div>
 
           <!-- Quảng cáo -->
           <div class="panel ad-panel" id="ad-slot">
-            <a href="#" target="_blank" rel="noopener sponsored" aria-label="Quảng cáo">
-              <img class="ad-image" src="images/ad.svg?v=12" alt="Quảng cáo" loading="lazy"
+            <a href="#" target="_blank" rel="noopener sponsored" aria-label="Advertisement">
+              <img class="ad-image" src="images/ad.svg?v=13" alt="Advertisement" loading="lazy"
                    onerror="var s=document.getElementById('ad-slot'); if(s) s.style.display='none';" />
             </a>
           </div>
@@ -112,15 +113,15 @@
     </main>
     <!-- BANNER:bottom (thay ảnh images/banner.svg, đặt link ở href) -->
     <div class="leaderboard-ad">
-      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Quảng cáo">
-        <img src="images/banner.svg?v=12" alt="Quảng cáo" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
+      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Advertisement">
+        <img src="images/banner.svg?v=13" alt="Advertisement" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
       </a>
     </div>
 
-    <script src="js/engine/xiangqi.js?v=12"></script>
-    <script src="js/board.js?v=12"></script>
-    <script src="js/api.js?v=12"></script>
-    <script src="js/puzzles.js?v=12"></script>
-    <script src="js/ui.js?v=12"></script>
+    <script src="js/engine/xiangqi.js?v=13"></script>
+    <script src="js/board.js?v=13"></script>
+    <script src="js/api.js?v=13"></script>
+    <script src="js/puzzles.js?v=13"></script>
+    <script src="js/ui.js?v=13"></script>
   </body>
 </html>

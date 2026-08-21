@@ -12,6 +12,7 @@ const buildSsl = require('./config/ssl');
 const authRoutes = require('./routes/auth.routes');
 const gameRoutes = require('./routes/game.routes');
 const userRoutes = require('./routes/user.routes');
+const paymentRoutes = require('./routes/payment.routes');
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -41,25 +42,26 @@ const sessionStore = new MySQLStore({
   ...(dbSsl ? { ssl: dbSsl } : {}),
 });
 
-app.use(
-  session({
-    store: sessionStore,
-    secret: process.env.SESSION_SECRET || 'doi-chuoi-bi-mat-nay',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 ngày
-      sameSite: 'lax',
-      secure: process.env.COOKIE_SECURE === 'true' || IS_PROD, // bật khi chạy HTTPS
-    },
-  })
-);
+// Tách riêng để WebSocket dùng lại được (đọc phiên đăng nhập từ cookie khi kết nối /ws).
+const sessionParser = session({
+  store: sessionStore,
+  secret: process.env.SESSION_SECRET || 'doi-chuoi-bi-mat-nay',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    maxAge: 1000 * 60 * 60 * 24 * 7, // 7 ngày
+    sameSite: 'lax',
+    secure: process.env.COOKIE_SECURE === 'true' || IS_PROD, // bật khi chạy HTTPS
+  },
+});
+app.use(sessionParser);
 
 // REST API
 app.use('/api', authRoutes);
 app.use('/api/games', gameRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/payments', paymentRoutes);
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
@@ -86,7 +88,7 @@ app.get('*', (req, res, next) => {
 app.use((err, req, res, next) => {
   console.error('✗ Lỗi:', err.stack || err);
   if (res.headersSent) return next(err);
-  res.status(err.status || 500).json({ error: IS_PROD ? 'Lỗi máy chủ' : String(err.message || err) });
+  res.status(err.status || 500).json({ error: IS_PROD ? 'Server error' : String(err.message || err) });
 });
 
 // Tự tạo bảng khi khởi động (giúp deploy cloud không cần chạy init-db thủ công).
@@ -98,7 +100,8 @@ ensureSchema()
 const server = http.createServer(app);
 
 /* ---------- WebSocket: đấu Cờ Tướng người với người (real-time) ---------- */
-require('./realtime/match')(server);
+// Truyền sessionParser vào để socket biết ai đang kết nối (bắt buộc cho ván cược điểm).
+require('./realtime/match')(server, sessionParser);
 
 server.listen(PORT, () => {
   console.log(`\n✓ Đánh Cờ Tướng Online đang chạy (${IS_PROD ? 'production' : 'development'}): http://localhost:${PORT}\n`);

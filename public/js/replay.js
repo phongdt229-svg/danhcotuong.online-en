@@ -6,7 +6,7 @@
   'use strict';
   const X = window.Xiangqi;
   const $ = (id) => document.getElementById(id);
-  const NAME = { K: 'Tướng', A: 'Sĩ', E: 'Tượng', H: 'Mã', R: 'Xe', C: 'Pháo', P: 'Tốt' };
+  const NAME = { K: 'General', A: 'Advisor', E: 'Elephant', H: 'Horse', R: 'Chariot', C: 'Cannon', P: 'Soldier' };
 
   let moves = [];
   let idx = 0;
@@ -90,30 +90,30 @@
     const params = new URLSearchParams(location.search);
     const id = params.get('id');
     const info = $('game-info');
-    if (!id) { info.textContent = 'Thiếu mã ván đấu.'; return; }
+    if (!id) { info.textContent = 'Missing game id.'; return; }
     let g;
     try {
       const res = await window.API.gameDetail(id);
       g = res && res.game;
     } catch (e) {
-      info.innerHTML = 'Không tải được ván đấu. <a href="login.html">Đăng nhập</a> rồi thử lại.';
+      info.innerHTML = 'Could not load the game. <a href="login.html">Sign in</a> and try again.';
       return;
     }
-    if (!g) { info.textContent = 'Không tìm thấy ván đấu.'; return; }
+    if (!g) { info.textContent = 'Game not found.'; return; }
 
     try { moves = JSON.parse(g.pgn || '[]'); } catch (e) { moves = []; }
-    const resultText = { win: 'Thắng', loss: 'Thua', draw: 'Hòa' }[g.result] || g.result;
+    const resultText = { win: 'Win', loss: 'Loss', draw: 'Draw' }[g.result] || g.result;
     const dt = new Date(g.created_at).toLocaleString('vi-VN');
     info.innerHTML =
-      '<div><b>Đối thủ:</b> ' + g.opponent_type + '</div>' +
-      '<div><b>Kết quả:</b> ' + resultText + '</div>' +
-      '<div><b>Số nước:</b> ' + g.moves_count + '</div>' +
-      '<div><b>Thời gian:</b> ' + dt + '</div>';
-    $('info-red').textContent = 'Đỏ';
-    $('info-black').textContent = 'Đen';
+      '<div><b>Opponent:</b> ' + g.opponent_type + '</div>' +
+      '<div><b>Result:</b> ' + resultText + '</div>' +
+      '<div><b>Moves:</b> ' + g.moves_count + '</div>' +
+      '<div><b>Date:</b> ' + dt + '</div>';
+    $('info-red').textContent = 'Red';
+    $('info-black').textContent = 'Black';
 
     if (!moves.length) {
-      info.innerHTML += '<div class="text-muted" style="margin-top:8px">Ván này chưa lưu nước đi để xem lại.</div>';
+      info.innerHTML += '<div class="text-muted" style="margin-top:8px">This game has no saved moves to replay.</div>';
     }
 
     $('btn-first').addEventListener('click', () => { stopPlay(); go(0); });

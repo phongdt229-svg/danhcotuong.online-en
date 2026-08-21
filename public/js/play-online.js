@@ -12,7 +12,7 @@
     code: null, token: null, myColor: null,
     game: null, board: null, started: false, over: false,
     applied: 0, // số nước đã áp dụng (mình + đối thủ)
-    pollTimer: null, name: 'Khách', startTs: null, auto: null, loggedIn: false,
+    pollTimer: null, name: 'Guest', startTs: null, auto: null, loggedIn: false,
     capturedByRed: [], capturedByBlack: [],
   };
 
@@ -20,7 +20,7 @@
     r: { K: '帥', A: '仕', E: '相', H: '傌', R: '俥', C: '炮', P: '兵' },
     b: { K: '將', A: '士', E: '象', H: '馬', R: '車', C: '砲', P: '卒' },
   };
-  const NAME = { K: 'Tướng', A: 'Sĩ', E: 'Tượng', H: 'Mã', R: 'Xe', C: 'Pháo', P: 'Tốt' };
+  const NAME = { K: 'General', A: 'Advisor', E: 'Elephant', H: 'Horse', R: 'Chariot', C: 'Cannon', P: 'Soldier' };
 
   const Sound = (() => {
     let ctx = null;
@@ -46,7 +46,7 @@
     const m = $('login-modal');
     if (m) m.classList.remove('hidden'); // popup "Cần đăng nhập"
     const el = $('lobby-status');
-    if (el) el.textContent = 'Bạn cần đăng nhập để chơi với người khác.';
+    if (el) el.textContent = 'You need to sign in to play against other people.';
     hideWaiting();
   }
 
@@ -60,7 +60,7 @@
     const box = $('room-list');
     if (!box) return;
     box.innerHTML = '';
-    if (!list.length) { box.innerHTML = '<div class="room-empty">Chưa có phòng nào. Hãy tạo phòng mới!</div>'; return; }
+    if (!list.length) { box.innerHTML = '<div class="room-empty">No rooms yet. Create one!</div>'; return; }
     list.forEach((r) => {
       const row = document.createElement('div');
       row.className = 'room-item';
@@ -69,7 +69,7 @@
       info.innerHTML = '<b>' + escapeHtml(r.host) + '</b><span class="room-code-sm">#' + escapeHtml(r.code) + '</span>';
       const btn = document.createElement('button');
       btn.className = 'btn btn-primary';
-      btn.textContent = 'Vào';
+      btn.textContent = 'Join';
       btn.addEventListener('click', () => doJoin(r.code));
       row.appendChild(info); row.appendChild(btn);
       box.appendChild(row);
@@ -82,29 +82,29 @@
     try {
       const r = await window.API.matchQuick(state.name);
       state.code = r.code; state.token = r.token; state.myColor = r.color;
-      if (r.waiting) { showWaiting('Đang tìm đối thủ…', null); startPoll(); }
+      if (r.waiting) { showWaiting('Looking for an opponent…', null); startPoll(); }
       else startPoll();
-    } catch (e) { lobbyStatus('Lỗi tìm trận.'); }
+    } catch (e) { lobbyStatus('Could not find a match.'); }
   }
   async function doCreate() {
     if (!state.loggedIn) return requireLoginUI();
     try {
       const r = await window.API.matchCreate(state.name);
       state.code = r.code; state.token = r.token; state.myColor = r.color;
-      showWaiting('Đang chờ bạn bè vào phòng…', r.code);
+      showWaiting('Waiting for a friend to join…', r.code);
       startPoll();
-    } catch (e) { lobbyStatus('Lỗi tạo phòng.'); }
+    } catch (e) { lobbyStatus('Could not create the room.'); }
   }
   async function doJoin(code) {
     if (!state.loggedIn) return requireLoginUI();
     code = (code || '').toUpperCase().trim();
-    if (code.length < 3) { lobbyStatus('Nhập mã phòng hợp lệ.'); return; }
+    if (code.length < 3) { lobbyStatus('Enter a valid room code.'); return; }
     try {
       const r = await window.API.matchJoin(code, state.name);
       state.code = r.code; state.token = r.token; state.myColor = r.color;
       startPoll();
     } catch (e) {
-      lobbyStatus((e && e.data && e.data.error) || 'Không vào được phòng.');
+      lobbyStatus((e && e.data && e.data.error) || 'Could not join that room.');
     }
   }
 
@@ -121,7 +121,7 @@
 
     if (!state.started) {
       if (s.status === 'playing') beginGame(s);
-      else if (s.status === 'ended') { lobbyStatus('Trận đã kết thúc.'); stopPoll(); }
+      else if (s.status === 'ended') { lobbyStatus('The game has ended.'); stopPoll(); }
       return;
     }
     // áp dụng nước đi mới của đối thủ
@@ -135,11 +135,11 @@
     renderChat(s.chat || []);
     if (s.status === 'ended' && !state.over) {
       const result = s.winner ? (s.winner === state.myColor ? 'win' : 'loss') : null;
-      finish(result, s.result || 'Ván kết thúc.');
+      finish(result, s.result || 'Game over.');
     } else if (!state.over) {
       const my = state.game.turn === state.myColor;
-      if (s.opponentOnline === false) status('⚠ Đối thủ đang mất kết nối…');
-      else status(my ? 'Tới lượt BẠN đi.' : 'Đang chờ đối thủ đi…');
+      if (s.opponentOnline === false) status('⚠ Your opponent lost connection…');
+      else status(my ? 'YOUR turn to move.' : 'Waiting for your opponent…');
     }
   }
 
@@ -154,9 +154,9 @@
     const col = document.querySelector('.board-col'); if (col) col.classList.toggle('flip', flip);
     state.board.clearSelection(); state.board.setLastMove(null); state.board.render(state.game);
 
-    const opp = state.myColor === 'r' ? (s.black || 'Đối thủ') : (s.red || 'Đối thủ');
-    if (state.myColor === 'r') { $('name-red').textContent = state.name + ' (Bạn — Đỏ)'; $('name-black').textContent = opp + ' (Đen)'; }
-    else { $('name-red').textContent = opp + ' (Đỏ)'; $('name-black').textContent = state.name + ' (Bạn — Đen)'; }
+    const opp = state.myColor === 'r' ? (s.black || 'Opponent') : (s.red || 'Opponent');
+    if (state.myColor === 'r') { $('name-red').textContent = state.name + ' (You — Red)'; $('name-black').textContent = opp + ' (Black)'; }
+    else { $('name-red').textContent = opp + ' (Red)'; $('name-black').textContent = state.name + ' (You — Black)'; }
 
     $('btn-resign').disabled = false;
     $('lobby-overlay').classList.add('hidden');
@@ -175,7 +175,7 @@
     state.board.setInteractive(my);
     $('bar-red').classList.toggle('active', state.game.turn === 'r');
     $('bar-black').classList.toggle('active', state.game.turn === 'b');
-    status(my ? 'Tới lượt BẠN đi.' : 'Đang chờ đối thủ đi…');
+    status(my ? 'YOUR turn to move.' : 'Waiting for your opponent…');
   }
 
   /* ---------------- Nước đi ---------------- */
@@ -206,7 +206,7 @@
     if (st.over) {
       const winner = st.loser === X.RED ? X.BLACK : X.RED; // 'r' | 'b'
       const iWon = winner === state.myColor;
-      const text = (iWon ? 'Bạn' : 'Đối thủ') + ' thắng (' + (st.reason === 'checkmate' ? 'chiếu hết' : 'hết nước') + ')';
+      const text = (iWon ? 'You' : 'Your opponent') + ' won (' + (st.reason === 'checkmate' ? 'checkmate' : 'stalemate') + ')';
       window.API.matchOver(state.code, state.token, text, winner).catch(() => {});
       finish(iWon ? 'win' : 'loss', text);
     }
@@ -221,9 +221,9 @@
     $('btn-resign').disabled = true;
     $('bar-red').classList.remove('active'); $('bar-black').classList.remove('active');
     Sound.end();
-    let title = 'Ván kết thúc';
-    if (result === 'win') title = 'Bạn THẮNG! 🎉';
-    else if (result === 'loss') title = 'Bạn THUA';
+    let title = 'Game over';
+    if (result === 'win') title = 'You WIN! 🎉';
+    else if (result === 'loss') title = 'You LOSE';
     status(title + ' — ' + reason);
     $('result-title').textContent = title;
     $('result-reason').textContent = reason;
@@ -290,7 +290,7 @@
     const url = location.origin + location.pathname + '?join=' + state.code;
     const done = () => {
       const b = $('btn-copy-invite');
-      if (b) { const t = b.textContent; b.textContent = '✓ Đã copy!'; setTimeout(() => (b.textContent = t), 1500); }
+      if (b) { const t = b.textContent; b.textContent = '✓ Copied!'; setTimeout(() => (b.textContent = t), 1500); }
     };
     if (navigator.clipboard && navigator.clipboard.writeText)
       navigator.clipboard.writeText(url).then(done).catch(() => fallbackCopy(url, done));
@@ -309,7 +309,7 @@
     const cb = $('chat-box'); if (cb) { cb.innerHTML = ''; cb._n = undefined; }
     hideWaiting();
     $('btn-resign').disabled = true;
-    lobbyStatus('Chọn cách vào trận.');
+    lobbyStatus('Choose how you want to play.');
     refreshRooms();
   }
 
@@ -317,7 +317,7 @@
     let me = null;
     try { me = window.API && (await window.API.me()); } catch (e) {}
     state.loggedIn = !!(me && me.user);
-    state.name = state.loggedIn ? me.user.username : 'Khách';
+    state.name = state.loggedIn ? me.user.username : 'Guest';
 
     const p = new URLSearchParams(location.search);
     if (p.get('join')) state.auto = { t: 'join', code: String(p.get('join')).toUpperCase() };
@@ -328,8 +328,8 @@
     $('btn-create').addEventListener('click', doCreate);
     $('btn-join').addEventListener('click', () => doJoin($('join-code').value));
     $('btn-refresh').addEventListener('click', refreshRooms);
-    $('btn-cancel').addEventListener('click', () => { stopPoll(); hideWaiting(); state.code = null; state.token = null; lobbyStatus('Đã huỷ. Chọn cách vào trận.'); refreshRooms(); });
-    $('btn-resign').addEventListener('click', () => { if (state.over || !state.game) return; window.API.matchResign(state.code, state.token).catch(() => {}); finish('loss', 'Bạn xin thua'); });
+    $('btn-cancel').addEventListener('click', () => { stopPoll(); hideWaiting(); state.code = null; state.token = null; lobbyStatus('Cancelled. Choose how you want to play.'); refreshRooms(); });
+    $('btn-resign').addEventListener('click', () => { if (state.over || !state.game) return; window.API.matchResign(state.code, state.token).catch(() => {}); finish('loss', 'You resigned'); });
     $('btn-new').addEventListener('click', resetToLobby);
     $('btn-again').addEventListener('click', resetToLobby);
     const cs = $('chat-send'); if (cs) cs.addEventListener('click', sendChat);
@@ -340,12 +340,12 @@
     setInterval(() => { if (!state.started && !state.pollTimer) refreshRooms(); }, 4000);
 
     if (!state.loggedIn) {
-      lobbyStatus('Bạn cần đăng nhập để chơi với người khác.');
+      lobbyStatus('You need to sign in to play against other people.');
       if (state.auto) requireLoginUI(); // đến từ "Vào phòng" mà chưa đăng nhập -> báo ngay
       return;
     }
 
-    lobbyStatus('Chọn cách vào trận.');
+    lobbyStatus('Choose how you want to play.');
     if (state.auto) {
       if (state.auto.t === 'join') doJoin(state.auto.code);
       else if (state.auto.t === 'create') doCreate();

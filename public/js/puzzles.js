@@ -6,7 +6,7 @@
   'use strict';
   const X = window.Xiangqi;
   const $ = (id) => document.getElementById(id);
-  const NAME = { K: 'Tướng', A: 'Sĩ', E: 'Tượng', H: 'Mã', R: 'Xe', C: 'Pháo', P: 'Tốt' };
+  const NAME = { K: 'General', A: 'Advisor', E: 'Elephant', H: 'Horse', R: 'Chariot', C: 'Cannon', P: 'Soldier' };
   const sq = (x, y) => String.fromCharCode(65 + x) + (10 - y);
   const status = (m) => { const e = $('status-msg'); if (e) e.textContent = m; };
 
@@ -31,7 +31,7 @@
   }
 
   function showProgress() {
-    $('progress').textContent = 'Câu ' + (state.idx + 1) + '/' + state.order.length + ' · Đã giải: ' + state.solved;
+    $('progress').textContent = 'Puzzle ' + (state.idx + 1) + '/' + state.order.length + ' · Solved: ' + state.solved;
   }
 
   function loadPuzzle() {
@@ -58,12 +58,12 @@
     state.board.setInteractive(true);
     state.board.render(state.game);
 
-    const sideVN = p.turn === 'r' ? 'Đỏ' : 'Đen';
-    $('side-label').textContent = 'Lượt đi: ' + sideVN;
-    $('turn-label').textContent = sideVN + ' đi — tìm nước hay nhất!';
+    const sideVN = p.turn === 'r' ? 'Red' : 'Black';
+    $('side-label').textContent = sideVN + ' to move';
+    $('turn-label').textContent = sideVN + ' to move — find the best move!';
     $('bar-bottom').querySelector('.dot').className = 'dot ' + (p.turn === 'r' ? 'red' : 'black');
-    status(p.score > 100000 ? '♟ Có đòn CHIẾU HẾT ẩn trong thế cờ này!' : '♟ Tìm nước thắng quân/thắng thế!');
-    $('btn-next').textContent = state.idx + 1 >= state.order.length ? 'Xong' : 'Câu tiếp →';
+    status(p.score > 100000 ? '♟ There is a hidden CHECKMATE in this position!' : '♟ Find the move that wins material or the game!');
+    $('btn-next').textContent = state.idx + 1 >= state.order.length ? 'Done' : 'Next puzzle →';
     showProgress();
   }
 
@@ -80,13 +80,13 @@
       state.board.render(state.game);
       state.solved++;
       showProgress();
-      status('✅ Chính xác! ' + NAME[typeAt(p)] + ' ' + sq(from.x, from.y) + '→' + sq(to.x, to.y) + '. Bấm "Câu tiếp".');
+      status('✅ Correct! ' + NAME[typeAt(p)] + ' ' + sq(from.x, from.y) + '→' + sq(to.x, to.y) + '. Press "Next puzzle".');
     } else {
       state.attempts++;
       state.board.clearSelection();
       state.board.render(state.game);
-      let msg = '❌ Chưa đúng, thử lại!';
-      if (state.attempts >= 3) msg += ' (Bấm 💡 Gợi ý nếu cần)';
+      let msg = '❌ Not quite — try again!';
+      if (state.attempts >= 3) msg += ' (Press 💡 Hint if you are stuck)';
       status(msg);
     }
   }
@@ -100,7 +100,7 @@
     if (!state.cur || state.revealed) return;
     // Gợi ý: chỉ đánh dấu quân cần đi.
     if (state.board.setHint) state.board.setHint({ from: state.cur.sol.from, to: state.cur.sol.from });
-    status('💡 Quân cần đi ở ' + sq(state.cur.sol.from.x, state.cur.sol.from.y) + '.');
+    status('💡 The piece to move is on ' + sq(state.cur.sol.from.x, state.cur.sol.from.y) + '.');
   }
 
   function showSolution() {
@@ -109,7 +109,7 @@
     state.revealed = true;
     if (state.board.setHint) state.board.setHint({ from: p.sol.from, to: p.sol.to });
     state.board.setInteractive(false);
-    status('👁 Đáp án: ' + NAME[typeAt(p)] + ' ' + sq(p.sol.from.x, p.sol.from.y) + '→' + sq(p.sol.to.x, p.sol.to.y));
+    status('👁 Solution: ' + NAME[typeAt(p)] + ' ' + sq(p.sol.from.x, p.sol.from.y) + '→' + sq(p.sol.to.x, p.sol.to.y));
   }
 
   function retry() {
@@ -119,7 +119,7 @@
 
   function next() {
     if (state.idx + 1 >= state.order.length) {
-      status('🎉 Hoàn thành! Bạn giải đúng ' + state.solved + '/' + state.order.length + ' câu.');
+      status('🎉 All done! You solved ' + state.solved + '/' + state.order.length + ' puzzles.');
       return;
     }
     state.idx++;
@@ -148,7 +148,7 @@
       state.list = [];
     }
     if (!state.list.length) {
-      status('Chưa có câu đố nào.');
+      status('No puzzles available.');
       return;
     }
     state.order = shuffle(state.list.length);

@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#0f1620" />
     <link rel="apple-touch-icon" href="images/icon.svg" />
-    <title>Chơi với máy — Đánh Cờ Tướng Online</title>
-    <link rel="stylesheet" href="css/style.css?v=12" />
-    <link rel="stylesheet" href="css/board.css?v=12" />
+    <title>Play vs Computer — Xiangqi Online</title>
+    <link rel="stylesheet" href="css/style.css?v=13" />
+    <link rel="stylesheet" href="css/board.css?v=13" />
       <style>
       /* Critical CSS: menu 2 cấp + nút nổi bật (nhúng để chạy kể cả khi style.css chưa cập nhật) */
       .has-sub{position:relative}
@@ -28,45 +28,46 @@
       <div class="container nav-inner">
         <a class="brand" href="index.html">
           <span class="logo">將</span>
-          <span>Cờ Tướng Online</span>
+          <span>Xiangqi Online</span>
         </a>
         <button class="nav-toggle" aria-label="Menu">☰</button>
         <ul class="nav-menu">
-          <li><a href="index.html">Trang chủ</a></li>
+          <li><a href="index.html">Home</a></li>
           <li class="has-sub">
-            <a href="play.html" class="sub-toggle">Chơi ▾</a>
+            <a href="play.html" class="sub-toggle">Play ▾</a>
             <ul class="sub-menu">
-              <li><a href="play.html">Chơi với máy</a></li>
-              <li><a href="play-up.html">Cờ úp</a></li>
-              <li><a href="puzzles.html">Cờ thế</a></li>
+              <li><a href="play.html">Play vs Computer</a></li>
+              <li><a href="play-up.html">Flip Xiangqi</a></li>
+              <li><a href="puzzles.html">Puzzles</a></li>
             </ul>
           </li>
           <li class="has-sub">
-            <a href="play-online.html" class="sub-toggle">Đấu online ▾</a>
+            <a href="play-online.html" class="sub-toggle">Online ▾</a>
             <ul class="sub-menu">
-              <li><a href="play-online.html">Chơi với người</a></li>
-              <li><a href="rooms.html">Danh sách phòng</a></li>
+              <li><a href="play-online.html">Play vs Human</a></li>
+              <li><a href="rooms.html">Room List</a></li>
             </ul>
           </li>
-          <li><a href="leaderboard.html">Xếp hạng</a></li>
-          <li><a href="profile.html" data-auth="user" style="display: none">Hồ sơ</a></li>
+          <li><a href="leaderboard.html">Leaderboard</a></li>
+          <li><a href="topup.html">Buy Points</a></li>
+          <li><a href="profile.html" data-auth="user" style="display: none">Profile</a></li>
         </ul>
         <div class="nav-actions">
-          <a class="btn btn-ghost" href="login.html" data-auth="guest">Đăng nhập</a>
-          <a class="btn btn-primary" href="register.html" data-auth="guest">Đăng ký</a>
+          <a class="btn btn-ghost" href="login.html" data-auth="guest">Sign in</a>
+          <a class="btn btn-primary" href="register.html" data-auth="guest">Sign up</a>
           <span data-auth="user" style="display: none; font-weight: 700"
-            ><span data-user-name>bạn</span></span
+            ><span data-user-name>there</span></span
           >
           <a class="btn btn-ghost" href="#" data-auth="user" data-action="logout" style="display: none"
-            >Đăng xuất</a
+            >Log out</a
           >
         </div>
       </div>
     </header>
     <!-- BANNER:top (thay ảnh images/banner.svg, đặt link ở href) -->
     <div class="leaderboard-ad">
-      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Quảng cáo">
-        <img src="images/banner.svg?v=12" alt="Quảng cáo" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
+      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Advertisement">
+        <img src="images/banner.svg?v=13" alt="Advertisement" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
       </a>
     </div>
 
@@ -75,7 +76,7 @@
         <!-- Cột bàn cờ -->
         <div class="board-col">
           <div class="player-bar" id="bar-black">
-            <div class="who"><span class="dot black"></span> Máy (Đen) — <span id="ai-level">AI</span></div>
+            <div class="who"><span class="dot black"></span> Computer (Black) — <span id="ai-level">AI</span></div>
             <div class="captured" id="captured-black"></div>
             <div class="clock" id="timer-black">10:00</div>
           </div>
@@ -83,7 +84,7 @@
           <div id="board"></div>
 
           <div class="player-bar active" id="bar-red">
-            <div class="who"><span class="dot red"></span> Bạn (Đỏ)</div>
+            <div class="who"><span class="dot red"></span> You (Red)</div>
             <div class="captured" id="captured-red"></div>
             <div class="clock" id="timer-red">10:00</div>
           </div>
@@ -92,32 +93,32 @@
         <!-- Bảng điều khiển -->
         <aside class="side-panel">
           <div class="panel">
-            <h3>Trạng thái</h3>
-            <div id="status-msg">Chọn mức độ để bắt đầu</div>
+            <h3>Status</h3>
+            <div id="status-msg">Pick a difficulty to start</div>
           </div>
 
           <div class="panel">
-            <h3>Điều khiển</h3>
+            <h3>Controls</h3>
             <div class="controls">
-              <button class="btn btn-ghost" id="btn-hint">💡 Gợi ý</button>
-              <button class="btn btn-ghost" id="btn-undo">↶ Hoàn nước</button>
-              <button class="btn btn-ghost" id="btn-resign">🏳 Xin thua</button>
-              <button class="btn btn-primary" id="btn-new">＋ Ván mới</button>
+              <button class="btn btn-ghost" id="btn-hint">💡 Hint</button>
+              <button class="btn btn-ghost" id="btn-undo">↶ Undo</button>
+              <button class="btn btn-ghost" id="btn-resign">🏳 Resign</button>
+              <button class="btn btn-primary" id="btn-new">＋ New game</button>
             </div>
           </div>
 
           <div class="panel">
-            <h3>Lịch sử nước đi</h3>
+            <h3>Move history</h3>
             <div id="move-list"></div>
           </div>
 
           <!-- Quảng cáo: thay ảnh ở images/ad.svg (hoặc đổi src), đặt link ở href -->
           <div class="panel ad-panel" id="ad-slot">
-            <a href="#" target="_blank" rel="noopener sponsored" aria-label="Quảng cáo">
+            <a href="#" target="_blank" rel="noopener sponsored" aria-label="Advertisement">
               <img
                 class="ad-image"
-                src="images/ad.svg?v=12"
-                alt="Quảng cáo"
+                src="images/ad.svg?v=13"
+                alt="Advertisement"
                 loading="lazy"
                 onerror="var s=document.getElementById('ad-slot'); if(s) s.style.display='none';"
               />
@@ -128,69 +129,69 @@
     </main>
     <!-- BANNER:bottom (thay ảnh images/banner.svg, đặt link ở href) -->
     <div class="leaderboard-ad">
-      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Quảng cáo">
-        <img src="images/banner.svg?v=12" alt="Quảng cáo" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
+      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Advertisement">
+        <img src="images/banner.svg?v=13" alt="Advertisement" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
       </a>
     </div>
 
     <!-- Overlay thiết lập ván -->
     <div class="overlay" id="setup-overlay">
       <div class="modal">
-        <button class="modal-close" id="btn-close-setup" aria-label="Đóng" title="Đóng">×</button>
-        <h2>♟ Thiết lập ván đấu</h2>
+        <button class="modal-close" id="btn-close-setup" aria-label="Close" title="Close">×</button>
+        <h2>♟ Game setup</h2>
         <div class="opt-group">
-          <label>Độ khó của máy</label>
+          <label>Computer difficulty</label>
           <div class="opt-row">
             <input type="radio" name="difficulty" id="d-easy" value="easy" />
-            <label for="d-easy">Dễ</label>
+            <label for="d-easy">Easy</label>
             <input type="radio" name="difficulty" id="d-med" value="medium" checked />
-            <label for="d-med">Trung bình</label>
+            <label for="d-med">Medium</label>
             <input type="radio" name="difficulty" id="d-hard" value="hard" />
-            <label for="d-hard">Khó</label>
+            <label for="d-hard">Hard</label>
             <input type="radio" name="difficulty" id="d-expert" value="expert" />
-            <label for="d-expert">Rất khó</label>
+            <label for="d-expert">Expert</label>
             <input type="radio" name="difficulty" id="d-master" value="master" />
-            <label for="d-master">Cao thủ</label>
+            <label for="d-master">Master</label>
           </div>
         </div>
         <div class="opt-group">
-          <label>Thời gian mỗi bên</label>
+          <label>Time per side</label>
           <div class="opt-row">
             <input type="radio" name="time" id="t-5" value="5" />
-            <label for="t-5">5 phút</label>
+            <label for="t-5">5 min</label>
             <input type="radio" name="time" id="t-10" value="10" checked />
-            <label for="t-10">10 phút</label>
+            <label for="t-10">10 min</label>
             <input type="radio" name="time" id="t-15" value="15" />
-            <label for="t-15">15 phút</label>
+            <label for="t-15">15 min</label>
           </div>
         </div>
-        <button class="btn btn-primary btn-block btn-lg" id="btn-start">Bắt đầu</button>
+        <button class="btn btn-primary btn-block btn-lg" id="btn-start">Start</button>
       </div>
     </div>
 
     <!-- Modal kết quả -->
     <div class="overlay hidden" id="result-modal">
       <div class="modal center">
-        <button class="modal-close" aria-label="Đóng" title="Đóng">×</button>
-        <h2 id="result-title">Kết thúc</h2>
+        <button class="modal-close" aria-label="Close" title="Close">×</button>
+        <h2 id="result-title">Game over</h2>
         <p class="text-muted" id="result-reason"></p>
         <div class="controls" style="margin-top: 18px">
-          <button class="btn btn-accent" id="btn-analyze">🔍 Phân tích ván</button>
-          <button class="btn btn-ghost" id="btn-again">Chơi lại</button>
-          <a class="btn btn-primary" href="index.html">Về trang chủ</a>
+          <button class="btn btn-accent" id="btn-analyze">🔍 Analyse game</button>
+          <button class="btn btn-ghost" id="btn-again">Play again</button>
+          <a class="btn btn-primary" href="index.html">Back to home</a>
         </div>
       </div>
     </div>
 
-    <script src="js/engine/xiangqi.js?v=12"></script>
-    <script src="js/board.js?v=12"></script>
-    <script src="js/api.js?v=12"></script>
-    <script src="js/play.js?v=12"></script>
-    <script src="js/ui.js?v=12"></script>
+    <script src="js/engine/xiangqi.js?v=13"></script>
+    <script src="js/board.js?v=13"></script>
+    <script src="js/api.js?v=13"></script>
+    <script src="js/play.js?v=13"></script>
+    <script src="js/ui.js?v=13"></script>
     <script>
       // hiển thị nhãn độ khó trên thanh người chơi
       (function () {
-        const map = { easy: 'Dễ', medium: 'Trung bình', hard: 'Khó', expert: 'Rất khó', master: 'Cao thủ' };
+        const map = { easy: 'Easy', medium: 'Medium', hard: 'Hard', expert: 'Expert', master: 'Master' };
         document.querySelectorAll('input[name="difficulty"]').forEach((r) =>
           r.addEventListener('change', () => {
             document.getElementById('ai-level').textContent = map[r.value] || 'AI';

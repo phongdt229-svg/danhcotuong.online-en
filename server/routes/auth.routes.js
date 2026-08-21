@@ -21,7 +21,7 @@ function rateLimit(req, res, next) {
   } else {
     rec.count += 1;
     if (rec.count > RL_MAX) {
-      return res.status(429).json({ error: 'Quá nhiều lần thử. Vui lòng đợi vài phút rồi thử lại.' });
+      return res.status(429).json({ error: 'Too many attempts. Please wait a few minutes and try again.' });
     }
   }
   if (attempts.size > 5000) {
@@ -37,21 +37,21 @@ router.post('/register', rateLimit, async (req, res) => {
     const password = req.body.password || '';
 
     if (!USERNAME_RE.test(username))
-      return res.status(400).json({ error: 'Tên đăng nhập 3-50 ký tự (chữ, số, _ .)' });
-    if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'Email không hợp lệ' });
-    if (password.length < 6) return res.status(400).json({ error: 'Mật khẩu tối thiểu 6 ký tự' });
+      return res.status(400).json({ error: 'Username must be 3-50 characters (letters, digits, _ and .)' });
+    if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'Invalid email address' });
+    if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
 
     if (await userService.findByUsername(username))
-      return res.status(409).json({ error: 'Tên đăng nhập đã tồn tại' });
+      return res.status(409).json({ error: 'That username is already taken' });
     if (await userService.emailExists(email))
-      return res.status(409).json({ error: 'Email đã được sử dụng' });
+      return res.status(409).json({ error: 'That email is already in use' });
 
     const user = await userService.createUser({ username, email, password });
     req.session.userId = user.id;
     res.status(201).json({ user });
   } catch (err) {
     console.error('register error:', err.message);
-    res.status(500).json({ error: 'Lỗi máy chủ khi đăng ký' });
+    res.status(500).json({ error: 'Server error while signing up' });
   }
 });
 
@@ -60,12 +60,12 @@ router.post('/login', rateLimit, async (req, res) => {
     const username = (req.body.username || '').trim();
     const password = req.body.password || '';
     const user = await userService.verifyCredentials(username, password);
-    if (!user) return res.status(401).json({ error: 'Sai tên đăng nhập hoặc mật khẩu' });
+    if (!user) return res.status(401).json({ error: 'Wrong username or password' });
     req.session.userId = user.id;
     res.json({ user });
   } catch (err) {
     console.error('login error:', err.message);
-    res.status(500).json({ error: 'Lỗi máy chủ khi đăng nhập' });
+    res.status(500).json({ error: 'Server error while signing in' });
   }
 });
 

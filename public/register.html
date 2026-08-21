@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#0f1620" />
     <link rel="apple-touch-icon" href="images/icon.svg" />
-    <title>Đăng ký — Đánh Cờ Tướng Online</title>
-    <link rel="stylesheet" href="css/style.css?v=12" />
+    <title>Sign up — Xiangqi Online</title>
+    <link rel="stylesheet" href="css/style.css?v=13" />
       <style>
       /* Critical CSS: menu 2 cấp + nút nổi bật (nhúng để chạy kể cả khi style.css chưa cập nhật) */
       .has-sub{position:relative}
@@ -25,48 +25,49 @@
   <body>
     <header class="navbar">
       <div class="container nav-inner">
-        <a class="brand" href="index.html"><span class="logo">將</span><span>Cờ Tướng Online</span></a>
+        <a class="brand" href="index.html"><span class="logo">將</span><span>Xiangqi Online</span></a>
         <button class="nav-toggle" aria-label="Menu">☰</button>
         <ul class="nav-menu">
-          <li><a href="index.html">Trang chủ</a></li>
+          <li><a href="index.html">Home</a></li>
           <li class="has-sub">
-            <a href="play.html" class="sub-toggle">Chơi ▾</a>
+            <a href="play.html" class="sub-toggle">Play ▾</a>
             <ul class="sub-menu">
-              <li><a href="play.html">Chơi với máy</a></li>
-              <li><a href="play-up.html">Cờ úp</a></li>
-              <li><a href="puzzles.html">Cờ thế</a></li>
+              <li><a href="play.html">Play vs Computer</a></li>
+              <li><a href="play-up.html">Flip Xiangqi</a></li>
+              <li><a href="puzzles.html">Puzzles</a></li>
             </ul>
           </li>
           <li class="has-sub">
-            <a href="play-online.html" class="sub-toggle">Đấu online ▾</a>
+            <a href="play-online.html" class="sub-toggle">Online ▾</a>
             <ul class="sub-menu">
-              <li><a href="play-online.html">Chơi với người</a></li>
-              <li><a href="rooms.html">Danh sách phòng</a></li>
+              <li><a href="play-online.html">Play vs Human</a></li>
+              <li><a href="rooms.html">Room List</a></li>
             </ul>
           </li>
-          <li><a href="leaderboard.html">Xếp hạng</a></li>
-          <li><a href="profile.html" data-auth="user" style="display: none">Hồ sơ</a></li>
+          <li><a href="leaderboard.html">Leaderboard</a></li>
+          <li><a href="topup.html">Buy Points</a></li>
+          <li><a href="profile.html" data-auth="user" style="display: none">Profile</a></li>
         </ul>
         <div class="nav-actions">
-          <a class="btn btn-ghost" href="login.html">Đăng nhập</a>
+          <a class="btn btn-ghost" href="login.html">Sign in</a>
         </div>
       </div>
     </header>
     <!-- BANNER:top (thay ảnh images/banner.svg, đặt link ở href) -->
     <div class="leaderboard-ad">
-      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Quảng cáo">
-        <img src="images/banner.svg?v=12" alt="Quảng cáo" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
+      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Advertisement">
+        <img src="images/banner.svg?v=13" alt="Advertisement" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
       </a>
     </div>
 
     <main class="container">
       <div class="auth-wrap card">
-        <h1>Tạo tài khoản</h1>
-        <p class="center text-muted" style="margin-top: 0">Lưu kết quả và theo dõi tiến bộ của bạn.</p>
+        <h1>Create an account</h1>
+        <p class="center text-muted" style="margin-top: 0">Save your results and track your progress.</p>
         <form id="register-form">
           <div class="form-msg" id="msg"></div>
           <div class="form-group">
-            <label for="username">Tên đăng nhập</label>
+            <label for="username">Username</label>
             <input class="input" type="text" id="username" required minlength="3" autocomplete="username" />
           </div>
           <div class="form-group">
@@ -74,17 +75,17 @@
             <input class="input" type="email" id="email" required autocomplete="email" />
           </div>
           <div class="form-group">
-            <label for="password">Mật khẩu (tối thiểu 6 ký tự)</label>
+            <label for="password">Password (at least 6 characters)</label>
             <input class="input" type="password" id="password" required minlength="6" autocomplete="new-password" />
           </div>
-          <button class="btn btn-primary btn-block btn-lg" type="submit">Đăng ký</button>
+          <button class="btn btn-primary btn-block btn-lg" type="submit">Sign up</button>
         </form>
-        <div class="form-foot">Đã có tài khoản? <a href="login.html">Đăng nhập</a></div>
+        <div class="form-foot">Already have an account? <a href="login.html">Sign in</a></div>
       </div>
     </main>
 
-    <script src="js/api.js?v=12"></script>
-    <script src="js/ui.js?v=12"></script>
+    <script src="js/api.js?v=13"></script>
+    <script src="js/ui.js?v=13"></script>
     <script>
       document.getElementById('register-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -100,7 +101,7 @@
           location.href = 'profile.html';
         } catch (err) {
           msg.className = 'form-msg error';
-          msg.textContent = err.message || 'Đăng ký thất bại';
+          msg.textContent = err.message || 'Sign-up failed';
         }
       });
     </script>

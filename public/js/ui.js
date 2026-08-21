@@ -18,7 +18,7 @@
     const isLight = () => document.documentElement.getAttribute('data-theme') === 'light';
     const paint = () => {
       btn.textContent = isLight() ? '🌙' : '☀️';
-      btn.title = isLight() ? 'Chuyển giao diện Tối' : 'Chuyển giao diện Sáng';
+      btn.title = isLight() ? 'Switch to dark theme' : 'Switch to light theme';
     };
     paint();
     btn.addEventListener('click', () => {

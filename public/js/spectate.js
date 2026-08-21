@@ -7,7 +7,7 @@
   'use strict';
   const X = window.Xiangqi;
   const $ = (id) => document.getElementById(id);
-  const NAME = { K: 'Tướng', A: 'Sĩ', E: 'Tượng', H: 'Mã', R: 'Xe', C: 'Pháo', P: 'Tốt' };
+  const NAME = { K: 'General', A: 'Advisor', E: 'Elephant', H: 'Horse', R: 'Chariot', C: 'Cannon', P: 'Soldier' };
 
   let ws = null;
   let game = null;
@@ -66,11 +66,11 @@
     if (st.over) {
       over = true;
       updateTurnBars();
-      status('Ván kết thúc: ' + (st.reason === 'checkmate' ? 'Chiếu hết.' : 'Hết nước đi.'));
+      status('Game over: ' + (st.reason === 'checkmate' ? 'Checkmate.' : 'Stalemate.'));
     } else if (st.check) {
-      status((game.turn === 'r' ? 'Đỏ' : 'Đen') + ' đang bị chiếu!');
+      status((game.turn === 'r' ? 'Red' : 'Black') + ' is in check!');
     } else {
-      status('Đang xem: tới lượt ' + (game.turn === 'r' ? 'Đỏ' : 'Đen') + '.');
+      status('Watching: ' + (game.turn === 'r' ? 'Red' : 'Black') + ' to move.');
     }
   }
 
@@ -78,14 +78,14 @@
     switch (msg.type) {
       case 'spectate-start': {
         over = false;
-        $('name-red').textContent = (msg.red || 'Đỏ') + ' (Đỏ)';
-        $('name-black').textContent = (msg.black || 'Đen') + ' (Đen)';
+        $('name-red').textContent = (msg.red || 'Red') + ' (Red)';
+        $('name-black').textContent = (msg.black || 'Black') + ' (Black)';
         game = new X.Game();
         const ms = msg.moves || [];
         for (const m of ms) { if (!game.move(m.from, m.to)) break; }
         const last = ms.length ? ms[ms.length - 1] : null;
         renderAll(last);
-        status('Đang xem trực tiếp — tới lượt ' + (game.turn === 'r' ? 'Đỏ' : 'Đen') + '.');
+        status('Watching live — ' + (game.turn === 'r' ? 'Red' : 'Black') + ' to move.');
         break;
       }
       case 'move':
@@ -95,10 +95,10 @@
         over = true;
         updateTurnBars();
         $('live-dot').style.display = 'none';
-        status('🏁 ' + (msg.text || 'Trận đã kết thúc.'));
+        status('🏁 ' + (msg.text || 'The game has ended.'));
         break;
       case 'error':
-        status('⚠ ' + (msg.message || 'Không xem được trận này.'));
+        status('⚠ ' + (msg.message || 'This game cannot be watched.'));
         $('live-dot').style.display = 'none';
         break;
     }
@@ -106,16 +106,16 @@
 
   function init() {
     const code = (new URLSearchParams(location.search).get('code') || '').toUpperCase().trim();
-    if (!code) { status('Thiếu mã trận đấu.'); return; }
+    if (!code) { status('Missing game code.'); return; }
     const proto = location.protocol === 'https:' ? 'wss' : 'ws';
     ws = new WebSocket(proto + '://' + location.host + '/ws');
     ws.onopen = () => {
-      ws.send(JSON.stringify({ type: 'hello', name: 'Khán giả' }));
+      ws.send(JSON.stringify({ type: 'hello', name: 'Spectator' }));
       ws.send(JSON.stringify({ type: 'spectate', code }));
-      status('Đang vào xem trận ' + code + '…');
+      status('Joining game ' + code + '…');
     };
-    ws.onclose = () => { $('live-dot').style.display = 'none'; if (!over) status('Mất kết nối máy chủ.'); };
-    ws.onerror = () => status('Lỗi kết nối máy chủ.');
+    ws.onclose = () => { $('live-dot').style.display = 'none'; if (!over) status('Lost connection to the server.'); };
+    ws.onerror = () => status('Could not reach the server.');
     ws.onmessage = (ev) => { let m; try { m = JSON.parse(ev.data); } catch (e) { return; } handle(m); };
   }
 
