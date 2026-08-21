@@ -6,7 +6,7 @@
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#0f1620" />
     <link rel="apple-touch-icon" href="images/icon.svg" />
-    <title>Buy Points — Xiangqi Online</title>
+    <title>Buy Points — Chinesechess Online</title>
     <link rel="stylesheet" href="css/style.css?v=13" />
     <style>
       /* Critical CSS: menu 2 cấp + nút nổi bật (nhúng để chạy kể cả khi style.css chưa cập nhật) */
@@ -45,7 +45,7 @@
   <body>
     <header class="navbar">
       <div class="container nav-inner">
-        <a class="brand" href="index.html"><span class="logo">將</span><span>Xiangqi Online</span></a>
+        <a class="brand" href="index.html"><span class="logo">將</span><span>Chinesechess Online</span></a>
         <button class="nav-toggle" aria-label="Menu">☰</button>
         <ul class="nav-menu">
           <li><a href="index.html">Home</a></li>
@@ -65,7 +65,13 @@
             </ul>
           </li>
           <li><a href="leaderboard.html">Leaderboard</a></li>
-          <li><a href="topup.html">Buy Points</a></li>
+          <li class="has-sub">
+            <a href="topup.html" class="sub-toggle">Points ▾</a>
+            <ul class="sub-menu">
+              <li><a href="topup.html">Buy Points</a></li>
+              <li><a href="history.html">Points History</a></li>
+            </ul>
+          </li>
           <li><a href="profile.html" data-auth="user" style="display: none">Profile</a></li>
         </ul>
         <div class="nav-actions">

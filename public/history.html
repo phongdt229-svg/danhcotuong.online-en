@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#0f1620" />
+    <link rel="apple-touch-icon" href="images/icon.svg" />
+    <title>Points History — Chinesechess Online</title>
+    <link rel="stylesheet" href="css/style.css?v=13" />
+    <style>
+      /* Critical CSS: menu 2 cấp + nút nổi bật (nhúng để chạy kể cả khi style.css chưa cập nhật) */
+      .has-sub{position:relative}
+      .sub-menu{display:none;position:absolute;top:100%;left:0;min-width:190px;list-style:none;margin:0;padding:6px;padding-top:10px;background:var(--c-card,#1c2836);border:1px solid var(--c-border,#2a3a4d);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:50}
+      .has-sub:hover>.sub-menu,.has-sub.open>.sub-menu{display:block}
+      .sub-menu li{display:block}
+      .sub-menu a{display:block;white-space:nowrap}
+      .nav-menu a{white-space:nowrap}
+      @media(max-width:980px){.nav-menu{display:none;position:absolute;top:64px;left:0;right:0;flex-direction:column;align-items:stretch;background:var(--c-bg-soft,#16202d);border-bottom:1px solid var(--c-border,#2a3a4d);padding:10px;gap:2px}.nav-menu.open{display:flex}.sub-menu{position:static;display:block;min-width:0;padding:0 0 0 16px;margin:2px 0;background:transparent;border:none;box-shadow:none}.nav-toggle{display:inline-block}}
+
+      /* Lịch sử điểm */
+      .balance-num{font-size:2.6rem;font-weight:800;line-height:1;color:var(--c-accent,#f0b429)}
+      .sum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:4px}
+      .sum-tile{padding:14px;border-radius:11px;background:var(--c-bg-soft,#16202d);border:1px solid var(--c-border,#2a3a4d)}
+      .sum-tile .num{font-size:1.45rem;font-weight:800;line-height:1.2}
+      .sum-tile .lbl{font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;opacity:.7;margin-top:4px}
+      .up{color:#34d399}
+      .down{color:#f87171}
+      .filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+      .filter-btn{padding:6px 14px;border-radius:999px;cursor:pointer;font:inherit;font-size:.83rem;font-weight:600;
+        background:var(--c-bg-soft,#16202d);border:1px solid var(--c-border,#2a3a4d);color:inherit}
+      .filter-btn.selected{border-color:var(--c-accent,#f0b429);color:var(--c-accent,#f0b429)}
+      table.ledger{width:100%;border-collapse:collapse}
+      table.ledger th{text-align:left;font-size:.74rem;text-transform:uppercase;letter-spacing:.05em;
+        opacity:.65;padding:8px 10px;border-bottom:1px solid var(--c-border,#2a3a4d)}
+      table.ledger td{padding:11px 10px;border-bottom:1px solid var(--c-border,#2a3a4d);vertical-align:top}
+      .ledger-when{white-space:nowrap;font-size:.83rem;opacity:.75}
+      .ledger-icon{display:inline-block;width:1.6em}
+      .ledger-note{display:block;font-size:.78rem;opacity:.6;margin-top:2px;margin-left:1.6em}
+      .ledger-delta{text-align:right;font-weight:800;white-space:nowrap}
+      .ledger-balance{text-align:right;white-space:nowrap;opacity:.8}
+      .table-wrap{overflow-x:auto}
+      #btn-more{display:block;margin:16px auto 0}
+    </style>
+  </head>
+  <body>
+    <header class="navbar">
+      <div class="container nav-inner">
+        <a class="brand" href="index.html"><span class="logo">將</span><span>Chinesechess Online</span></a>
+        <button class="nav-toggle" aria-label="Menu">☰</button>
+        <ul class="nav-menu">
+          <li><a href="index.html">Home</a></li>
+          <li class="has-sub">
+            <a href="play.html" class="sub-toggle">Play ▾</a>
+            <ul class="sub-menu">
+              <li><a href="play.html">Play vs Computer</a></li>
+              <li><a href="play-up.html">Flip Xiangqi</a></li>
+              <li><a href="puzzles.html">Puzzles</a></li>
+            </ul>
+          </li>
+          <li class="has-sub">
+            <a href="play-online.html" class="sub-toggle">Online ▾</a>
+            <ul class="sub-menu">
+              <li><a href="play-online.html">Play vs Human</a></li>
+              <li><a href="rooms.html">Room List</a></li>
+            </ul>
+          </li>
+          <li><a href="leaderboard.html">Leaderboard</a></li>
+          <li class="has-sub">
+            <a href="topup.html" class="sub-toggle">Points ▾</a>
+            <ul class="sub-menu">
+              <li><a href="topup.html">Buy Points</a></li>
+              <li><a href="history.html">Points History</a></li>
+            </ul>
+          </li>
+          <li><a href="profile.html" data-auth="user" style="display: none">Profile</a></li>
+        </ul>
+        <div class="nav-actions">
+          <span style="font-weight: 700">Hi, <span data-user-name>there</span></span>
+          <a class="btn btn-ghost" href="#" data-action="logout">Log out</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="container" style="padding: 28px 20px 60px">
+      <div id="guard" class="card center" style="display: none">
+        <h2>You are not signed in</h2>
+        <p class="text-muted">Please sign in to view your points history.</p>
+        <a class="btn btn-primary" href="login.html">Sign in</a>
+      </div>
+
+      <div id="content" style="display: none">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px">
+          <h1 style="margin: 0">Points History</h1>
+          <a class="btn btn-primary" href="topup.html">＋ Buy points</a>
+        </div>
+
+        <div class="card" style="margin: 18px 0 22px">
+          <h3 style="margin-top: 0; color: var(--c-muted)">Current balance</h3>
+          <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 16px">
+            <span class="balance-num" id="balance">0</span>
+            <span class="text-muted">points</span>
+          </div>
+          <div class="sum-grid">
+            <div class="sum-tile"><div class="num up" id="sum-topup">0</div><div class="lbl">Bought</div></div>
+            <div class="sum-tile"><div class="num down" id="sum-staked">0</div><div class="lbl">Staked</div></div>
+            <div class="sum-tile"><div class="num up" id="sum-won">0</div><div class="lbl">Won back</div></div>
+            <div class="sum-tile"><div class="num" id="sum-net">0</div><div class="lbl">Net from games</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="filters">
+            <button class="filter-btn selected" data-kind="">All</button>
+            <button class="filter-btn" data-kind="topup">💳 Top-ups</button>
+            <button class="filter-btn" data-kind="stake_hold">🎲 Stakes placed</button>
+            <button class="filter-btn" data-kind="stake_win">🏆 Wins</button>
+            <button class="filter-btn" data-kind="stake_refund">↩️ Refunds</button>
+          </div>
+          <div class="table-wrap">
+            <table class="ledger">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Activity</th>
+                  <th style="text-align: right">Change</th>
+                  <th style="text-align: right">Balance</th>
+                </tr>
+              </thead>
+              <tbody id="ledger-body">
+                <tr><td colspan="4" class="text-muted">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <button class="btn btn-ghost" id="btn-more" style="display: none">Load more</button>
+        </div>
+      </div>
+    </main>
+
+    <script src="js/api.js?v=13"></script>
+    <script src="js/ui.js?v=13"></script>
+    <script src="js/history.js?v=13"></script>
+  </body>
+</html>

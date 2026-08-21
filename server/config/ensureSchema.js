@@ -80,6 +80,27 @@ const STAKE_MATCHES = `CREATE TABLE IF NOT EXISTS stake_matches (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`;
 
 /*
+ * Sổ cái điểm — ghi TỪNG biến động điểm của mỗi người.
+ *
+ * Mỗi dòng được ghi trong CÙNG transaction với lệnh đổi users.points, nên
+ * tổng các delta luôn khớp số dư hiện tại. `balance_after` lưu số dư ngay sau
+ * biến động để tra cứu lịch sử không cần cộng dồn lại.
+ */
+const POINT_LEDGER = `CREATE TABLE IF NOT EXISTS point_ledger (
+  id            INT AUTO_INCREMENT PRIMARY KEY,
+  user_id       INT         NOT NULL,
+  delta         INT         NOT NULL,
+  balance_after INT         NOT NULL,
+  kind          ENUM('topup','stake_hold','stake_win','stake_refund','house_fee','adjust') NOT NULL,
+  ref_type      VARCHAR(20) NULL,
+  ref_id        INT         NULL,
+  note          VARCHAR(190) NULL,
+  created_at    DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_ledger_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_ledger_user (user_id, id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`;
+
+/*
  * Thêm cột vào bảng đã tồn tại từ trước.
  * Không dùng "ADD COLUMN IF NOT EXISTS" vì đó là cú pháp riêng của MariaDB —
  * hỏi information_schema để chạy được trên cả MySQL khi deploy cloud.
@@ -101,4 +122,5 @@ module.exports = async function ensureSchema() {
   await pool.query(POINT_TRANSACTIONS);
   await pool.query(STAKE_MATCHES);
   await addColumnIfMissing('users', 'points', 'INT NOT NULL DEFAULT 0 AFTER draws');
+  await pool.query(POINT_LEDGER); // sau users vì có khoá ngoại tới users
 };

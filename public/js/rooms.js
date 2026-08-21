@@ -56,7 +56,9 @@
       row.className = 'room-item';
       const info = document.createElement('span');
       info.className = 'room-info';
-      info.innerHTML = '<b>' + escapeHtml(r.host) + '</b><span class="room-code-sm">#' + escapeHtml(r.code) + '</span>';
+      info.innerHTML =
+        '<b>' + escapeHtml(r.host) + '</b><span class="room-code-sm">#' + escapeHtml(r.code) + '</span>' +
+        '<span class="room-code-sm">💰 ' + Number(r.stake || 0).toLocaleString('en-US') + ' pts</span>';
       const btn = document.createElement('button');
       btn.className = 'btn btn-primary';
       btn.textContent = 'Join';

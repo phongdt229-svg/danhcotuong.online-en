@@ -55,6 +55,14 @@
     payConfig: () => req('GET', '/api/payments/config'),
     pointsBalance: () => req('GET', '/api/payments/balance'),
     payHistory: () => req('GET', '/api/payments/history'),
+    pointsLedger: (opts) => {
+      const o = opts || {};
+      const q = [];
+      if (o.limit) q.push('limit=' + encodeURIComponent(o.limit));
+      if (o.before) q.push('before=' + encodeURIComponent(o.before));
+      if (o.kind) q.push('kind=' + encodeURIComponent(o.kind));
+      return req('GET', '/api/payments/ledger' + (q.length ? '?' + q.join('&') : ''));
+    },
     payCreateOrder: (amount) => req('POST', '/api/payments/paypal/order', { amount }),
     payCapture: (orderId) => req('POST', '/api/payments/paypal/capture', { orderId }),
 

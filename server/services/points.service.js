@@ -9,6 +9,7 @@
  */
 const pool = require('../config/db');
 const paypal = require('./paypal.service');
+const ledger = require('./ledger.service');
 
 // 1 USD = 10 điểm (đổi được qua .env nếu sau này thay tỉ giá).
 const POINTS_PER_USD = Math.max(1, Number(process.env.POINTS_PER_USD) || 10);
@@ -66,7 +67,7 @@ async function createTopUp(userId, amountUsd) {
   const order = await paypal.createOrder({
     amountUsd: amount,
     referenceId: `user-${userId}`,
-    description: `${points} points — Xiangqi Online`,
+    description: `${points} points — Chinesechess Online`,
   });
 
   await pool.query(
@@ -167,6 +168,16 @@ async function creditAtomically({ txId, userId, captureId, paidValue, creditPoin
       [captureId, paidValue.toFixed(2), creditPoints, txId]
     );
     await conn.query('UPDATE users SET points = points + ? WHERE id = ?', [creditPoints, userId]);
+
+    // Ghi sổ cái trong cùng transaction để lịch sử luôn khớp số dư.
+    await ledger.record(conn, {
+      userId,
+      delta: creditPoints,
+      kind: 'topup',
+      refType: 'paypal',
+      refId: txId,
+      note: `PayPal $${paidValue.toFixed(2)}`,
+    });
 
     const [balRows] = await conn.query('SELECT points FROM users WHERE id = ? LIMIT 1', [userId]);
     await conn.commit();

@@ -1,36 +1,60 @@
-# docker-compose.yml — chay app Node + MySQL cung luc bang Docker.
-# Dung:  docker compose up -d --build
-# App se chay o cong 3000; tu tao bang khi khoi dong.
+# docker-compose.yml — chạy app Node + MySQL cùng lúc bằng Docker.
+#
+# Dùng:
+#   1. cp .env.docker.example .env.docker   (rồi điền giá trị thật vào .env.docker)
+#   2. docker compose --env-file .env.docker up -d --build
+#
+# KHÔNG đặt secret trực tiếp trong file này — file này nằm trong git.
+# Mọi giá trị nhạy cảm đọc từ .env.docker (đã bị .gitignore bỏ qua).
 services:
   app:
     build: .
     restart: unless-stopped
     ports:
-      - "3000:3000"          # domain se reverse-proxy vao cong nay
+      # Chỉ mở trên loopback — Nginx ở ngoài proxy vào. Không phơi cổng ra Internet.
+      - "127.0.0.1:3000:3000"
     environment:
       NODE_ENV: production
       PORT: "3000"
       DB_HOST: db
       DB_PORT: "3306"
-      DB_USER: danhcotuong
-      DB_PASSWORD: DOI_MAT_KHAU_DB     # <-- doi mat khau (khop voi db ben duoi)
-      DB_NAME: danhcotuong
-      SESSION_SECRET: "dc2e895b6b44fabcd6be183920908ffc4d725ba1e180c1ed18d7fa61a436c31ed4d91eb92ab1ece3aa22992811a221f7"
-      COOKIE_SECURE: "false"           # co HTTPS roi thi doi 'true'
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      SESSION_SECRET: ${SESSION_SECRET}
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+
+      # Nạp điểm qua PayPal
+      PAYPAL_MODE: ${PAYPAL_MODE:-sandbox}
+      PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID}
+      PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET}
+      POINTS_PER_USD: ${POINTS_PER_USD:-10}
+
+      # Cược điểm khi đấu với người
+      STAKE_MIN: ${STAKE_MIN:-150}
+      STAKE_WINNER_PERCENT: ${STAKE_WINNER_PERCENT:-80}
+      ADMIN_USER_ID: ${ADMIN_USER_ID:-}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   db:
     image: mysql:8.0
     restart: unless-stopped
     command: --default-authentication-plugin=mysql_native_password
     environment:
-      MYSQL_DATABASE: danhcotuong
-      MYSQL_USER: danhcotuong
-      MYSQL_PASSWORD: DOI_MAT_KHAU_DB        # <-- giong DB_PASSWORD o tren
-      MYSQL_ROOT_PASSWORD: DOI_MAT_KHAU_ROOT # <-- mat khau root MySQL
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
     volumes:
       - dbdata:/var/lib/mysql
+    # App chỉ khởi động sau khi MySQL thật sự nhận kết nối.
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
 
 volumes:
   dbdata:

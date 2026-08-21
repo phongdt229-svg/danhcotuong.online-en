@@ -11,6 +11,7 @@
  * và mỗi ván chỉ được chia đúng một lần (chốt bằng cột `status`).
  */
 const pool = require('./../config/db');
+const ledger = require('./ledger.service');
 
 // Cược tối thiểu và tỉ lệ ăn chia — chỉnh được qua .env.
 const MIN_STAKE = Math.max(1, Number(process.env.STAKE_MIN) || 150);
@@ -82,6 +83,14 @@ async function openMatch({ code, stake, redUserId, blackUserId }) {
       [String(code).slice(0, 12), stake, stake * 2, redUserId, blackUserId]
     );
 
+    await ledger.recordMany(conn, [redUserId, blackUserId], {
+      delta: -stake,
+      kind: 'stake_hold',
+      refType: 'match',
+      refId: res.insertId,
+      note: `Stake for game ${code}`,
+    });
+
     await conn.commit();
     return { matchId: res.insertId, stake, pot: stake * 2 };
   } catch (err) {
@@ -124,8 +133,25 @@ async function settle(matchId, outcome, winnerUserId) {
       housePoints = split.housePoints;
 
       await conn.query('UPDATE users SET points = points + ? WHERE id = ?', [winnerPoints, winnerUserId]);
+      await ledger.record(conn, {
+        userId: winnerUserId,
+        delta: winnerPoints,
+        kind: 'stake_win',
+        refType: 'match',
+        refId: matchId,
+        note: `Won game ${m.code} (pot ${m.pot})`,
+      });
+
       if (ADMIN_USER_ID && housePoints > 0) {
         await conn.query('UPDATE users SET points = points + ? WHERE id = ?', [housePoints, ADMIN_USER_ID]);
+        await ledger.record(conn, {
+          userId: ADMIN_USER_ID,
+          delta: housePoints,
+          kind: 'house_fee',
+          refType: 'match',
+          refId: matchId,
+          note: `House fee from game ${m.code}`,
+        });
       }
       await conn.query(
         `UPDATE stake_matches
@@ -141,6 +167,13 @@ async function settle(matchId, outcome, winnerUserId) {
         m.red_user_id,
         m.black_user_id,
       ]);
+      await ledger.recordMany(conn, [m.red_user_id, m.black_user_id], {
+        delta: m.stake,
+        kind: 'stake_refund',
+        refType: 'match',
+        refId: matchId,
+        note: outcome === 'draw' ? `Draw in game ${m.code}` : `Game ${m.code} could not be played`,
+      });
       await conn.query(
         `UPDATE stake_matches
             SET status = 'refunded', outcome = ?, settled_at = NOW()

@@ -1,19 +1,27 @@
 /*
- * play-online.js — Đấu Cờ Tướng NGƯỜI với NGƯỜI bằng POLLING (bản PHP, không WebSocket).
- * Cứ ~1.5s hỏi server lấy nước đi mới của đối thủ. Tái dùng xiangqi.js + board.js.
+ * play-online.js — Đấu Cờ Tướng NGƯỜI với NGƯỜI qua WebSocket (/ws).
+ *
+ * Trước đây file này gọi REST /api/match/* của bản PHP — server Node không có
+ * các route đó nên trang bị hỏng. Nay dùng thẳng backend WebSocket (server/realtime/match.js),
+ * vốn tự kiểm tra luật cờ nên chống gian lận tốt hơn, và có sẵn phần cược điểm.
+ *
+ * Mọi trận với người đều CÓ CƯỢC: hai bên bị trừ tiền cược khi ván bắt đầu,
+ * người thắng nhận phần lớn tổng cược, hòa thì hoàn lại. Server quyết định
+ * toàn bộ việc cộng/trừ — trang này chỉ hiển thị.
  */
 (function () {
   'use strict';
   const X = window.Xiangqi;
   const $ = (id) => document.getElementById(id);
-  const POLL_MS = 1500;
 
   const state = {
-    code: null, token: null, myColor: null,
+    ws: null, code: null, myColor: null,
     game: null, board: null, started: false, over: false,
-    applied: 0, // số nước đã áp dụng (mình + đối thủ)
-    pollTimer: null, name: 'Guest', startTs: null, auto: null, loggedIn: false,
+    name: 'Guest', startTs: null, auto: null, loggedIn: false,
+    balance: 0, minStake: 150, winnerPercent: 80, housePercent: 20,
+    stake: 0, pot: 0,
     capturedByRed: [], capturedByBlack: [],
+    reconnectTimer: null,
   };
 
   const GLYPH = {
@@ -32,6 +40,120 @@
   const status = (m) => { const e = $('status-msg'); if (e) e.textContent = m; };
   const lobbyStatus = (m) => { const e = $('lobby-status'); if (e) e.textContent = m; };
   function escapeHtml(s) { return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+  const fmtPts = (n) => Number(n || 0).toLocaleString('en-US');
+
+  /* ---------------- Kết nối ---------------- */
+  function wsSend(obj) {
+    if (state.ws && state.ws.readyState === WebSocket.OPEN) state.ws.send(JSON.stringify(obj));
+  }
+
+  function connect() {
+    const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+    const ws = new WebSocket(proto + '://' + location.host + '/ws');
+    state.ws = ws;
+
+    ws.onopen = () => { lobbyStatus('Connected. Choose how you want to play.'); wsSend({ type: 'list' }); };
+    ws.onmessage = (ev) => { let m; try { m = JSON.parse(ev.data); } catch (e) { return; } handle(m); };
+    ws.onclose = () => {
+      if (state.started && !state.over) status('⚠ Lost connection to the server.');
+      else lobbyStatus('Lost connection. Reconnecting…');
+      // Thử nối lại để người chơi không phải tải lại trang.
+      clearTimeout(state.reconnectTimer);
+      state.reconnectTimer = setTimeout(connect, 2000);
+    };
+    ws.onerror = () => {};
+  }
+
+  /* ---------------- Xử lý bản tin từ server ---------------- */
+  function handle(m) {
+    switch (m.type) {
+      case 'welcome':
+        state.loggedIn = Boolean(m.loggedIn);
+        if (m.name) state.name = m.name;
+        state.balance = m.balance || 0;
+        state.minStake = m.minStake || 150;
+        state.winnerPercent = m.winnerPercent || 80;
+        state.housePercent = m.housePercent != null ? m.housePercent : 20;
+        paintStakeUI();
+        if (!state.loggedIn) { lobbyStatus('You need to sign in to play against other people.'); requireLoginUI(); }
+        else if (state.auto) runAuto();
+        break;
+
+      case 'rooms':
+        renderRooms(m.rooms || []);
+        break;
+
+      case 'balance':
+        state.balance = m.balance || 0;
+        paintStakeUI();
+        break;
+
+      case 'need-login':
+        state.loggedIn = false;
+        requireLoginUI();
+        break;
+
+      case 'stake-error':
+        hideWaiting();
+        lobbyStatus(m.message || 'Could not start the staked game.');
+        $('lobby-overlay').classList.remove('hidden');
+        break;
+
+      case 'waiting':
+        showWaiting('Looking for an opponent staking ' + fmtPts(m.stake) + ' points…', null);
+        break;
+
+      case 'created':
+        state.code = m.code;
+        showWaiting('Waiting for someone to join (' + fmtPts(m.stake) + ' points)…', m.code);
+        break;
+
+      case 'start':
+        beginGame(m);
+        break;
+
+      case 'move': {
+        if (!state.game || state.over) return;
+        const rec = state.game.move(m.from, m.to);
+        if (rec) afterMove(rec);
+        break;
+      }
+
+      case 'illegal':
+        // Server từ chối nước đi -> tải lại trang là cách chắc chắn nhất để đồng bộ.
+        status('That move was rejected by the server. Reload if the board looks wrong.');
+        break;
+
+      case 'resign':
+        finish('win', 'Your opponent resigned');
+        break;
+
+      case 'opponent-timeout':
+        finish('win', 'Your opponent ran out of time');
+        break;
+
+      case 'opponent-left':
+        finish('win', 'Your opponent left the game');
+        break;
+
+      case 'draw-accept':
+        finish(null, 'Both players agreed to a draw');
+        break;
+
+      case 'chat':
+        addChat(m.text, false);
+        break;
+
+      case 'stake-settled':
+        showSettlement(m);
+        break;
+
+      case 'error':
+        lobbyStatus(m.message || 'Something went wrong.');
+        hideWaiting();
+        break;
+    }
+  }
 
   /* ---------------- Sảnh ---------------- */
   function showWaiting(text, code) {
@@ -44,18 +166,53 @@
 
   function requireLoginUI() {
     const m = $('login-modal');
-    if (m) m.classList.remove('hidden'); // popup "Cần đăng nhập"
-    const el = $('lobby-status');
-    if (el) el.textContent = 'You need to sign in to play against other people.';
+    if (m) m.classList.remove('hidden');
+    lobbyStatus('You need to sign in to play against other people.');
     hideWaiting();
   }
 
-  async function refreshRooms() {
-    try {
-      const data = await window.API.matchList();
-      renderRooms((data && data.rooms) || []);
-    } catch (e) {}
+  // Hiện số dư + mức cược tối thiểu, khoá nút nếu không đủ điểm.
+  function paintStakeUI() {
+    const bal = $('lobby-balance');
+    if (bal) bal.textContent = fmtPts(state.balance);
+    const input = $('stake-input');
+    if (input) {
+      input.min = String(state.minStake);
+      if (!input.value) input.value = String(state.minStake);
+      input.placeholder = 'min ' + state.minStake;
+    }
+    const note = $('stake-note');
+    if (note) {
+      note.textContent =
+        'Minimum ' + fmtPts(state.minStake) + ' points. Winner takes ' + state.winnerPercent +
+        '% of the pot, ' + state.housePercent + '% goes to the house. A draw refunds both players.';
+    }
+    const poor = state.loggedIn && state.balance < state.minStake;
+    ['btn-quick', 'btn-create'].forEach((id) => { const b = $(id); if (b) b.disabled = poor; });
+    const warn = $('stake-warning');
+    if (warn) {
+      warn.style.display = poor ? '' : 'none';
+      warn.innerHTML = poor
+        ? 'You have ' + fmtPts(state.balance) + ' points — you need at least ' + fmtPts(state.minStake) +
+          ' to play. <a href="topup.html">Buy points</a>.'
+        : '';
+    }
   }
+
+  function currentStake() {
+    const input = $('stake-input');
+    const v = Math.floor(Number(input ? input.value : state.minStake));
+    if (!Number.isFinite(v) || v < state.minStake) {
+      lobbyStatus('Stake must be at least ' + fmtPts(state.minStake) + ' points.');
+      return null;
+    }
+    if (v > state.balance) {
+      lobbyStatus('You only have ' + fmtPts(state.balance) + ' points.');
+      return null;
+    }
+    return v;
+  }
+
   function renderRooms(list) {
     const box = $('room-list');
     if (!box) return;
@@ -66,10 +223,14 @@
       row.className = 'room-item';
       const info = document.createElement('span');
       info.className = 'room-info';
-      info.innerHTML = '<b>' + escapeHtml(r.host) + '</b><span class="room-code-sm">#' + escapeHtml(r.code) + '</span>';
+      info.innerHTML =
+        '<b>' + escapeHtml(r.host) + '</b><span class="room-code-sm">#' + escapeHtml(r.code) + '</span>' +
+        '<span class="room-code-sm">💰 ' + fmtPts(r.stake) + ' pts</span>';
       const btn = document.createElement('button');
       btn.className = 'btn btn-primary';
       btn.textContent = 'Join';
+      btn.disabled = r.stake > state.balance;
+      btn.title = btn.disabled ? 'You do not have enough points for this room' : '';
       btn.addEventListener('click', () => doJoin(r.code));
       row.appendChild(info); row.appendChild(btn);
       box.appendChild(row);
@@ -77,76 +238,32 @@
   }
 
   /* ---------------- Vào trận ---------------- */
-  async function doQuick() {
+  function doQuick() {
     if (!state.loggedIn) return requireLoginUI();
-    try {
-      const r = await window.API.matchQuick(state.name);
-      state.code = r.code; state.token = r.token; state.myColor = r.color;
-      if (r.waiting) { showWaiting('Looking for an opponent…', null); startPoll(); }
-      else startPoll();
-    } catch (e) { lobbyStatus('Could not find a match.'); }
+    const stake = currentStake();
+    if (stake === null) return;
+    wsSend({ type: 'quick', stake });
   }
-  async function doCreate() {
+  function doCreate() {
     if (!state.loggedIn) return requireLoginUI();
-    try {
-      const r = await window.API.matchCreate(state.name);
-      state.code = r.code; state.token = r.token; state.myColor = r.color;
-      showWaiting('Waiting for a friend to join…', r.code);
-      startPoll();
-    } catch (e) { lobbyStatus('Could not create the room.'); }
+    const stake = currentStake();
+    if (stake === null) return;
+    wsSend({ type: 'create', stake });
   }
-  async function doJoin(code) {
+  function doJoin(code) {
     if (!state.loggedIn) return requireLoginUI();
     code = (code || '').toUpperCase().trim();
     if (code.length < 3) { lobbyStatus('Enter a valid room code.'); return; }
-    try {
-      const r = await window.API.matchJoin(code, state.name);
-      state.code = r.code; state.token = r.token; state.myColor = r.color;
-      startPoll();
-    } catch (e) {
-      lobbyStatus((e && e.data && e.data.error) || 'Could not join that room.');
-    }
-  }
-
-  /* ---------------- Polling ---------------- */
-  function startPoll() { stopPoll(); poll(); state.pollTimer = setInterval(poll, POLL_MS); }
-  function stopPoll() { if (state.pollTimer) clearInterval(state.pollTimer); state.pollTimer = null; }
-
-  async function poll() {
-    if (!state.code || !state.token) return;
-    let s;
-    try { s = await window.API.matchState(state.code, state.token, state.applied); }
-    catch (e) { return; }
-    if (!s) return;
-
-    if (!state.started) {
-      if (s.status === 'playing') beginGame(s);
-      else if (s.status === 'ended') { lobbyStatus('The game has ended.'); stopPoll(); }
-      return;
-    }
-    // áp dụng nước đi mới của đối thủ
-    if (s.moves && s.moves.length) {
-      for (const m of s.moves) {
-        const rec = state.game.move(m.from, m.to);
-        if (rec) { afterMove(rec); state.applied++; }
-      }
-      checkLocalOver(); // có thể đối thủ vừa chiếu hết
-    }
-    renderChat(s.chat || []);
-    if (s.status === 'ended' && !state.over) {
-      const result = s.winner ? (s.winner === state.myColor ? 'win' : 'loss') : null;
-      finish(result, s.result || 'Game over.');
-    } else if (!state.over) {
-      const my = state.game.turn === state.myColor;
-      if (s.opponentOnline === false) status('⚠ Your opponent lost connection…');
-      else status(my ? 'YOUR turn to move.' : 'Waiting for your opponent…');
-    }
+    wsSend({ type: 'join', code });
   }
 
   /* ---------------- Bắt đầu ---------------- */
   function beginGame(s) {
     state.started = true; state.over = false; state.startTs = Date.now();
-    state.applied = 0; state.capturedByRed = []; state.capturedByBlack = [];
+    state.myColor = s.color;
+    state.stake = s.stake || 0;
+    state.pot = s.pot || 0;
+    state.capturedByRed = []; state.capturedByBlack = [];
     state.game = new X.Game();
     state.board = new window.Board($('board'), { humanColor: state.myColor, onMove: onMyMove });
     const flip = state.myColor === 'b';
@@ -154,19 +271,23 @@
     const col = document.querySelector('.board-col'); if (col) col.classList.toggle('flip', flip);
     state.board.clearSelection(); state.board.setLastMove(null); state.board.render(state.game);
 
-    const opp = state.myColor === 'r' ? (s.black || 'Opponent') : (s.red || 'Opponent');
+    const opp = s.opponent || 'Opponent';
     if (state.myColor === 'r') { $('name-red').textContent = state.name + ' (You — Red)'; $('name-black').textContent = opp + ' (Black)'; }
     else { $('name-red').textContent = opp + ' (Red)'; $('name-black').textContent = state.name + ' (You — Black)'; }
+
+    const sb = $('stake-banner');
+    if (sb) {
+      sb.style.display = '';
+      sb.textContent = '💰 Staked game — ' + fmtPts(state.stake) + ' points each, pot ' + fmtPts(state.pot) +
+        '. Winner takes ' + fmtPts(Math.floor((state.pot * state.winnerPercent) / 100)) + '.';
+    }
 
     $('btn-resign').disabled = false;
     $('lobby-overlay').classList.add('hidden');
     $('result-modal').classList.add('hidden');
+    hideWaiting();
+    const cb = $('chat-box'); if (cb) cb.innerHTML = '';
     renderCaptured(); renderHistory(); updateTurn();
-
-    // nếu vào giữa chừng, áp dụng các nước đã có
-    if (s.moves && s.moves.length) {
-      for (const m of s.moves) { const rec = state.game.move(m.from, m.to); if (rec) { afterMove(rec); state.applied++; } }
-    }
   }
 
   function updateTurn() {
@@ -179,14 +300,12 @@
   }
 
   /* ---------------- Nước đi ---------------- */
-  async function onMyMove(from, to) {
-    if (state.over || state.game.turn !== state.myColor) return;
+  function onMyMove(from, to) {
+    if (state.over || !state.game || state.game.turn !== state.myColor) return;
     const rec = state.game.move(from, to);
     if (!rec) return;
-    state.applied++;
     afterMove(rec);
-    try { await window.API.matchMove(state.code, state.token, from, to); } catch (e) {}
-    checkLocalOver();
+    wsSend({ type: 'move', from, to });
   }
 
   function afterMove(rec) {
@@ -197,26 +316,21 @@
     renderCaptured(); renderHistory();
     const st = state.game.status();
     if (st.check) Sound.check(); else if (rec.captured) Sound.capture(); else Sound.move();
-    if (!state.over) updateTurn();
-  }
-
-  function checkLocalOver() {
-    if (state.over || !state.game) return;
-    const st = state.game.status();
     if (st.over) {
-      const winner = st.loser === X.RED ? X.BLACK : X.RED; // 'r' | 'b'
+      // Server cũng tự phát hiện hết ván và chia điểm — ở đây chỉ hiện kết quả.
+      const winner = st.loser === X.RED ? X.BLACK : X.RED;
       const iWon = winner === state.myColor;
-      const text = (iWon ? 'You' : 'Your opponent') + ' won (' + (st.reason === 'checkmate' ? 'checkmate' : 'stalemate') + ')';
-      window.API.matchOver(state.code, state.token, text, winner).catch(() => {});
-      finish(iWon ? 'win' : 'loss', text);
+      finish(iWon ? 'win' : 'loss',
+        (iWon ? 'You' : 'Your opponent') + ' won (' + (st.reason === 'checkmate' ? 'checkmate' : 'stalemate') + ')');
+      return;
     }
+    if (!state.over) updateTurn();
   }
 
   /* ---------------- Kết thúc ---------------- */
   function finish(result, reason) {
     if (state.over) return;
     state.over = true;
-    stopPoll();
     if (state.board) state.board.setInteractive(false);
     $('btn-resign').disabled = true;
     $('bar-red').classList.remove('active'); $('bar-black').classList.remove('active');
@@ -231,10 +345,26 @@
     if (result) saveResult(result);
   }
 
+  // Hiện chi tiết chia điểm do server gửi về (nguồn sự thật duy nhất).
+  function showSettlement(m) {
+    state.balance = m.balance != null ? m.balance : state.balance;
+    paintStakeUI();
+    const el = $('result-stake');
+    if (!el) return;
+    el.style.display = '';
+    if (m.outcome === 'draw') {
+      el.textContent = '🤝 Draw — your ' + fmtPts(m.stake) + ' points were refunded. Balance: ' + fmtPts(m.balance) + '.';
+    } else if (m.won) {
+      el.textContent = '💰 You won ' + fmtPts(m.winnerPoints) + ' points from a ' + fmtPts(m.pot) +
+        ' pot (house took ' + fmtPts(m.housePoints) + '). Balance: ' + fmtPts(m.balance) + '.';
+    } else {
+      el.textContent = '💸 You lost your ' + fmtPts(m.stake) + ' point stake. Balance: ' + fmtPts(m.balance) + '.';
+    }
+  }
+
   async function saveResult(result) {
     try {
-      const me = await window.API.me();
-      if (!me || !me.user || !state.game) return;
+      if (!state.game) return;
       const moves = state.game.history.map((h) => ({ from: h.from, to: h.to }));
       await window.API.saveGame({ opponent_type: 'pvp', result, moves_count: state.game.history.length, duration_sec: Math.round((Date.now() - state.startTs) / 1000), pgn: JSON.stringify(moves) });
     } catch (e) {}
@@ -256,28 +386,25 @@
   function moveSpan(rec) { const s = document.createElement('span'); s.className = 'move-cell ' + (X.colorOf(rec.piece) === X.RED ? 'mv-red' : 'mv-black'); s.textContent = NAME[X.typeOf(rec.piece)] + ' ' + sq(rec.from.x, rec.from.y) + '→' + sq(rec.to.x, rec.to.y); return s; }
 
   /* ---------------- Chat ---------------- */
-  function renderChat(list) {
+  function addChat(text, mine) {
     const box = $('chat-box');
-    if (!box || !Array.isArray(list)) return;
-    if (box._n === list.length) return; // không đổi -> khỏi vẽ lại
-    box._n = list.length;
-    box.innerHTML = list
-      .map((msg) => {
-        const mine = msg.who === state.myColor;
-        return '<div class="chat-msg ' + (mine ? 'mine' : '') + '"><span class="chat-name">' +
-          escapeHtml(msg.name || '') + '</span>' + escapeHtml(msg.text || '') + '</div>';
-      })
-      .join('');
+    if (!box || !text) return;
+    const div = document.createElement('div');
+    div.className = 'chat-msg' + (mine ? ' mine' : '');
+    div.innerHTML = '<span class="chat-name">' + escapeHtml(mine ? 'You' : 'Opponent') + '</span>' + escapeHtml(text);
+    box.appendChild(div);
     box.scrollTop = box.scrollHeight;
   }
-  async function sendChat() {
+  function sendChat() {
     const inp = $('chat-input');
     if (!inp) return;
     const text = inp.value.trim();
-    if (!text || !state.code || !state.token) return;
+    if (!text || !state.started) return;
     inp.value = '';
-    try { await window.API.matchChat(state.code, state.token, text); poll(); } catch (e) {}
+    wsSend({ type: 'chat', text });
+    addChat(text, true);
   }
+
   function fallbackCopy(text, cb) {
     const ta = document.createElement('textarea');
     ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
@@ -301,24 +428,31 @@
 
   /* ---------------- Reset ---------------- */
   function resetToLobby() {
-    state.over = true; state.started = false; stopPoll();
-    state.code = null; state.token = null; state.game = null; state.applied = 0;
+    state.over = true; state.started = false;
+    state.code = null; state.game = null; state.stake = 0; state.pot = 0;
+    wsSend({ type: 'cancel' });
     if (state.board) { $('board').innerHTML = ''; $('board').classList.remove('flip'); const c = document.querySelector('.board-col'); if (c) c.classList.remove('flip'); state.board = null; }
     $('result-modal').classList.add('hidden');
     $('lobby-overlay').classList.remove('hidden');
-    const cb = $('chat-box'); if (cb) { cb.innerHTML = ''; cb._n = undefined; }
+    const rs = $('result-stake'); if (rs) rs.style.display = 'none';
+    const sb = $('stake-banner'); if (sb) sb.style.display = 'none';
+    const cb = $('chat-box'); if (cb) cb.innerHTML = '';
     hideWaiting();
     $('btn-resign').disabled = true;
     lobbyStatus('Choose how you want to play.');
-    refreshRooms();
+    wsSend({ type: 'list' });
   }
 
-  async function init() {
-    let me = null;
-    try { me = window.API && (await window.API.me()); } catch (e) {}
-    state.loggedIn = !!(me && me.user);
-    state.name = state.loggedIn ? me.user.username : 'Guest';
+  function runAuto() {
+    if (!state.auto) return;
+    const a = state.auto;
+    state.auto = null;
+    if (a.t === 'join') doJoin(a.code);
+    else if (a.t === 'create') doCreate();
+    else if (a.t === 'quick') doQuick();
+  }
 
+  function init() {
     const p = new URLSearchParams(location.search);
     if (p.get('join')) state.auto = { t: 'join', code: String(p.get('join')).toUpperCase() };
     else if (p.get('create') === '1') state.auto = { t: 'create' };
@@ -327,30 +461,39 @@
     $('btn-quick').addEventListener('click', doQuick);
     $('btn-create').addEventListener('click', doCreate);
     $('btn-join').addEventListener('click', () => doJoin($('join-code').value));
-    $('btn-refresh').addEventListener('click', refreshRooms);
-    $('btn-cancel').addEventListener('click', () => { stopPoll(); hideWaiting(); state.code = null; state.token = null; lobbyStatus('Cancelled. Choose how you want to play.'); refreshRooms(); });
-    $('btn-resign').addEventListener('click', () => { if (state.over || !state.game) return; window.API.matchResign(state.code, state.token).catch(() => {}); finish('loss', 'You resigned'); });
+    $('btn-refresh').addEventListener('click', () => wsSend({ type: 'list' }));
+    $('btn-cancel').addEventListener('click', () => {
+      wsSend({ type: 'cancel' });
+      hideWaiting();
+      state.code = null;
+      lobbyStatus('Cancelled. Choose how you want to play.');
+      wsSend({ type: 'list' });
+    });
+    $('btn-resign').addEventListener('click', () => {
+      if (state.over || !state.game) return;
+      wsSend({ type: 'resign' });
+      finish('loss', 'You resigned');
+    });
     $('btn-new').addEventListener('click', resetToLobby);
     $('btn-again').addEventListener('click', resetToLobby);
     const cs = $('chat-send'); if (cs) cs.addEventListener('click', sendChat);
     const ci = $('chat-input'); if (ci) ci.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendChat(); } });
     const bi = $('btn-copy-invite'); if (bi) bi.addEventListener('click', copyInvite);
+    const si = $('stake-input'); if (si) si.addEventListener('input', () => lobbyStatus('Choose how you want to play.'));
 
-    refreshRooms();
-    setInterval(() => { if (!state.started && !state.pollTimer) refreshRooms(); }, 4000);
-
-    if (!state.loggedIn) {
-      lobbyStatus('You need to sign in to play against other people.');
-      if (state.auto) requireLoginUI(); // đến từ "Vào phòng" mà chưa đăng nhập -> báo ngay
-      return;
-    }
-
-    lobbyStatus('Choose how you want to play.');
-    if (state.auto) {
-      if (state.auto.t === 'join') doJoin(state.auto.code);
-      else if (state.auto.t === 'create') doCreate();
-      else if (state.auto.t === 'quick') doQuick();
-    }
+    paintStakeUI();
+    connect();
+    // Sảnh tự làm mới danh sách phòng + số dư khi chưa vào trận
+    // (số dư có thể đổi vì vừa nạp điểm ở tab khác).
+    setInterval(async () => {
+      if (state.started) return;
+      wsSend({ type: 'list' });
+      if (!state.loggedIn) return;
+      try {
+        const r = await window.API.pointsBalance();
+        if (r && r.balance !== state.balance) { state.balance = r.balance; paintStakeUI(); }
+      } catch (e) {}
+    }, 4000);
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

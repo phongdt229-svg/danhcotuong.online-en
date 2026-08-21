@@ -13,8 +13,15 @@ module.exports = {
     {
       name: 'danhcotuong',
       script: 'server/server.js',
-      // 'max' = 1 process / 1 CPU core (cluster). Lưu ý: session đã lưu ở MySQL nên
-      // chạy nhiều instance vẫn chia sẻ phiên đăng nhập an toàn.
+
+      // ⚠ BẮT BUỘC giữ instances: 1 (fork). KHÔNG chuyển sang cluster/'max'.
+      //
+      // Phòng đấu online (server/realtime/match.js) giữ trạng thái TRONG RAM của
+      // từng tiến trình: danh sách phòng, hàng chờ ghép trận, ván cờ đang đánh.
+      // Chạy nhiều instance thì hai người chơi có thể rơi vào hai tiến trình khác
+      // nhau -> không thấy phòng của nhau, và ván CƯỢC ĐIỂM sẽ hỏng giữa chừng.
+      // (Session thì an toàn vì lưu ở MySQL — nhưng phòng đấu thì không.)
+      // Muốn chạy nhiều instance: phải chuyển trạng thái phòng sang Redis trước.
       instances: 1,
       exec_mode: 'fork',
       autorestart: true,

@@ -11,6 +11,7 @@ const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const pointsService = require('../services/points.service');
 const paypal = require('../services/paypal.service');
+const ledgerService = require('../services/ledger.service');
 
 // Giới hạn số đơn tạo mới theo người dùng (tránh spam tạo đơn lên PayPal).
 const orderAttempts = new Map(); // userId -> { count, ts }
@@ -55,6 +56,28 @@ router.get('/balance', requireAuth, async (req, res, next) => {
 router.get('/history', requireAuth, async (req, res, next) => {
   try {
     res.json({ transactions: await pointsService.history(req.session.userId, 20) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/*
+ * Lịch sử biến động điểm (nạp vào / trừ ra) — đọc từ sổ cái nên khớp tuyệt đối với số dư.
+ * ?limit=25&before=<id>&kind=topup|stake_hold|stake_win|stake_refund|house_fee
+ */
+router.get('/ledger', requireAuth, async (req, res, next) => {
+  try {
+    const userId = req.session.userId;
+    const page = await ledgerService.history(userId, {
+      limit: req.query.limit,
+      before: req.query.before,
+      kind: req.query.kind,
+    });
+    res.json({
+      ...page,
+      balance: await pointsService.getBalance(userId),
+      summary: await ledgerService.summary(userId),
+    });
   } catch (err) {
     next(err);
   }

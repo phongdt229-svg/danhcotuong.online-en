@@ -1,26 +1,26 @@
-# nginx.conf.example — Reverse proxy + HTTPS cho Đánh Cờ Tướng Online (Node trên cổng 3000)
+# nginx.conf.example — Reverse proxy + HTTPS cho Chinesechess Online (Node trên cổng 3000)
 #
-# Cài: copy vào /etc/nginx/sites-available/danhcotuong, sửa server_name,
-#   sudo ln -s /etc/nginx/sites-available/danhcotuong /etc/nginx/sites-enabled/
+# Cài: copy vào /etc/nginx/sites-available/chinesechess, sửa server_name,
+#   sudo ln -s /etc/nginx/sites-available/chinesechess /etc/nginx/sites-enabled/
 #   sudo nginx -t && sudo systemctl reload nginx
-# HTTPS miễn phí: sudo certbot --nginx -d danhcotuong.online -d www.danhcotuong.online
+# HTTPS miễn phí: sudo certbot --nginx -d chinesechess.online -d www.chinesechess.online
 
 # Chuyển HTTP -> HTTPS
 server {
     listen 80;
     listen [::]:80;
-    server_name danhcotuong.online www.danhcotuong.online;
+    server_name chinesechess.online www.chinesechess.online;
     return 301 https://$host$request_uri;
 }
 
 server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
-    server_name danhcotuong.online www.danhcotuong.online;
+    server_name chinesechess.online www.chinesechess.online;
 
     # Certbot tự điền 2 dòng dưới khi chạy. Để sẵn placeholder:
-    ssl_certificate     /etc/letsencrypt/live/danhcotuong.online/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/danhcotuong.online/privkey.pem;
+    ssl_certificate     /etc/letsencrypt/live/chinesechess.online/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/chinesechess.online/privkey.pem;
 
     # Cho phép body lớn vừa phải (khớp limit 1mb của Express)
     client_max_body_size 1m;
@@ -35,7 +35,7 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    # WebSocket (đấu online — Giai đoạn 2)
+    # WebSocket (đấu online + cược điểm) — BẮT BUỘC, thiếu block này là không vào trận được
     location /ws {
         proxy_pass http://127.0.0.1:3000;
         proxy_http_version 1.1;
