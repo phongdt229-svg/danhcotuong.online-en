@@ -13,6 +13,7 @@ const authRoutes = require('./routes/auth.routes');
 const gameRoutes = require('./routes/game.routes');
 const userRoutes = require('./routes/user.routes');
 const paymentRoutes = require('./routes/payment.routes');
+const withdrawRoutes = require('./routes/withdraw.routes');
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -62,6 +63,7 @@ app.use('/api', authRoutes);
 app.use('/api/games', gameRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/withdraw', withdrawRoutes);
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 

@@ -101,6 +101,28 @@ const POINT_LEDGER = `CREATE TABLE IF NOT EXISTS point_ledger (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`;
 
 /*
+ * Yêu cầu rút điểm về PayPal (admin duyệt tay).
+ * Điểm bị GIỮ (trừ khỏi số dư) ngay khi gửi yêu cầu nên không thể tiêu hai lần.
+ * 'paid' = đã chuyển tiền (không hoàn điểm); 'rejected'/'cancelled' = hoàn lại điểm.
+ */
+const WITHDRAWALS = `CREATE TABLE IF NOT EXISTS withdrawals (
+  id           INT AUTO_INCREMENT PRIMARY KEY,
+  user_id      INT           NOT NULL,
+  points       INT           NOT NULL,
+  amount_usd   DECIMAL(10,2) NOT NULL,
+  paypal_email VARCHAR(190)  NOT NULL,
+  status       ENUM('pending','paid','rejected','cancelled') NOT NULL DEFAULT 'pending',
+  admin_note   VARCHAR(190)  NULL,
+  payout_ref   VARCHAR(120)  NULL,
+  created_at   DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  processed_at DATETIME      NULL,
+  processed_by INT           NULL,
+  CONSTRAINT fk_wd_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_wd_user (user_id, id),
+  INDEX idx_wd_status (status, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`;
+
+/*
  * Thêm cột vào bảng đã tồn tại từ trước.
  * Không dùng "ADD COLUMN IF NOT EXISTS" vì đó là cú pháp riêng của MariaDB —
  * hỏi information_schema để chạy được trên cả MySQL khi deploy cloud.
@@ -123,4 +145,13 @@ module.exports = async function ensureSchema() {
   await pool.query(STAKE_MATCHES);
   await addColumnIfMissing('users', 'points', 'INT NOT NULL DEFAULT 0 AFTER draws');
   await pool.query(POINT_LEDGER); // sau users vì có khoá ngoại tới users
+  await pool.query(WITHDRAWALS);
+
+  // Bổ sung 2 loại biến động mới cho sổ cái đã tạo từ trước (bản cũ chỉ có 6 loại).
+  await pool
+    .query(
+      `ALTER TABLE point_ledger MODIFY COLUMN kind
+       ENUM('topup','stake_hold','stake_win','stake_refund','house_fee','adjust','withdraw_hold','withdraw_refund') NOT NULL`
+    )
+    .catch(() => {}); // đã đủ loại thì bỏ qua
 };

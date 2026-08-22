@@ -13,6 +13,8 @@ const KIND_LABEL = {
   stake_refund: 'Stake refunded',
   house_fee: 'House fee',
   adjust: 'Adjustment',
+  withdraw_hold: 'Withdrawal requested',
+  withdraw_refund: 'Withdrawal returned',
 };
 
 /*

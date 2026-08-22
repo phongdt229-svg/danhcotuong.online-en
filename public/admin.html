@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#0f1620" />
+    <title>Withdrawals Admin — Chinesechess Online</title>
+    <link rel="stylesheet" href="css/style.css?v=14" />
+    <style>
+      .balance-num{font-size:2.2rem;font-weight:800;line-height:1}
+      .sum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+      .sum-tile{padding:14px;border-radius:11px;background:var(--c-bg-soft,#16202d);border:1px solid var(--c-border,#2a3a4d)}
+      .sum-tile .num{font-size:1.5rem;font-weight:800;line-height:1.2;color:var(--c-accent,#f0b429)}
+      .sum-tile .lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;opacity:.7;margin-top:4px}
+      .filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+      .filter-btn{padding:6px 14px;border-radius:999px;cursor:pointer;font:inherit;font-size:.83rem;font-weight:600;
+        background:var(--c-bg-soft,#16202d);border:1px solid var(--c-border,#2a3a4d);color:inherit}
+      .filter-btn.selected{border-color:var(--c-accent,#f0b429);color:var(--c-accent,#f0b429)}
+      table.adm{width:100%;border-collapse:collapse}
+      table.adm th{text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;
+        opacity:.65;padding:8px 10px;border-bottom:1px solid var(--c-border,#2a3a4d)}
+      table.adm td{padding:11px 10px;border-bottom:1px solid var(--c-border,#2a3a4d);vertical-align:top;font-size:.88rem}
+      .adm-email{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.82rem;word-break:break-all}
+      .adm-note{font-size:.75rem;opacity:.6;margin-top:3px}
+      .adm-actions{white-space:nowrap}
+      .adm-badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.72rem;font-weight:700}
+      .adm-badge.pending{background:rgba(240,180,41,.15);color:#f0b429}
+      .adm-badge.paid{background:rgba(16,185,129,.15);color:#34d399}
+      .adm-badge.rejected,.adm-badge.cancelled{background:rgba(239,68,68,.15);color:#f87171}
+      .adm-msg{margin:0 0 14px;padding:11px 14px;border-radius:10px;font-weight:600;display:none;font-size:.9rem}
+      .adm-msg.ok{background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.45)}
+      .adm-msg.err{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.45)}
+      .table-wrap{overflow-x:auto}
+      .howto{margin-top:22px;font-size:.82rem;line-height:1.7;opacity:.75}
+      .howto b{opacity:1}
+    </style>
+  </head>
+  <body>
+    <header class="navbar">
+      <div class="container nav-inner">
+        <a class="brand" href="index.html"><span class="logo">將</span><span>Chinesechess Online</span></a>
+        <div class="nav-actions">
+          <span style="font-weight: 700">Hi, <span data-user-name>there</span></span>
+          <a class="btn btn-ghost" href="index.html">Back to site</a>
+          <a class="btn btn-ghost" href="#" data-action="logout">Log out</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="container" style="padding: 28px 20px 60px">
+      <div id="guard" class="card center" style="display: none">
+        <h2>You are not signed in</h2>
+        <a class="btn btn-primary" href="login.html">Sign in</a>
+      </div>
+
+      <div id="denied" class="card center" style="display: none">
+        <h2>🔒 Admin only</h2>
+        <p class="text-muted" id="denied-msg"></p>
+        <p class="text-muted" style="font-size: 0.82rem">
+          Set <code>ADMIN_USER_ID</code> in <code>api/payment-config.php</code> to the id of the account
+          that reviews withdrawals.
+        </p>
+        <a class="btn btn-ghost" href="index.html">Back to site</a>
+      </div>
+
+      <div id="content" style="display: none">
+        <h1 style="margin: 0 0 18px">Withdrawal requests</h1>
+
+        <div class="card" style="margin-bottom: 22px">
+          <div class="sum-grid">
+            <div class="sum-tile"><div class="num" id="sum-count">0</div><div class="lbl">Awaiting review</div></div>
+            <div class="sum-tile"><div class="num" id="sum-points">0</div><div class="lbl">Points on hold</div></div>
+            <div class="sum-tile"><div class="num" id="sum-usd">$0.00</div><div class="lbl">You owe (pending)</div></div>
+            <div class="sum-tile"><div class="num" id="sum-paid">$0.00</div><div class="lbl">Paid all-time</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="adm-msg" id="adm-msg"></div>
+          <div class="filters">
+            <button class="filter-btn selected" data-status="pending">Awaiting review</button>
+            <button class="filter-btn" data-status="paid">Paid</button>
+            <button class="filter-btn" data-status="rejected">Rejected</button>
+            <button class="filter-btn" data-status="cancelled">Cancelled</button>
+            <button class="filter-btn" data-status="all">All</button>
+          </div>
+          <div class="table-wrap">
+            <table class="adm">
+              <thead>
+                <tr>
+                  <th>Requested</th>
+                  <th>User</th>
+                  <th>PayPal address</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="adm-body">
+                <tr><td colspan="6" class="text-muted">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="howto">
+          <b>Cách xử lý một yêu cầu:</b><br />
+          1. Mở PayPal → Send money → dán đúng địa chỉ ở cột <b>PayPal address</b> → gửi số tiền ở cột <b>Amount</b>.<br />
+          2. Quay lại đây bấm <b>Mark paid</b>, dán mã giao dịch PayPal vào để sau này còn đối soát.<br />
+          <br />
+          <b>Mark paid KHÔNG chuyển tiền</b> — nó chỉ đóng yêu cầu và giữ nguyên số điểm đã trừ.
+          Chỉ bấm sau khi tiền đã thực sự gửi đi.<br />
+          <b>Reject</b> sẽ <b>hoàn lại toàn bộ điểm</b> cho người dùng kèm lý do bạn nhập.
+        </div>
+      </div>
+    </main>
+
+
+    <footer class="footer">
+      <div class="container">
+        © 2026 chinesechess.online — Play Xiangqi (Chinese Chess) free in your browser.
+      </div>
+    </footer>
+
+    <script src="js/api.js?v=14"></script>
+    <script src="js/ui.js?v=14"></script>
+
+    <script src="js/admin.js?v=14"></script>
+  </body>
+</html>

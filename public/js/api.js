@@ -66,6 +66,16 @@
     payCreateOrder: (amount) => req('POST', '/api/payments/paypal/order', { amount }),
     payCapture: (orderId) => req('POST', '/api/payments/paypal/capture', { orderId }),
 
+    // Rút điểm về PayPal (admin duyệt tay)
+    wdRules: () => req('GET', '/api/withdraw/rules'),
+    wdRequest: (points, paypalEmail) => req('POST', '/api/withdraw/request', { points, paypalEmail }),
+    wdMine: () => req('GET', '/api/withdraw/mine'),
+    wdCancel: (id) => req('POST', '/api/withdraw/cancel', { id }),
+    // Chỉ tài khoản admin gọi được
+    wdAdminList: (status) => req('GET', '/api/withdraw/admin/list' + (status ? '?status=' + encodeURIComponent(status) : '')),
+    wdAdminPaid: (id, payoutRef, note) => req('POST', '/api/withdraw/admin/paid', { id, payoutRef, note }),
+    wdAdminReject: (id, note) => req('POST', '/api/withdraw/admin/reject', { id, note }),
+
     // Sổ tay tự học của AI (chơi với máy)
     bookLookup: (board) => req('POST', '/api/book/lookup', { board }),
     bookLearn: (moves, blackWon, draw) =>

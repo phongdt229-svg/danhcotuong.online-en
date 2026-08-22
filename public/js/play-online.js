@@ -22,6 +22,8 @@
     stake: 0, pot: 0,
     capturedByRed: [], capturedByBlack: [],
     reconnectTimer: null,
+    seenRooms: null, // mã các phòng đã thấy, để chỉ báo phòng MỚI (null = chưa tải lần nào)
+    onlineCount: 0,
   };
 
   const GLYPH = {
@@ -71,6 +73,8 @@
         state.loggedIn = Boolean(m.loggedIn);
         if (m.name) state.name = m.name;
         state.balance = m.balance || 0;
+        state.onlineCount = (m.online || []).length;
+        paintOnlineCount();
         state.minStake = m.minStake || 150;
         state.winnerPercent = m.winnerPercent || 80;
         state.housePercent = m.housePercent != null ? m.housePercent : 20;
@@ -81,6 +85,24 @@
 
       case 'rooms':
         renderRooms(m.rooms || []);
+        break;
+
+      // Có người vừa online / offline (server chỉ gửi khi trạng thái THẬT SỰ đổi).
+      case 'user-online':
+        state.onlineCount = m.count || 0;
+        paintOnlineCount();
+        if (!state.started) {
+          window.UI.toast(m.name + ' is online', {
+            kind: 'ok',
+            sub: m.count + ' player' + (m.count === 1 ? '' : 's') + ' online now',
+            timeout: 4000,
+          });
+        }
+        break;
+
+      case 'user-offline':
+        state.onlineCount = m.count || 0;
+        paintOnlineCount();
         break;
 
       case 'balance':
@@ -213,7 +235,56 @@
     return v;
   }
 
+  /*
+   * Báo phòng MỚI xuất hiện. So danh sách lần này với lần trước để chỉ báo phòng
+   * chưa từng thấy — không báo lại mỗi lần làm mới (4 giây/lần).
+   * Lần đầu vào trang thì chỉ ghi nhớ, không đổ một loạt thông báo.
+   */
+  function notifyNewRooms(list) {
+    const seen = state.seenRooms;
+    const isFirstLoad = seen === null;
+    const now = new Set(list.map((r) => r.code));
+
+    if (!isFirstLoad && !state.started) {
+      list.forEach((r) => {
+        if (seen.has(r.code)) return;
+        const enough = Number(r.stake) <= state.balance;
+        window.UI.toast('New room from ' + r.host, {
+          kind: 'room',
+          sub: enough
+            ? '💰 ' + fmtPts(r.stake) + ' points · click to join'
+            : '💰 ' + fmtPts(r.stake) + ' points · you need ' + fmtPts(Number(r.stake) - state.balance) + ' more',
+          onClick: () => (enough ? doJoin(r.code) : notEnough(r.stake)),
+        });
+      });
+    }
+    state.seenRooms = now;
+  }
+
+  // Hiện số người đang online ở sảnh.
+  function paintOnlineCount() {
+    const el = $('online-count');
+    if (!el) return;
+    const n = state.onlineCount || 0;
+    el.textContent = n + ' online';
+    el.style.display = n > 0 ? '' : 'none';
+  }
+
+  // Thông báo rõ ràng khi không đủ điểm (kèm lối đi nạp thêm).
+  function notEnough(stake) {
+    const missing = Number(stake) - state.balance;
+    window.UI.toast('Not enough points for this room', {
+      kind: 'warn',
+      sub: 'Stake ' + fmtPts(stake) + ' · you have ' + fmtPts(state.balance) +
+           ' · you need ' + fmtPts(missing) + ' more. Click to buy points.',
+      timeout: 8000,
+      onClick: () => (location.href = 'topup.html'),
+    });
+    lobbyStatus('You need ' + fmtPts(stake) + ' points for that room — you have ' + fmtPts(state.balance) + '.');
+  }
+
   function renderRooms(list) {
+    notifyNewRooms(list);
     const box = $('room-list');
     if (!box) return;
     box.innerHTML = '';
@@ -221,17 +292,18 @@
     list.forEach((r) => {
       const row = document.createElement('div');
       row.className = 'room-item';
+      const enough = Number(r.stake) <= state.balance;
       const info = document.createElement('span');
       info.className = 'room-info';
       info.innerHTML =
         '<b>' + escapeHtml(r.host) + '</b><span class="room-code-sm">#' + escapeHtml(r.code) + '</span>' +
-        '<span class="room-code-sm">💰 ' + fmtPts(r.stake) + ' pts</span>';
+        '<span class="room-code-sm' + (enough ? '' : ' stake-short') + '">💰 ' + fmtPts(r.stake) + ' pts</span>';
       const btn = document.createElement('button');
-      btn.className = 'btn btn-primary';
-      btn.textContent = 'Join';
-      btn.disabled = r.stake > state.balance;
-      btn.title = btn.disabled ? 'You do not have enough points for this room' : '';
-      btn.addEventListener('click', () => doJoin(r.code));
+      btn.className = 'btn ' + (enough ? 'btn-primary' : 'btn-ghost');
+      btn.textContent = enough ? 'Join' : 'Need points';
+      // KHÔNG khoá nút: bấm vào phải giải thích được vì sao chưa vào được.
+      btn.title = enough ? '' : 'You do not have enough points for this room';
+      btn.addEventListener('click', () => (enough ? doJoin(r.code) : notEnough(r.stake)));
       row.appendChild(info); row.appendChild(btn);
       box.appendChild(row);
     });

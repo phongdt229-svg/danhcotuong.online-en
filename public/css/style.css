@@ -42,6 +42,13 @@ body {
   margin: 0;
   padding: 0;
 }
+/* Nền dự phòng cho thẻ html: body dùng background-attachment:fixed nên nền chỉ
+   phủ đúng khung nhìn. Safari iOS và vài trình duyệt Android xử lý 'fixed' kém,
+   để hở mảng TRẮNG ở phần trang dài hơn màn hình. Đặt nền ở html thì chỗ hở đó
+   vẫn tối thay vì chói trắng. */
+html {
+  background: var(--c-bg);
+}
 body {
   font-family: var(--font);
   background: radial-gradient(1200px 600px at 50% -10%, #1d2b3c, var(--c-bg)) fixed;

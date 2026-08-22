@@ -6,10 +6,10 @@
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#0f1620" />
     <link rel="apple-touch-icon" href="images/icon.svg" />
-    <title>Points History — Chinesechess Online</title>
+    <title>Withdraw Points — Chinesechess Online</title>
     <link rel="stylesheet" href="css/style.css?v=14" />
     <style>
-      /* Critical CSS: menu 2 cấp + nút nổi bật (nhúng để chạy kể cả khi style.css chưa cập nhật) */
+      /* Critical CSS: menu 2 cấp (nhúng để chạy kể cả khi style.css chưa cập nhật) */
       .has-sub{position:relative}
       .sub-menu{display:none;position:absolute;top:100%;left:0;min-width:190px;list-style:none;margin:0;padding:6px;padding-top:10px;background:var(--c-card,#1c2836);border:1px solid var(--c-border,#2a3a4d);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:50}
       .has-sub:hover>.sub-menu,.has-sub.open>.sub-menu{display:block}
@@ -18,29 +18,32 @@
       .nav-menu a{white-space:nowrap}
       @media(max-width:980px){.nav-menu{display:none;position:absolute;top:64px;left:0;right:0;flex-direction:column;align-items:stretch;background:var(--c-bg-soft,#16202d);border-bottom:1px solid var(--c-border,#2a3a4d);padding:10px;gap:2px}.nav-menu.open{display:flex}.sub-menu{position:static;display:block;min-width:0;padding:0 0 0 16px;margin:2px 0;background:transparent;border:none;box-shadow:none}.nav-toggle{display:inline-block}}
 
-      /* Lịch sử điểm */
+      /* Rút điểm */
       .balance-num{font-size:2.6rem;font-weight:800;line-height:1;color:var(--c-accent,#f0b429)}
-      .sum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:4px}
-      .sum-tile{padding:14px;border-radius:11px;background:var(--c-bg-soft,#16202d);border:1px solid var(--c-border,#2a3a4d)}
-      .sum-tile .num{font-size:1.45rem;font-weight:800;line-height:1.2}
-      .sum-tile .lbl{font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;opacity:.7;margin-top:4px}
-      .up{color:#34d399}
-      .down{color:#f87171}
-      .filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
-      .filter-btn{padding:6px 14px;border-radius:999px;cursor:pointer;font:inherit;font-size:.83rem;font-weight:600;
-        background:var(--c-bg-soft,#16202d);border:1px solid var(--c-border,#2a3a4d);color:inherit}
-      .filter-btn.selected{border-color:var(--c-accent,#f0b429);color:var(--c-accent,#f0b429)}
-      table.ledger{width:100%;border-collapse:collapse}
-      table.ledger th{text-align:left;font-size:.74rem;text-transform:uppercase;letter-spacing:.05em;
+      .wd-field{margin-bottom:14px}
+      .wd-field label{display:block;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;opacity:.7;margin-bottom:6px}
+      .wd-field input{width:100%;padding:11px 13px;border-radius:9px;font:inherit;color:inherit;
+        background:var(--c-bg,#0f1620);border:1px solid var(--c-border,#2a3a4d)}
+      .wd-row{display:flex;gap:8px;align-items:center}
+      .wd-row input{flex:1;min-width:0}
+      .wd-preview{margin-top:6px;font-size:.85rem;color:var(--c-accent,#f0b429);font-weight:600;min-height:1.2em}
+      .wd-rule{font-size:.8rem;line-height:1.5;opacity:.75;margin:0 0 16px}
+      .wd-warning{margin:0 0 14px;padding:10px 13px;border-radius:9px;font-size:.85rem;font-weight:600;
+        color:#f87171;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.35)}
+      .wd-msg{margin:14px 0 0;padding:11px 14px;border-radius:10px;font-weight:600;display:none;font-size:.9rem}
+      .wd-msg.ok{background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.45)}
+      .wd-msg.err{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.45)}
+      table.wd{width:100%;border-collapse:collapse}
+      table.wd th{text-align:left;font-size:.74rem;text-transform:uppercase;letter-spacing:.05em;
         opacity:.65;padding:8px 10px;border-bottom:1px solid var(--c-border,#2a3a4d)}
-      table.ledger td{padding:11px 10px;border-bottom:1px solid var(--c-border,#2a3a4d);vertical-align:top}
-      .ledger-when{white-space:nowrap;font-size:.83rem;opacity:.75}
-      .ledger-icon{display:inline-block;width:1.6em}
-      .ledger-note{display:block;font-size:.78rem;opacity:.6;margin-top:2px;margin-left:1.6em}
-      .ledger-delta{text-align:right;font-weight:800;white-space:nowrap}
-      .ledger-balance{text-align:right;white-space:nowrap;opacity:.8}
+      table.wd td{padding:11px 10px;border-bottom:1px solid var(--c-border,#2a3a4d);vertical-align:top;font-size:.9rem}
+      .wd-badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.74rem;font-weight:700}
+      .wd-badge.pending{background:rgba(240,180,41,.15);color:#f0b429}
+      .wd-badge.paid{background:rgba(16,185,129,.15);color:#34d399}
+      .wd-badge.rejected,.wd-badge.cancelled{background:rgba(239,68,68,.15);color:#f87171}
+      .wd-note{font-size:.78rem;opacity:.65;margin-top:4px}
       .table-wrap{overflow-x:auto}
-      #btn-more{display:block;margin:16px auto 0}
+      .wd-legal{margin-top:22px;font-size:.78rem;line-height:1.6;opacity:.6}
     </style>
   </head>
   <body>
@@ -86,55 +89,76 @@
     <main class="container" style="padding: 28px 20px 60px">
       <div id="guard" class="card center" style="display: none">
         <h2>You are not signed in</h2>
-        <p class="text-muted">Please sign in to view your points history.</p>
+        <p class="text-muted">Please sign in to withdraw points.</p>
         <a class="btn btn-primary" href="login.html">Sign in</a>
       </div>
 
       <div id="content" style="display: none">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px">
-          <h1 style="margin: 0">Points History</h1>
-          <a class="btn btn-primary" href="topup.html">＋ Buy points</a>
+          <h1 style="margin: 0">Withdraw Points</h1>
+          <a class="btn btn-ghost" href="history.html">Points history</a>
         </div>
 
         <div class="card" style="margin: 18px 0 22px">
-          <h3 style="margin-top: 0; color: var(--c-muted)">Current balance</h3>
-          <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 16px">
+          <h3 style="margin-top: 0; color: var(--c-muted)">Available balance</h3>
+          <div style="display: flex; align-items: baseline; gap: 10px">
             <span class="balance-num" id="balance">0</span>
             <span class="text-muted">points</span>
           </div>
-          <div class="sum-grid">
-            <div class="sum-tile"><div class="num up" id="sum-topup">0</div><div class="lbl">Bought</div></div>
-            <div class="sum-tile"><div class="num down" id="sum-staked">0</div><div class="lbl">Staked</div></div>
-            <div class="sum-tile"><div class="num up" id="sum-won">0</div><div class="lbl">Won back</div></div>
-            <div class="sum-tile"><div class="num" id="sum-net">0</div><div class="lbl">Net from games</div></div>
-          </div>
+        </div>
+
+        <div class="card" style="margin-bottom: 22px">
+          <h3 style="margin-top: 0; color: var(--c-muted)">Request a withdrawal</h3>
+          <p class="wd-rule" id="wd-rule"></p>
+          <p class="wd-warning" id="wd-warning" style="display: none"></p>
+
+          <form id="wd-form">
+            <div class="wd-field">
+              <label for="wd-points">Points to withdraw</label>
+              <div class="wd-row">
+                <input type="number" id="wd-points" step="10" required />
+                <button class="btn btn-ghost" type="button" id="wd-max">Max</button>
+              </div>
+              <div class="wd-preview" id="wd-preview"></div>
+            </div>
+
+            <div class="wd-field">
+              <label for="wd-email">PayPal email to receive the money</label>
+              <input type="email" id="wd-email" required autocomplete="email" />
+            </div>
+
+            <button class="btn btn-primary btn-lg" type="submit" id="wd-submit">Request withdrawal</button>
+          </form>
+
+          <div class="wd-msg" id="wd-msg"></div>
         </div>
 
         <div class="card">
-          <div class="filters">
-            <button class="filter-btn selected" data-kind="">All</button>
-            <button class="filter-btn" data-kind="topup">💳 Top-ups</button>
-            <button class="filter-btn" data-kind="stake_hold">🎲 Stakes placed</button>
-            <button class="filter-btn" data-kind="stake_win">🏆 Wins</button>
-            <button class="filter-btn" data-kind="stake_refund">↩️ Refunds</button>
-          </div>
+          <h3 style="margin-top: 0; color: var(--c-muted)">Your requests</h3>
           <div class="table-wrap">
-            <table class="ledger">
+            <table class="wd">
               <thead>
                 <tr>
                   <th>Date</th>
-                  <th>Activity</th>
-                  <th style="text-align: right">Change</th>
-                  <th style="text-align: right">Balance</th>
+                  <th>Points</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th></th>
                 </tr>
               </thead>
-              <tbody id="ledger-body">
-                <tr><td colspan="4" class="text-muted">Loading…</td></tr>
+              <tbody id="wd-body">
+                <tr><td colspan="5" class="text-muted">Loading…</td></tr>
               </tbody>
             </table>
           </div>
-          <button class="btn btn-ghost" id="btn-more" style="display: none">Load more</button>
         </div>
+
+        <p class="wd-legal">
+          Withdrawals are reviewed manually and paid out by hand, so they are not instant. Your points are
+          held as soon as you submit a request; if the request is rejected or you cancel it, the points go
+          straight back to your balance. Double-check the PayPal address — money sent to the wrong address
+          cannot be recovered.
+        </p>
       </div>
     </main>
 
@@ -148,6 +172,6 @@
     <script src="js/api.js?v=14"></script>
     <script src="js/ui.js?v=14"></script>
 
-    <script src="js/history.js?v=14"></script>
+    <script src="js/withdraw.js?v=14"></script>
   </body>
 </html>

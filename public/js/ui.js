@@ -144,5 +144,64 @@
   });
   registerSW();
 
-  window.UI = { refreshAuthUI };
+  /* ---------- Thông báo nổi (toast) ---------- */
+  // Dùng chung cho mọi trang. CSS nhúng thẳng đây để không phụ thuộc style.css.
+  let toastBox = null;
+  function ensureToastBox() {
+    if (toastBox && document.body.contains(toastBox)) return toastBox;
+    const style = document.createElement('style');
+    style.textContent =
+      '.toast-box{position:fixed;right:16px;bottom:16px;z-index:9999;display:flex;flex-direction:column;gap:8px;max-width:min(340px,calc(100vw - 32px))}' +
+      '.toast{padding:12px 14px;border-radius:11px;font-size:.88rem;line-height:1.45;font-weight:600;cursor:pointer;' +
+      'background:var(--c-card,#1c2836);border:1px solid var(--c-border,#2a3a4d);color:var(--c-text,#e8eef6);' +
+      'box-shadow:0 10px 30px rgba(0,0,0,.4);opacity:0;transform:translateY(8px);transition:opacity .18s,transform .18s}' +
+      '.toast.show{opacity:1;transform:none}' +
+      '.toast.ok{border-color:rgba(16,185,129,.5)}' +
+      '.toast.warn{border-color:rgba(239,68,68,.5)}' +
+      '.toast.room{border-color:rgba(240,180,41,.55)}' +
+      '.toast-sub{display:block;font-weight:400;opacity:.75;font-size:.8rem;margin-top:3px}' +
+      '@media(max-width:600px){.toast-box{left:16px;right:16px;bottom:12px;max-width:none}}';
+    document.head.appendChild(style);
+    toastBox = document.createElement('div');
+    toastBox.className = 'toast-box';
+    document.body.appendChild(toastBox);
+    return toastBox;
+  }
+
+  /*
+   * toast(text, {kind, sub, timeout, onClick})
+   *   kind: '' | 'ok' | 'warn' | 'room'
+   *   sub: dòng phụ nhỏ bên dưới
+   *   timeout: ms tự tắt (mặc định 5000, đặt 0 để không tự tắt)
+   */
+  function toast(text, opts) {
+    const o = opts || {};
+    const box = ensureToastBox();
+    const el = document.createElement('div');
+    el.className = 'toast' + (o.kind ? ' ' + o.kind : '');
+    el.textContent = text;
+    if (o.sub) {
+      const s = document.createElement('span');
+      s.className = 'toast-sub';
+      s.textContent = o.sub;
+      el.appendChild(s);
+    }
+    const close = () => {
+      el.classList.remove('show');
+      setTimeout(() => el.remove(), 200);
+    };
+    el.addEventListener('click', () => {
+      if (o.onClick) o.onClick();
+      close();
+    });
+    box.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('show'));
+    const ms = o.timeout === 0 ? 0 : o.timeout || 5000;
+    if (ms) setTimeout(close, ms);
+    // Giữ tối đa 4 thông báo, cũ nhất rơi ra trước.
+    while (box.children.length > 4) box.firstElementChild.remove();
+    return el;
+  }
+
+  window.UI = { refreshAuthUI, toast };
 })();

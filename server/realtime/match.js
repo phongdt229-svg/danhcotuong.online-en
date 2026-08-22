@@ -83,6 +83,44 @@ module.exports = function attachMatch(server, sessionParser) {
     for (const s of room.spectators) if (isOpen(s)) s.send(payload);
   }
 
+  /*
+   * Danh sách người đang online (chỉ tính tài khoản đã đăng nhập).
+   * Một người mở nhiều tab -> đếm số socket, chỉ báo khi tab ĐẦU TIÊN mở
+   * và khi tab CUỐI đóng, để không spam thông báo.
+   */
+  const online = new Map(); // userId -> { name, sockets }
+
+  function onlineNames() {
+    return [...online.values()].map((u) => u.name);
+  }
+
+  // Gửi cho mọi người đang ở sảnh, trừ người vừa đổi trạng thái.
+  function broadcastLobby(obj, exceptWs) {
+    const payload = JSON.stringify(obj);
+    for (const ws of lobby) if (ws !== exceptWs && isOpen(ws)) ws.send(payload);
+  }
+
+  function markOnline(ws) {
+    if (!ws.userId) return;
+    const cur = online.get(ws.userId);
+    if (cur) {
+      cur.sockets++;
+      return; // đã online ở tab khác -> không báo lại
+    }
+    online.set(ws.userId, { name: ws.name, sockets: 1 });
+    broadcastLobby({ type: 'user-online', name: ws.name, count: online.size }, ws);
+  }
+
+  function markOffline(ws) {
+    if (!ws.userId) return;
+    const cur = online.get(ws.userId);
+    if (!cur) return;
+    cur.sockets--;
+    if (cur.sockets > 0) return; // vẫn còn tab khác
+    online.delete(ws.userId);
+    broadcastLobby({ type: 'user-offline', name: cur.name, count: online.size }, ws);
+  }
+
   // Rời hàng chờ ghép nhanh (mỗi mức cược một hàng riêng).
   function leaveQuickQueue(ws) {
     if (ws.quickStake != null && quickWaiting.get(ws.quickStake) === ws) {
@@ -270,11 +308,14 @@ module.exports = function attachMatch(server, sessionParser) {
       } catch (e) {}
     }
 
+    markOnline(ws); // báo cho người ở sảnh biết có người vừa vào
+
     send(ws, {
       type: 'welcome',
       loggedIn: Boolean(ws.userId),
       name: ws.name,
       balance: ws.points || 0,
+      online: onlineNames(), // ai đang online lúc mình vào
       ...stakeService.rules(),
     });
     send(ws, roomsPayload()); // gửi danh sách phòng + trận đang đánh ngay
@@ -495,6 +536,7 @@ module.exports = function attachMatch(server, sessionParser) {
     });
 
     ws.on('close', () => {
+      markOffline(ws);
       lobby.delete(ws);
       if (ws.spectating && ws.spectating.spectators) { ws.spectating.spectators.delete(ws); ws.spectating = null; }
       leaveQuickQueue(ws);
