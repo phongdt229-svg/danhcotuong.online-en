@@ -58,8 +58,9 @@
         <h2>🔒 Admin only</h2>
         <p class="text-muted" id="denied-msg"></p>
         <p class="text-muted" style="font-size: 0.82rem">
-          Set <code>ADMIN_USER_ID</code> in <code>api/payment-config.php</code> to the id of the account
-          that reviews withdrawals.
+          The admin is the account named <code>admin</code> by default. To use a different account,
+          set <code>ADMIN_USERNAME</code> or <code>ADMIN_USER_ID</code> in
+          <code>api/payment-config.php</code>.
         </p>
         <a class="btn btn-ghost" href="index.html">Back to site</a>
       </div>
@@ -105,13 +106,15 @@
         </div>
 
         <div class="howto">
-          <b>Cách xử lý một yêu cầu:</b><br />
-          1. Mở PayPal → Send money → dán đúng địa chỉ ở cột <b>PayPal address</b> → gửi số tiền ở cột <b>Amount</b>.<br />
-          2. Quay lại đây bấm <b>Mark paid</b>, dán mã giao dịch PayPal vào để sau này còn đối soát.<br />
+          <b>How to handle a request:</b><br />
+          1. Open PayPal → Send money → paste the address from the <b>PayPal address</b> column →
+          send the amount shown in the <b>Amount</b> column.<br />
+          2. Come back here and click <b>Mark paid</b>, pasting the PayPal transaction ID so you can
+          reconcile it later.<br />
           <br />
-          <b>Mark paid KHÔNG chuyển tiền</b> — nó chỉ đóng yêu cầu và giữ nguyên số điểm đã trừ.
-          Chỉ bấm sau khi tiền đã thực sự gửi đi.<br />
-          <b>Reject</b> sẽ <b>hoàn lại toàn bộ điểm</b> cho người dùng kèm lý do bạn nhập.
+          <b>Mark paid does NOT transfer any money</b> — it only closes the request and keeps the
+          points deducted. Only click it after the money has actually been sent.<br />
+          <b>Reject</b> returns <b>all of the points</b> to the user, along with the reason you enter.
         </div>
       </div>
     </main>
@@ -119,7 +122,7 @@
 
     <footer class="footer">
       <div class="container">
-        © 2026 chinesechess.online — Play Xiangqi (Chinese Chess) free in your browser.
+        © 2026 chinesechess.online — Play Chinese Chess free in your browser.
       </div>
     </footer>
 
