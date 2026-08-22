@@ -4,6 +4,7 @@
 const express = require('express');
 const router = express.Router();
 const userService = require('../services/user.service');
+const recaptcha = require('../services/recaptcha.service');
 
 const USERNAME_RE = /^[a-zA-Z0-9_.]{3,50}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -30,7 +31,7 @@ function rateLimit(req, res, next) {
   next();
 }
 
-router.post('/register', rateLimit, async (req, res) => {
+router.post('/register', rateLimit, recaptcha.requireCaptcha('register'), async (req, res) => {
   try {
     const username = (req.body.username || '').trim();
     const email = (req.body.email || '').trim().toLowerCase();
@@ -55,7 +56,7 @@ router.post('/register', rateLimit, async (req, res) => {
   }
 });
 
-router.post('/login', rateLimit, async (req, res) => {
+router.post('/login', rateLimit, recaptcha.requireCaptcha('login'), async (req, res) => {
   try {
     const username = (req.body.username || '').trim();
     const password = req.body.password || '';
@@ -81,5 +82,8 @@ router.get('/me', async (req, res) => {
   const user = await userService.findById(req.session.userId);
   res.json({ user });
 });
+
+// Khoá công khai của reCAPTCHA cho trình duyệt nạp thư viện (khoá này vốn công khai).
+router.get('/recaptcha/config', (req, res) => res.json(recaptcha.config()));
 
 module.exports = router;

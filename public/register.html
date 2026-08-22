@@ -20,6 +20,10 @@
       .btn-puzzle{background:linear-gradient(150deg,#8b5cf6,#6d28d9);color:#fff}
       .badge-new{display:inline-block;background:#ef4444;color:#fff;font-size:.6rem;font-weight:800;line-height:1;padding:3px 6px;border-radius:999px;margin-left:4px;vertical-align:middle}
       @media(max-width:980px){.nav-menu{display:none;position:absolute;top:64px;left:0;right:0;flex-direction:column;align-items:stretch;background:var(--c-bg-soft,#16202d);border-bottom:1px solid var(--c-border,#2a3a4d);padding:10px;gap:2px}.nav-menu.open{display:flex}.sub-menu{position:static;display:block;min-width:0;padding:0 0 0 16px;margin:2px 0;background:transparent;border:none;box-shadow:none}.nav-toggle{display:inline-block}}
+      /* Ghi chú reCAPTCHA + ẩn badge góc phải (Google cho phép nếu có ghi chú này) */
+      .captcha-notice{margin:14px 0 0;font-size:.72rem;line-height:1.5;text-align:center;opacity:.55}
+      .captcha-notice a{text-decoration:underline}
+      .grecaptcha-badge{visibility:hidden}
     </style>
   </head>
   <body>
@@ -88,6 +92,11 @@
           <button class="btn btn-primary btn-block btn-lg" type="submit">Sign up</button>
         </form>
         <div class="form-foot">Already have an account? <a href="login.html">Sign in</a></div>
+          <p class="captcha-notice">
+          Protected by reCAPTCHA — Google's
+          <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Privacy Policy</a> and
+          <a href="https://policies.google.com/terms" target="_blank" rel="noopener">Terms of Service</a> apply.
+        </p>
       </div>
     </main>
 
@@ -101,20 +110,28 @@
     <script src="js/api.js?v=14"></script>
 
     <script src="js/ui.js?v=14"></script>
+    <script src="js/recaptcha.js?v=14"></script>
     <script>
+      window.Captcha.prepare();
       document.getElementById('register-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const msg = document.getElementById('msg');
         msg.className = 'form-msg';
         msg.textContent = '';
+        const btn = e.target.querySelector('button[type=submit]');
+        btn.disabled = true;
         try {
+          // Lấy token NGAY lúc bấm nút — token reCAPTCHA chỉ sống ~2 phút.
+          const captcha = await window.Captcha.token('register');
           await window.API.register(
             document.getElementById('username').value.trim(),
             document.getElementById('email').value.trim(),
-            document.getElementById('password').value
+            document.getElementById('password').value,
+            captcha
           );
           location.href = 'profile.html';
         } catch (err) {
+          btn.disabled = false;
           msg.className = 'form-msg error';
           msg.textContent = err.message || 'Sign-up failed';
         }
