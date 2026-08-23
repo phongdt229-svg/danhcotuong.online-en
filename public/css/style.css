@@ -185,6 +185,48 @@ img {
   cursor: pointer;
 }
 
+/*
+ * Điện thoại: navbar là flex MỘT HÀNG không xuống dòng, nên trên màn hẹp
+ * (logo + tên + nút ☰ + nút Sign in/Sign up) cộng lại vượt bề ngang và đẩy
+ * cả trang tràn sang phải.
+ * Cách xử lý: giữ nguyên một hàng cao 64px (menu xổ xuống định vị theo top:64px),
+ * cho TÊN THƯƠNG HIỆU co lại và cắt bớt bằng dấu ..., còn các nút thì không co.
+ */
+@media (max-width: 640px) {
+  .brand {
+    font-size: 0.98rem;
+    gap: 8px;
+    min-width: 0; /* bắt buộc, nếu không flex item không co dưới kích thước nội dung */
+    overflow: hidden;
+  }
+  .brand span:last-child {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .brand .logo {
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    font-size: 1rem;
+  }
+  .nav-toggle,
+  .nav-actions {
+    flex-shrink: 0;
+  }
+  .nav-actions {
+    gap: 6px;
+  }
+  .nav-actions .btn {
+    padding: 6px 9px;
+    font-size: 0.8rem;
+  }
+  /* Lời chào "Hi, tên" chiếm nhiều chỗ mà không thiết yếu trên màn hẹp */
+  .nav-actions > span {
+    display: none;
+  }
+}
+
 /* ---------- Buttons ---------- */
 .btn {
   display: inline-flex;
@@ -938,4 +980,14 @@ table.games th {
   .stat-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+}
+
+/*
+ * Khung cuộn ngang cho bảng. Bảng nhiều cột (lịch sử ván, bảng xếp hạng...) không
+ * vừa màn hình điện thoại và làm TRÀN cả trang. Bọc bảng trong khung này thì chỉ
+ * riêng bảng cuộn ngang, trang vẫn đứng yên.
+ */
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
