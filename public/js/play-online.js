@@ -254,11 +254,14 @@
       list.forEach((r) => {
         if (seen.has(r.code)) return;
         const enough = Number(r.stake) <= state.balance;
-        window.UI.toast('New room from ' + r.host, {
+        window.UI.toast(r.host + ' opened a room', {
           kind: 'room',
+          icon: '將',
           sub: enough
-            ? '💰 ' + fmtPts(r.stake) + ' points · click to join'
-            : '💰 ' + fmtPts(r.stake) + ' points · you need ' + fmtPts(Number(r.stake) - state.balance) + ' more',
+            ? '💰 ' + fmtPts(r.stake) + ' points stake · room #' + r.code
+            : '💰 ' + fmtPts(r.stake) + ' points stake · you need ' + fmtPts(Number(r.stake) - state.balance) + ' more',
+          cta: enough ? '▶ Join now' : 'Buy points →',
+          timeout: 12000,
           onClick: () => (enough ? doJoin(r.code) : notEnough(r.stake)),
         });
       });

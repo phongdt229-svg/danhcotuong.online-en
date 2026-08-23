@@ -151,15 +151,31 @@
     if (toastBox && document.body.contains(toastBox)) return toastBox;
     const style = document.createElement('style');
     style.textContent =
-      '.toast-box{position:fixed;right:16px;bottom:16px;z-index:9999;display:flex;flex-direction:column;gap:8px;max-width:min(340px,calc(100vw - 32px))}' +
+      '.toast-box{position:fixed;right:16px;bottom:16px;z-index:9999;display:flex;flex-direction:column;gap:10px;max-width:min(360px,calc(100vw - 32px))}' +
       '.toast{padding:12px 14px;border-radius:11px;font-size:.88rem;line-height:1.45;font-weight:600;cursor:pointer;' +
       'background:var(--c-card,#1c2836);border:1px solid var(--c-border,#2a3a4d);color:var(--c-text,#e8eef6);' +
       'box-shadow:0 10px 30px rgba(0,0,0,.4);opacity:0;transform:translateY(8px);transition:opacity .18s,transform .18s}' +
       '.toast.show{opacity:1;transform:none}' +
       '.toast.ok{border-color:rgba(16,185,129,.5)}' +
       '.toast.warn{border-color:rgba(239,68,68,.5)}' +
-      '.toast.room{border-color:rgba(240,180,41,.55)}' +
       '.toast-sub{display:block;font-weight:400;opacity:.75;font-size:.8rem;margin-top:3px}' +
+
+      /* Toast PHÒNG MỚI: làm nổi hẳn so với thông báo thường vì đây là thứ cần
+         người dùng phản ứng ngay — nền vàng, viền phát sáng nhịp nhàng, có nút. */
+      '.toast.room{background:linear-gradient(150deg,#f2b134,#e08c1a);color:#2a1d00;' +
+      'border:2px solid rgba(255,220,140,.9);padding:14px 16px;font-size:.95rem;' +
+      'box-shadow:0 14px 40px rgba(240,180,41,.45);animation:toast-glow 1.6s ease-in-out infinite}' +
+      '.toast.room .toast-sub{opacity:.85;font-weight:600;color:#3d2b00}' +
+      '.toast.room:hover{filter:brightness(1.05)}' +
+      '.toast-head{display:flex;align-items:center;gap:8px}' +
+      '.toast-icon{flex:0 0 30px;width:30px;height:30px;border-radius:8px;display:inline-flex;' +
+      'align-items:center;justify-content:center;font-weight:900;font-size:1.05rem;' +
+      'background:rgba(0,0,0,.18);color:#2a1d00;font-family:"Noto Serif",serif}' +
+      '.toast-cta{display:inline-block;margin-top:9px;padding:6px 14px;border-radius:999px;' +
+      'background:#2a1d00;color:#f2b134;font-size:.8rem;font-weight:800;letter-spacing:.02em}' +
+      '@keyframes toast-glow{0%,100%{box-shadow:0 14px 40px rgba(240,180,41,.35)}' +
+      '50%{box-shadow:0 14px 46px rgba(240,180,41,.75)}}' +
+      '@media(prefers-reduced-motion:reduce){.toast.room{animation:none}}' +
       '@media(max-width:600px){.toast-box{left:16px;right:16px;bottom:12px;max-width:none}}';
     document.head.appendChild(style);
     toastBox = document.createElement('div');
@@ -179,12 +195,35 @@
     const box = ensureToastBox();
     const el = document.createElement('div');
     el.className = 'toast' + (o.kind ? ' ' + o.kind : '');
-    el.textContent = text;
+
+    // Toast phòng mới có thêm icon quân cờ cho dễ nhận ra giữa các thông báo khác.
+    if (o.icon) {
+      const head = document.createElement('div');
+      head.className = 'toast-head';
+      const ic = document.createElement('span');
+      ic.className = 'toast-icon';
+      ic.textContent = o.icon;
+      const tx = document.createElement('span');
+      tx.textContent = text;
+      head.appendChild(ic);
+      head.appendChild(tx);
+      el.appendChild(head);
+    } else {
+      el.textContent = text;
+    }
+
     if (o.sub) {
       const s = document.createElement('span');
       s.className = 'toast-sub';
       s.textContent = o.sub;
       el.appendChild(s);
+    }
+    // Nút hành động: nói thẳng bấm vào sẽ được gì, thay vì để người dùng đoán.
+    if (o.cta) {
+      const c = document.createElement('span');
+      c.className = 'toast-cta';
+      c.textContent = o.cta;
+      el.appendChild(c);
     }
     const close = () => {
       el.classList.remove('show');
@@ -228,23 +267,28 @@
           const enough = !isGuest && stake <= myBalance;
 
           // Ba trường hợp, mỗi trường hợp dẫn người dùng tới đúng nơi cần đến.
-          let sub, go;
+          let sub, go, cta;
           if (isGuest) {
-            sub = '💰 ' + pts + ' points · sign in to play';
+            sub = '💰 ' + pts + ' points stake';
+            cta = 'Sign in to play →';
             go = 'play-online.html?join=' + encodeURIComponent(r.code);
           } else if (enough) {
-            sub = '💰 ' + pts + ' points · click to join';
+            sub = '💰 ' + pts + ' points stake · room #' + r.code;
+            cta = '▶ Join now';
             go = 'play-online.html?join=' + encodeURIComponent(r.code);
           } else {
-            sub = '💰 ' + pts + ' points · you need ' +
+            sub = '💰 ' + pts + ' points stake · you need ' +
                   (stake - myBalance).toLocaleString('en-US') + ' more';
+            cta = 'Buy points →';
             go = 'topup.html';
           }
 
-          toast('New room from ' + r.host, {
+          toast(r.host + ' opened a room', {
             kind: 'room',
+            icon: '將',
             sub: sub,
-            timeout: 8000,
+            cta: cta,
+            timeout: 12000, // để lâu hơn: đây là thứ cần người dùng phản ứng
             onClick: () => { location.href = go; },
           });
         });
