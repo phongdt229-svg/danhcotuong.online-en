@@ -21,12 +21,13 @@ const { WebSocketServer } = require('ws');
 const X = require('../../public/js/engine/xiangqi.js'); // engine luật cờ dùng chung (chống gian lận)
 const stakeService = require('../services/stake.service');
 
-const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // bỏ ký tự dễ nhầm (I,O,0,1)
-
+/*
+ * Mã phòng: 4 CHỮ SỐ (0000–9999), không có chữ cái — dễ đọc cho nhau qua điện
+ * thoại và gõ được bằng bàn phím số.
+ * Chỉ 10.000 mã nên nơi gọi phải thử lại khi trùng (xem `while (rooms.has(...))`).
+ */
 function makeCode() {
-  let s = '';
-  for (let i = 0; i < 4; i++) s += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)];
-  return s;
+  return String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 }
 
 module.exports = function attachMatch(server, sessionParser) {
@@ -550,6 +551,17 @@ module.exports = function attachMatch(server, sessionParser) {
         if (wasOpen) broadcastRooms(); // chủ phòng thoát khi chưa bắt đầu
       }
     });
+  });
+
+  /*
+   * Trạng thái sảnh cho REST đọc. Bộ theo dõi phòng mới trong ui.js chạy ở MỌI
+   * trang (kể cả khách chưa đăng nhập) và không mở WebSocket, nên cần một
+   * endpoint HTTP thường để hỏi — xem GET /api/match/list trong server.js.
+   */
+  wss.lobbySnapshot = () => ({
+    rooms: openRooms(),
+    live: liveMatches(),
+    online: onlineNames(),
   });
 
   return wss;

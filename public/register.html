@@ -20,10 +20,12 @@
       .btn-puzzle{background:linear-gradient(150deg,#8b5cf6,#6d28d9);color:#fff}
       .badge-new{display:inline-block;background:#ef4444;color:#fff;font-size:.6rem;font-weight:800;line-height:1;padding:3px 6px;border-radius:999px;margin-left:4px;vertical-align:middle}
       @media(max-width:980px){.nav-menu{display:none;position:absolute;top:64px;left:0;right:0;flex-direction:column;align-items:stretch;background:var(--c-bg-soft,#16202d);border-bottom:1px solid var(--c-border,#2a3a4d);padding:10px;gap:2px}.nav-menu.open{display:flex}.sub-menu{position:static;display:block;min-width:0;padding:0 0 0 16px;margin:2px 0;background:transparent;border:none;box-shadow:none}.nav-toggle{display:inline-block}}
-      /* Ghi chú reCAPTCHA + ẩn badge góc phải (Google cho phép nếu có ghi chú này) */
+      /* Ghi chú reCAPTCHA. Huy hiệu góc phải để HIỆN cho thấy captcha đang chạy —
+         muốn ẩn cho gọn thì bỏ chú thích dòng .grecaptcha-badge bên dưới
+         (Google chỉ cho ẩn khi trang có ghi chú .captcha-notice này). */
       .captcha-notice{margin:14px 0 0;font-size:.72rem;line-height:1.5;text-align:center;opacity:.55}
       .captcha-notice a{text-decoration:underline}
-      .grecaptcha-badge{visibility:hidden}
+      /* .grecaptcha-badge{visibility:hidden} */
     </style>
   </head>
   <body>

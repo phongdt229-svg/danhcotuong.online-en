@@ -103,7 +103,16 @@ const server = http.createServer(app);
 
 /* ---------- WebSocket: đấu Cờ Tướng người với người (real-time) ---------- */
 // Truyền sessionParser vào để socket biết ai đang kết nối (bắt buộc cho ván cược điểm).
-require('./realtime/match')(server, sessionParser);
+const wss = require('./realtime/match')(server, sessionParser);
+
+/*
+ * Danh sách phòng qua HTTP thường (không cần WebSocket, không cần đăng nhập).
+ * ui.js dùng endpoint này để báo "có phòng mới" cho MỌI khách đang mở web,
+ * kể cả người chưa đăng nhập — bản PHP có sẵn route tương đương.
+ */
+app.get('/api/match/list', (req, res) => {
+  res.json(wss.lobbySnapshot ? wss.lobbySnapshot() : { rooms: [], live: [], online: [] });
+});
 
 server.listen(PORT, () => {
   console.log(`\n✓ Đánh Cờ Tướng Online đang chạy (${IS_PROD ? 'production' : 'development'}): http://localhost:${PORT}\n`);

@@ -360,6 +360,34 @@ img {
   justify-content: center;
   flex-wrap: wrap;
 }
+/*
+ * Điện thoại: 4 nút flex tự xuống dòng thành 4 hàng, chiếm hết màn hình.
+ * Chuyển sang lưới 2 CỘT cho gọn và cân đối.
+ */
+@media (max-width: 640px) {
+  .hero-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    /* Ép MỌI hàng cao bằng nhau: nhãn dài (Flip Chinese Chess) xuống 2 dòng
+       sẽ không làm hàng đó cao hơn hàng kia nữa. */
+    grid-auto-rows: 1fr;
+    gap: 10px;
+  }
+  .hero-actions .btn {
+    width: 100%;
+    padding: 12px 8px;
+    font-size: 0.88rem;
+    /* Tên nút dài (Flip Chinese Chess) được xuống dòng thay vì tràn ra ngoài */
+    white-space: normal;
+    line-height: 1.25;
+    text-align: center;
+  }
+  .hero-actions .badge-new {
+    display: block;
+    margin: 4px auto 0;
+    width: fit-content;
+  }
+}
 
 /* ---------- Feature grid ---------- */
 .section {
@@ -674,18 +702,28 @@ img {
 }
 
 /* ---------- Overlay / Modal ---------- */
+/*
+ * Popup. Trước đây dùng `align-items: center` mà hộp không giới hạn chiều cao:
+ * khi nội dung cao hơn màn hình (vd sảnh tạo phòng trên laptop), flex căn giữa
+ * làm hộp tràn ĐỀU cả hai đầu — phần trên bị cắt và KHÔNG cuộn tới được.
+ * Cách đúng: overlay tự cuộn, hộp căn từ trên xuống rồi dùng `margin: auto`
+ * để vẫn nằm giữa khi màn hình đủ cao.
+ */
 .overlay {
   position: fixed;
   inset: 0;
   background: rgba(8, 12, 18, 0.78);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   z-index: 60;
   padding: 20px;
 }
 .modal {
   position: relative;
+  margin: auto; /* căn giữa khi vừa màn hình, tự lùi lên khi cần cuộn */
   background: var(--c-card);
   border: 1px solid var(--c-border);
   border-radius: 16px;
@@ -693,6 +731,11 @@ img {
   width: 100%;
   max-width: 440px;
   box-shadow: var(--shadow);
+}
+/* Sảnh đấu online chứa nhiều mục (tìm nhanh, tạo phòng, danh sách, nhập mã)
+   nên cần rộng hơn popup thường. */
+#lobby-overlay .modal {
+  max-width: 560px;
 }
 .modal-close {
   position: absolute;
@@ -990,4 +1033,10 @@ table.games th {
 .table-wrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+/* Nút vẫn bấm được khi thiếu điểm (bấm vào sẽ hiện thông báo giải thích),
+   nhưng làm mờ đi để thấy ngay là chưa dùng được. */
+.btn-need-points {
+  opacity: 0.55;
 }

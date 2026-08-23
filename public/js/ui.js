@@ -203,5 +203,75 @@
     return el;
   }
 
+  /* ---------- Theo dõi phòng mới trên TOÀN SITE ---------- */
+  /*
+   * Trang Play vs Human tự lo phần này cho sảnh của nó. Đoạn dưới dành cho MỌI
+   * trang còn lại: đang đọc trang chủ, xem bảng xếp hạng hay chơi với máy mà có
+   * người mở phòng thì vẫn nhận được thông báo, bấm vào là vào thẳng phòng đó.
+   */
+  const ROOM_POLL_MS = 8000; // thưa hơn sảnh (4s) vì đây là nền, chạy ở mọi trang
+  let seenRooms = null;      // null = lần nạp đầu, chỉ ghi nhớ chứ không báo
+  let myBalance = 0;
+  let isGuest = true;        // khách CHƯA đăng nhập vẫn được nhận thông báo
+
+  async function watchRooms() {
+    try {
+      const data = await window.API.matchList();
+      const list = (data && data.rooms) || [];
+      const now = new Set(list.map((r) => r.code));
+
+      if (seenRooms !== null) {
+        list.forEach((r) => {
+          if (seenRooms.has(r.code)) return;
+          const stake = Number(r.stake) || 0;
+          const pts = stake.toLocaleString('en-US');
+          const enough = !isGuest && stake <= myBalance;
+
+          // Ba trường hợp, mỗi trường hợp dẫn người dùng tới đúng nơi cần đến.
+          let sub, go;
+          if (isGuest) {
+            sub = '💰 ' + pts + ' points · sign in to play';
+            go = 'play-online.html?join=' + encodeURIComponent(r.code);
+          } else if (enough) {
+            sub = '💰 ' + pts + ' points · click to join';
+            go = 'play-online.html?join=' + encodeURIComponent(r.code);
+          } else {
+            sub = '💰 ' + pts + ' points · you need ' +
+                  (stake - myBalance).toLocaleString('en-US') + ' more';
+            go = 'topup.html';
+          }
+
+          toast('New room from ' + r.host, {
+            kind: 'room',
+            sub: sub,
+            timeout: 8000,
+            onClick: () => { location.href = go; },
+          });
+        });
+      }
+      seenRooms = now;
+    } catch (e) {
+      /* mất mạng / endpoint chưa có -> im lặng, lần sau thử lại */
+    }
+  }
+
+  async function startRoomWatch() {
+    // Sảnh đấu online đã có bộ theo dõi riêng, chạy thêm ở đây sẽ báo trùng.
+    const page = location.pathname.split('/').pop() || 'index.html';
+    if (page === 'play-online.html') return;
+    if (!window.API || !window.API.matchList) return;
+
+    // Khách vãng lai VẪN theo dõi — thấy có phòng mới là một lý do để đăng ký.
+    let me = null;
+    try { me = await window.API.me(); } catch (e) {}
+    isGuest = !(me && me.user);
+    myBalance = isGuest ? 0 : Number(me.user.points) || 0;
+
+    await watchRooms(); // lần đầu chỉ ghi nhớ danh sách hiện có
+    setInterval(watchRooms, ROOM_POLL_MS);
+  }
+
+  document.addEventListener('DOMContentLoaded', startRoomWatch);
+
   window.UI = { refreshAuthUI, toast };
 })();

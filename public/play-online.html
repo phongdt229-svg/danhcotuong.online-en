@@ -191,7 +191,9 @@
         <div class="opt-group">
           <label>Or join with a room code</label>
           <div class="chat-row">
-            <input type="text" id="join-code" placeholder="VD: AB12" maxlength="4" style="text-transform: uppercase" />
+            <input type="text" id="join-code" placeholder="e.g. 4821" maxlength="4"
+                   inputmode="numeric" pattern="[0-9]*" autocomplete="off"
+                   oninput="this.value=this.value.replace(/D/g,'')" />
             <button class="btn btn-ghost" id="btn-join">Join</button>
           </div>
         </div>

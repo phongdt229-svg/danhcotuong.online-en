@@ -209,8 +209,13 @@
         'Minimum ' + fmtPts(state.minStake) + ' points. Winner takes ' + state.winnerPercent +
         '% of the pot, ' + state.housePercent + '% goes to the house. A draw refunds both players.';
     }
+    // KHÔNG khoá nút: nút khoá thì bấm vào im lặng, người dùng không hiểu vì sao.
+    // Để nút bấm được, và khi thiếu điểm thì hiện thông báo giải thích (xem currentStake).
     const poor = state.loggedIn && state.balance < state.minStake;
-    ['btn-quick', 'btn-create'].forEach((id) => { const b = $(id); if (b) b.disabled = poor; });
+    ['btn-quick', 'btn-create'].forEach((id) => {
+      const b = $(id);
+      if (b) { b.disabled = false; b.classList.toggle('btn-need-points', poor); }
+    });
     const warn = $('stake-warning');
     if (warn) {
       warn.style.display = poor ? '' : 'none';
@@ -229,7 +234,7 @@
       return null;
     }
     if (v > state.balance) {
-      lobbyStatus('You only have ' + fmtPts(state.balance) + ' points.');
+      notEnough(v); // toast nói rõ thiếu bao nhiêu + lối sang trang nạp
       return null;
     }
     return v;
@@ -273,7 +278,7 @@
   // Thông báo rõ ràng khi không đủ điểm (kèm lối đi nạp thêm).
   function notEnough(stake) {
     const missing = Number(stake) - state.balance;
-    window.UI.toast('Not enough points for this room', {
+    window.UI.toast('Not enough points', {
       kind: 'warn',
       sub: 'Stake ' + fmtPts(stake) + ' · you have ' + fmtPts(state.balance) +
            ' · you need ' + fmtPts(missing) + ' more. Click to buy points.',
