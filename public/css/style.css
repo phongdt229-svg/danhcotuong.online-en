@@ -1040,3 +1040,41 @@ table.games th {
 .btn-need-points {
   opacity: 0.55;
 }
+
+/* Language Switcher */
+.language-switcher {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.lang-btn {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--c-border);
+  background: transparent;
+  color: var(--c-muted);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.lang-btn:hover {
+  border-color: var(--c-accent);
+  color: var(--c-accent);
+}
+
+.lang-btn.active {
+  background: var(--c-accent);
+  border-color: var(--c-accent);
+  color: #000;
+}
+
+[data-theme='light'] .lang-btn.active {
+  background: var(--c-accent);
+  color: #000;
+}
