@@ -346,6 +346,7 @@
     state.capturedByRed = []; state.capturedByBlack = [];
     state.game = new X.Game();
     state.board = new window.Board($('board'), { humanColor: state.myColor, onMove: onMyMove });
+    state.board.setHint = () => {}; state.board.clearHint = () => {}; state.board.hintMove = null;
     const flip = state.myColor === 'b';
     $('board').classList.toggle('flip', flip);
     const col = document.querySelector('.board-col'); if (col) col.classList.toggle('flip', flip);
