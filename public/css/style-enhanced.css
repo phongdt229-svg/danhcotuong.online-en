@@ -27,11 +27,22 @@
 .brand {
   font-weight: 700;
   font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: transform 0.3s ease;
+}
+
+.brand .logo {
+  font-size: 1.3rem;
+  color: var(--c-accent);
+}
+
+.brand span:last-child {
   background: linear-gradient(135deg, #f2b134, #e8543c);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  transition: transform 0.3s ease;
 }
 
 .brand:hover {
