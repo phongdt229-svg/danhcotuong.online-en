@@ -52,37 +52,37 @@
         <a class="brand" href="/"><span class="logo">將</span><span>Chinesechess Online</span></a>
         <button class="nav-toggle" aria-label="Menu">☰</button>
         <ul class="nav-menu">
-          <li><a href="/">Home</a></li>
+          <li><a href="/" data-i18n="nav.home">Home</a></li>
           <li class="has-sub">
-            <a href="play.html" class="sub-toggle">Play ▾</a>
+            <a href="play.html" class="sub-toggle" data-i18n="nav.play">Play ▾</a>
             <ul class="sub-menu">
-              <li><a href="play.html">Play vs Computer</a></li>
-              <li><a href="play-up.html">Flip Chinese Chess</a></li>
-              <li><a href="puzzles.html">Puzzles</a></li>
+              <li><a href="play.html" data-i18n="nav.playVsComputer">Play vs Computer</a></li>
+              <li><a href="play-up.html" data-i18n="nav.flipChess">Flip Chinese Chess</a></li>
+              <li><a href="puzzles.html" data-i18n="nav.puzzles">Puzzles</a></li>
             </ul>
           </li>
           <li class="has-sub">
-            <a href="play-online.html" class="sub-toggle">Online ▾</a>
+            <a href="play-online.html" class="sub-toggle" data-i18n="nav.online">Online ▾</a>
             <ul class="sub-menu">
-              <li><a href="play-online.html">Play vs Human</a></li>
-              <li><a href="rooms.html">Room List</a></li>
+              <li><a href="play-online.html" data-i18n="nav.playVsHuman">Play vs Human</a></li>
+              <li><a href="rooms.html" data-i18n="nav.roomList">Room List</a></li>
             </ul>
           </li>
-          <li><a href="leaderboard.html">Leaderboard</a></li>
+          <li><a href="leaderboard.html" data-i18n="nav.leaderboard">Leaderboard</a></li>
           <li class="has-sub">
-            <a href="topup.html" class="sub-toggle">Points ▾</a>
+            <a href="topup.html" class="sub-toggle" data-i18n="nav.points">Points ▾</a>
             <ul class="sub-menu">
-              <li><a href="topup.html">Buy Points</a></li>
-              <li><a href="withdraw.html">Withdraw Points</a></li>
-              <li><a href="guide.html">Guide</a></li>
-              <li><a href="history.html">Points History</a></li>
+              <li><a href="topup.html" data-i18n="nav.buyPoints">Buy Points</a></li>
+              <li><a href="withdraw.html" data-i18n="nav.withdrawPoints">Withdraw Points</a></li>
+              <li><a href="guide.html" data-i18n="nav.guide">Guide</a></li>
+              <li><a href="history.html" data-i18n="nav.pointsHistory">Points History</a></li>
             </ul>
           </li>
-          <li><a href="profile.html" data-auth="user" style="display: none">Profile</a></li>
+          <li><a href="profile.html" data-auth="user" style="display: none" data-i18n="nav.profile">Profile</a></li>
         </ul>
         <div class="nav-actions">
-          <a class="btn btn-ghost" href="login.html" data-auth="guest">Sign in</a>
-          <a class="btn btn-primary" href="register.html" data-auth="guest">Sign up</a>
+          <a class="btn btn-ghost" href="login.html" data-auth="guest" data-i18n="nav.signIn">Sign in</a>
+          <a class="btn btn-primary" href="register.html" data-auth="guest" data-i18n="nav.signUp">Sign up</a>
           <span data-auth="user" style="display: none; font-weight: 700"
             >Hi, <span data-user-name>there</span></span
           >
@@ -95,35 +95,35 @@
 
     <main class="container" style="padding: 28px 20px 60px">
       <div style="max-width:800px;margin:0 auto">
-        <h1>Points System Guide</h1>
-        <p class="text-muted">Learn how to manage your points and participate in competitive games</p>
+        <h1 data-i18n="guide.title">Points System Guide</h1>
+        <p class="text-muted" data-i18n="guide.subtitle">Learn how to manage your points and participate in competitive games</p>
 
         <!-- Buy Points Section -->
         <section class="guide-section card" style="padding:24px;margin-bottom:24px">
-          <h2>💰 How to Buy Points</h2>
-          <p>Points are required to play in competitive games where you can win prizes. Here's how to purchase points:</p>
+          <h2 data-i18n="guide.buySection">💰 How to Buy Points</h2>
+          <p data-i18n="guide.buyIntro">Points are required to play in competitive games where you can win prizes. Here's how to purchase points:</p>
 
-          <h3>Step-by-step Instructions</h3>
+          <h3 data-i18n="guide.steps">Step-by-step Instructions</h3>
           <ul class="guide-steps">
             <li data-step="1">
-              <strong>Sign in to your account</strong>
-              <p style="margin:6px 0 0">Make sure you're logged in to access the buy points feature.</p>
+              <strong data-i18n="guide.step1">Sign in to your account</strong>
+              <p style="margin:6px 0 0" data-i18n="guide.step1Desc">Make sure you're logged in to access the buy points feature.</p>
             </li>
             <li data-step="2">
-              <strong>Navigate to Buy Points</strong>
-              <p style="margin:6px 0 0">Go to Points menu → Buy Points, or <a href="topup.html">click here</a>.</p>
+              <strong data-i18n="guide.step2">Navigate to Buy Points</strong>
+              <p style="margin:6px 0 0" data-i18n="guide.step2Desc">Go to Points menu → Buy Points, or <a href="topup.html">click here</a>.</p>
             </li>
             <li data-step="3">
-              <strong>Choose a package</strong>
-              <p style="margin:6px 0 0">Select from available point packages. Each package has a different price and point amount.</p>
+              <strong data-i18n="guide.step3">Choose a package</strong>
+              <p style="margin:6px 0 0" data-i18n="guide.step3Desc">Select from available point packages. Each package has a different price and point amount.</p>
             </li>
             <li data-step="4">
-              <strong>Complete payment</strong>
-              <p style="margin:6px 0 0">Pay using PayPal. Your points will be credited immediately after payment is confirmed.</p>
+              <strong data-i18n="guide.step4">Complete payment</strong>
+              <p style="margin:6px 0 0" data-i18n="guide.step4Desc">Pay using PayPal. Your points will be credited immediately after payment is confirmed.</p>
             </li>
             <li data-step="5">
-              <strong>Start playing</strong>
-              <p style="margin:6px 0 0">Your points are now in your balance. You can use them to join competitive games.</p>
+              <strong data-i18n="guide.step5">Start playing</strong>
+              <p style="margin:6px 0 0" data-i18n="guide.step5Desc">Your points are now in your balance. You can use them to join competitive games.</p>
             </li>
           </ul>
 
@@ -162,10 +162,10 @@
 
         <!-- Withdraw Points Section -->
         <section class="guide-section card" style="padding:24px;margin-bottom:24px">
-          <h2>🏦 How to Withdraw Points</h2>
-          <p>If you've earned points by winning games, you can withdraw them and receive money to your PayPal account.</p>
+          <h2 data-i18n="guide.withdrawSection">🏦 How to Withdraw Points</h2>
+          <p data-i18n="guide.withdrawIntro">If you've earned points by winning games, you can withdraw them and receive money to your PayPal account.</p>
 
-          <h3>Step-by-step Instructions</h3>
+          <h3 data-i18n="guide.steps">Step-by-step Instructions</h3>
           <ul class="guide-steps">
             <li data-step="1">
               <strong>Sign in and check your balance</strong>
@@ -302,12 +302,13 @@
     </main>
 
     <footer class="footer">
-      <div class="container">
+      <div class="container" data-i18n="common.copyright">
         © 2026 chinesechess.online — Play Chinese Chess free in your browser.
       </div>
     </footer>
 
     <script src="js/api.js?v=14"></script>
     <script src="js/ui.js?v=14"></script>
+    <script src="js/i18n.js?v=14"></script>
   </body>
 </html>

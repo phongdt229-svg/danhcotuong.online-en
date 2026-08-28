@@ -414,7 +414,7 @@ img {
   grid-template-columns: repeat(2, 1fr);
 }
 .feature {
-  text-align: left;
+  text-align: center;
 }
 .feature .ico {
   width: 46px;
@@ -425,7 +425,7 @@ img {
   justify-content: center;
   font-size: 1.5rem;
   background: var(--c-bg-soft);
-  margin-bottom: 12px;
+  margin: 0 auto 12px;
 }
 .feature h3 {
   margin: 0 0 6px;

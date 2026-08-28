@@ -105,6 +105,64 @@
       "notice": "⚠️ Important",
       "withdrawWarning": "Withdrawals are reviewed manually and paid by hand. They are not instant. If your request is rejected or cancelled, your points are returned to your balance immediately."
     },
+    "play": {
+      "playVsComputer": "Play vs Computer",
+      "difficulty": "Difficulty",
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard",
+      "gameTime": "Game Time",
+      "minutes": "minutes",
+      "newGame": "New Game",
+      "resign": "Resign",
+      "yourTurn": "YOUR turn to move.",
+      "waitingForOpponent": "Waiting for your opponent…",
+      "moveHistory": "Move history",
+      "capturedPieces": "Captured pieces",
+      "back": "Back to home"
+    },
+    "online": {
+      "playVsHuman": "Play vs Human",
+      "quickMatch": "Quick match",
+      "createRoom": "Create a room",
+      "joinRoom": "Join with a room code",
+      "openRooms": "Open rooms",
+      "yourStake": "Your stake (points)",
+      "balance": "Balance",
+      "buyPoints": "Buy points",
+      "noRoomsYet": "No rooms yet. Create one!",
+      "sendCode": "Send this code to a friend",
+      "copyInvite": "Copy invite link",
+      "opponent": "Opponent",
+      "status": "Status",
+      "chat": "Chat",
+      "typeMessage": "Type a message…",
+      "send": "Send"
+    },
+    "topup": {
+      "title": "Buy Points",
+      "yourBalance": "Your balance",
+      "choosePackage": "Choose a package",
+      "sandboxMode": "Sandbox mode",
+      "sandboxNote": "No real money is charged. Pay with a PayPal sandbox test account from developer.paypal.com → Testing Tools → Sandbox Accounts.",
+      "topupHistory": "Top-up history",
+      "amount": "Amount",
+      "pointsReceived": "Points received",
+      "status": "Status"
+    },
+    "withdraw": {
+      "title": "Withdraw Points",
+      "availableBalance": "Available balance",
+      "requestWithdrawal": "Request a withdrawal",
+      "pointsToWithdraw": "Points to withdraw",
+      "max": "Max",
+      "paypalEmail": "PayPal email to receive the money",
+      "requestBtn": "Request withdrawal",
+      "yourRequests": "Your requests",
+      "date": "Date",
+      "status": "Status",
+      "legal": "Withdrawals are reviewed manually and paid out by hand, so they are not instant. Your points are held as soon as you submit a request; if the request is rejected or you cancel it, the points go straight back to your balance. Double-check the PayPal address — money sent to the wrong address cannot be recovered."
+    },
     "common": {
       "loading": "Loading…",
       "error": "Error",
@@ -116,7 +174,8 @@
       "edit": "Edit",
       "close": "Close",
       "notSignedIn": "You are not signed in",
-      "pleaseSignIn": "Please sign in to continue."
+      "pleaseSignIn": "Please sign in to continue.",
+      "copyright": "© 2026 chinesechess.online — Play Chinese Chess free in your browser."
     }
   },
   "vi": {
@@ -225,6 +284,64 @@
       "notice": "⚠️ Quan trọng",
       "withdrawWarning": "Các lần rút điểm được xem xét thủ công và trả bằng tay. Chúng không phải là tức thời. Nếu yêu cầu của bạn bị từ chối hoặc hủy, điểm của bạn sẽ được hoàn lại vào số dư ngay lập tức."
     },
+    "play": {
+      "playVsComputer": "Chơi với máy",
+      "difficulty": "Mức độ khó",
+      "easy": "Dễ",
+      "medium": "Trung bình",
+      "hard": "Khó",
+      "gameTime": "Thời gian chơi",
+      "minutes": "phút",
+      "newGame": "Trò chơi mới",
+      "resign": "Đầu hàng",
+      "yourTurn": "LƯỢT CỦA BẠN di chuyển.",
+      "waitingForOpponent": "Đang chờ đối thủ…",
+      "moveHistory": "Lịch sử nước đi",
+      "capturedPieces": "Quân bị bắt",
+      "back": "Quay về trang chủ"
+    },
+    "online": {
+      "playVsHuman": "Chơi với người",
+      "quickMatch": "Trận nhanh",
+      "createRoom": "Tạo phòng",
+      "joinRoom": "Tham gia với mã phòng",
+      "openRooms": "Phòng mở",
+      "yourStake": "Cược của bạn (điểm)",
+      "balance": "Số dư",
+      "buyPoints": "Nạp điểm",
+      "noRoomsYet": "Chưa có phòng nào. Tạo một phòng!",
+      "sendCode": "Gửi mã này cho bạn bè",
+      "copyInvite": "Sao chép liên kết mời",
+      "opponent": "Đối thủ",
+      "status": "Trạng thái",
+      "chat": "Trò chuyện",
+      "typeMessage": "Nhập tin nhắn…",
+      "send": "Gửi"
+    },
+    "topup": {
+      "title": "Nạp điểm",
+      "yourBalance": "Số dư của bạn",
+      "choosePackage": "Chọn gói",
+      "sandboxMode": "Chế độ Sandbox",
+      "sandboxNote": "Không có tiền thật được tính phí. Thanh toán bằng tài khoản kiểm thử PayPal sandbox từ developer.paypal.com → Testing Tools → Sandbox Accounts.",
+      "topupHistory": "Lịch sử nạp điểm",
+      "amount": "Số tiền",
+      "pointsReceived": "Điểm nhận được",
+      "status": "Trạng thái"
+    },
+    "withdraw": {
+      "title": "Rút điểm",
+      "availableBalance": "Số dư khả dụng",
+      "requestWithdrawal": "Yêu cầu rút điểm",
+      "pointsToWithdraw": "Điểm cần rút",
+      "max": "Tối đa",
+      "paypalEmail": "Email PayPal để nhận tiền",
+      "requestBtn": "Yêu cầu rút điểm",
+      "yourRequests": "Các yêu cầu của bạn",
+      "date": "Ngày",
+      "status": "Trạng thái",
+      "legal": "Các lần rút điểm được xem xét thủ công và trả bằng tay. Chúng không phải là tức thời. Điểm của bạn được giữ ngay sau khi bạn gửi yêu cầu; nếu yêu cầu bị từ chối hoặc hủy, điểm sẽ được trả lại vào số dư ngay lập tức. Kiểm tra kỹ địa chỉ PayPal — tiền gửi sai địa chỉ không thể được khôi phục."
+    },
     "common": {
       "loading": "Đang tải…",
       "error": "Lỗi",
@@ -236,7 +353,8 @@
       "edit": "Chỉnh sửa",
       "close": "Đóng",
       "notSignedIn": "Bạn chưa đăng nhập",
-      "pleaseSignIn": "Vui lòng đăng nhập để tiếp tục."
+      "pleaseSignIn": "Vui lòng đăng nhập để tiếp tục.",
+      "copyright": "© 2026 chinesechess.online — Chơi Cờ Tướng miễn phí trong trình duyệt."
     }
   }
 }

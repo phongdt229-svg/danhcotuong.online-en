@@ -8,8 +8,9 @@ const i18n = {
     const response = await fetch('js/translations.json');
     this.translations = await response.json();
 
-    // Get saved language or default to 'en'
-    this.currentLang = localStorage.getItem('lang') || 'en';
+    // Always default to English
+    this.currentLang = 'en';
+    localStorage.removeItem('lang');
     this.apply();
   },
 
