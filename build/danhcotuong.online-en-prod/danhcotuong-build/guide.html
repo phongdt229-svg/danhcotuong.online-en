@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#0f1620" />
+    <link rel="apple-touch-icon" href="images/icon.svg" />
+    <title>Points Guide — Chinesechess Online</title>
+    <link rel="stylesheet" href="css/style.css?v=14" />
+    <style>
+      /* Critical CSS: menu 2 cấp + nút nổi bật (nhúng để chạy kể cả khi style.css chưa cập nhật) */
+      .has-sub{position:relative}
+      .sub-menu{display:none;position:absolute;top:100%;left:0;min-width:190px;list-style:none;margin:0;padding:6px;padding-top:10px;background:var(--c-card,#1c2836);border:1px solid var(--c-border,#2a3a4d);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:50}
+      .has-sub:hover>.sub-menu,.has-sub.open>.sub-menu{display:block}
+      .sub-menu li{display:block}
+      .sub-menu a{display:block;white-space:nowrap}
+      .nav-menu a{white-space:nowrap}
+      .btn-up{background:linear-gradient(150deg,#10b981,#047857);color:#fff}
+      .btn-puzzle{background:linear-gradient(150deg,#8b5cf6,#6d28d9);color:#fff}
+      .badge-new{display:inline-block;background:#ef4444;color:#fff;font-size:.6rem;font-weight:800;line-height:1;padding:3px 6px;border-radius:999px;margin-left:4px;vertical-align:middle}
+      @media(max-width:980px){.nav-menu{display:none;position:absolute;top:64px;left:0;right:0;flex-direction:column;align-items:stretch;background:var(--c-bg-soft,#16202d);border-bottom:1px solid var(--c-border,#2a3a4d);padding:10px;gap:2px}.nav-menu.open{display:flex}.sub-menu{position:static;display:block;min-width:0;padding:0 0 0 16px;margin:2px 0;background:transparent;border:none;box-shadow:none}.nav-toggle{display:inline-block}}
+
+      /* Guide styles */
+      .guide-section{margin-bottom:40px}
+      .guide-section h2{margin-top:0;color:var(--c-accent,#f0b429);font-size:1.8rem;margin-bottom:16px}
+      .guide-section h3{margin-top:18px;margin-bottom:10px;color:inherit;font-size:1.1rem}
+      .guide-section p{margin:10px 0;line-height:1.6}
+      .guide-steps{margin:16px 0;padding:0;list-style:none}
+      .guide-steps li{margin:12px 0;padding:12px 14px;padding-left:40px;position:relative;background:var(--c-bg-soft,#16202d);border-radius:8px;border-left:4px solid var(--c-accent,#f0b429)}
+      .guide-steps li:before{content:attr(data-step);position:absolute;left:12px;top:12px;display:flex;align-items:center;justify-content:center;width:24px;height:24px;background:var(--c-accent,#f0b429);color:#000;border-radius:50%;font-weight:800;font-size:.9rem}
+      .guide-list{margin:12px 0 0 20px;list-style:disc}
+      .guide-list li{margin:8px 0}
+      .info-box{margin:16px 0;padding:14px;border-radius:10px;border-left:4px solid #3b82f6;background:rgba(59,130,246,.08)}
+      .info-box strong{color:#3b82f6}
+      .warning-box{margin:16px 0;padding:14px;border-radius:10px;border-left:4px solid #f0b429;background:rgba(240,180,41,.08)}
+      .warning-box strong{color:#f0b429}
+      .success-box{margin:16px 0;padding:14px;border-radius:10px;border-left:4px solid #10b981;background:rgba(16,185,129,.08)}
+      .success-box strong{color:#10b981}
+      .guide-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin:16px 0}
+      .guide-card{padding:16px;background:var(--c-bg-soft,#16202d);border-radius:10px;border:1px solid var(--c-border,#2a3a4d)}
+      .guide-card .ico{font-size:2rem;margin-bottom:10px}
+      .guide-card h4{margin:8px 0;font-size:1rem}
+      .guide-card p{margin:6px 0;font-size:.9rem;opacity:.8}
+    </style>
+  </head>
+  <body>
+    <header class="navbar">
+      <div class="container nav-inner">
+        <a class="brand" href="index.html"><span class="logo">將</span><span>Chinesechess Online</span></a>
+        <button class="nav-toggle" aria-label="Menu">☰</button>
+        <ul class="nav-menu">
+          <li><a href="index.html">Home</a></li>
+          <li class="has-sub">
+            <a href="play.html" class="sub-toggle">Play ▾</a>
+            <ul class="sub-menu">
+              <li><a href="play.html">Play vs Computer</a></li>
+              <li><a href="play-up.html">Flip Chinese Chess</a></li>
+              <li><a href="puzzles.html">Puzzles</a></li>
+            </ul>
+          </li>
+          <li class="has-sub">
+            <a href="play-online.html" class="sub-toggle">Online ▾</a>
+            <ul class="sub-menu">
+              <li><a href="play-online.html">Play vs Human</a></li>
+              <li><a href="rooms.html">Room List</a></li>
+            </ul>
+          </li>
+          <li><a href="leaderboard.html">Leaderboard</a></li>
+          <li class="has-sub">
+            <a href="topup.html" class="sub-toggle">Points ▾</a>
+            <ul class="sub-menu">
+              <li><a href="topup.html">Buy Points</a></li>
+              <li><a href="withdraw.html">Withdraw Points</a></li>
+              <li><a href="guide.html">Guide</a></li>
+              <li><a href="history.html">Points History</a></li>
+            </ul>
+          </li>
+          <li><a href="profile.html" data-auth="user" style="display: none">Profile</a></li>
+        </ul>
+        <div class="nav-actions">
+          <a class="btn btn-ghost" href="login.html" data-auth="guest">Sign in</a>
+          <a class="btn btn-primary" href="register.html" data-auth="guest">Sign up</a>
+          <span data-auth="user" style="display: none; font-weight: 700"
+            >Hi, <span data-user-name>there</span></span
+          >
+          <a class="btn btn-ghost" href="#" data-auth="user" data-action="logout" style="display: none"
+            >Log out</a
+          >
+        </div>
+      </div>
+    </header>
+
+    <main class="container" style="padding: 28px 20px 60px">
+      <div style="max-width:800px;margin:0 auto">
+        <h1>Points System Guide</h1>
+        <p class="text-muted">Learn how to manage your points and participate in competitive games</p>
+
+        <!-- Buy Points Section -->
+        <section class="guide-section card" style="padding:24px;margin-bottom:24px">
+          <h2>💰 How to Buy Points</h2>
+          <p>Points are required to play in competitive games where you can win prizes. Here's how to purchase points:</p>
+
+          <h3>Step-by-step Instructions</h3>
+          <ul class="guide-steps">
+            <li data-step="1">
+              <strong>Sign in to your account</strong>
+              <p style="margin:6px 0 0">Make sure you're logged in to access the buy points feature.</p>
+            </li>
+            <li data-step="2">
+              <strong>Navigate to Buy Points</strong>
+              <p style="margin:6px 0 0">Go to Points menu → Buy Points, or <a href="topup.html">click here</a>.</p>
+            </li>
+            <li data-step="3">
+              <strong>Choose a package</strong>
+              <p style="margin:6px 0 0">Select from available point packages. Each package has a different price and point amount.</p>
+            </li>
+            <li data-step="4">
+              <strong>Complete payment</strong>
+              <p style="margin:6px 0 0">Pay using PayPal. Your points will be credited immediately after payment is confirmed.</p>
+            </li>
+            <li data-step="5">
+              <strong>Start playing</strong>
+              <p style="margin:6px 0 0">Your points are now in your balance. You can use them to join competitive games.</p>
+            </li>
+          </ul>
+
+          <div class="info-box">
+            <strong>ℹ️ Payment Methods:</strong> We accept PayPal for all transactions. Your payment information is secure and encrypted.
+          </div>
+
+          <h3>Payment Packages</h3>
+          <div class="guide-grid">
+            <div class="guide-card">
+              <div class="ico">🎯</div>
+              <h4>Starter</h4>
+              <p>Perfect for trying out competitive games</p>
+            </div>
+            <div class="guide-card">
+              <div class="ico">⭐</div>
+              <h4>Popular</h4>
+              <p>Best value for regular players</p>
+            </div>
+            <div class="guide-card">
+              <div class="ico">👑</div>
+              <h4>Premium</h4>
+              <p>For serious competitors</p>
+            </div>
+          </div>
+
+          <h3>Top-up History</h3>
+          <p>You can view all your purchases in the "Top-up history" table on the Buy Points page. This shows:</p>
+          <ul class="guide-list">
+            <li><strong>Date:</strong> When you made the purchase</li>
+            <li><strong>Amount:</strong> How much you paid</li>
+            <li><strong>Points:</strong> Number of points received</li>
+            <li><strong>Status:</strong> Whether the transaction is completed or pending</li>
+          </ul>
+        </section>
+
+        <!-- Withdraw Points Section -->
+        <section class="guide-section card" style="padding:24px;margin-bottom:24px">
+          <h2>🏦 How to Withdraw Points</h2>
+          <p>If you've earned points by winning games, you can withdraw them and receive money to your PayPal account.</p>
+
+          <h3>Step-by-step Instructions</h3>
+          <ul class="guide-steps">
+            <li data-step="1">
+              <strong>Sign in and check your balance</strong>
+              <p style="margin:6px 0 0">Only points earned through winning are eligible for withdrawal. Your withdrawable balance is shown on the Withdraw page.</p>
+            </li>
+            <li data-step="2">
+              <strong>Go to Withdraw Points</strong>
+              <p style="margin:6px 0 0">Go to Points menu → Withdraw Points, or <a href="withdraw.html">click here</a>.</p>
+            </li>
+            <li data-step="3">
+              <strong>Enter withdrawal amount</strong>
+              <p style="margin:6px 0 0">Specify how many points you want to withdraw. You can use the "Max" button to withdraw all available points.</p>
+            </li>
+            <li data-step="4">
+              <strong>Provide PayPal email</strong>
+              <p style="margin:6px 0 0">Enter the PayPal email address where you want to receive the money. <span style="color:#f87171">Double-check this carefully</span> — money sent to the wrong address cannot be recovered.</p>
+            </li>
+            <li data-step="5">
+              <strong>Submit request</strong>
+              <p style="margin:6px 0 0">Review everything and click "Request withdrawal". Your points will be held immediately.</p>
+            </li>
+            <li data-step="6">
+              <strong>Wait for approval</strong>
+              <p style="margin:6px 0 0">Withdrawals are reviewed manually. Approved requests are processed within 3-5 business days.</p>
+            </li>
+          </ul>
+
+          <h3>Withdrawal Limits & Rules</h3>
+          <ul class="guide-list">
+            <li><strong>Minimum withdrawal:</strong> Usually 100 points or more (check the actual minimum on the withdrawal page)</li>
+            <li><strong>Processing time:</strong> 3-5 business days after approval</li>
+            <li><strong>Eligible points:</strong> Only points earned from winning games, not purchased points</li>
+            <li><strong>Status tracking:</strong> Monitor your request status in the "Your requests" table</li>
+          </ul>
+
+          <div class="warning-box">
+            <strong>⚠️ Important:</strong> Withdrawals are reviewed manually and paid by hand. They are not instant. If your request is rejected or cancelled, your points are returned to your balance immediately.
+          </div>
+
+          <h3>Withdrawal Request Status</h3>
+          <p>Track your withdrawal requests with these statuses:</p>
+          <div class="guide-grid">
+            <div class="guide-card">
+              <div class="ico">⏳</div>
+              <h4>Pending</h4>
+              <p>Your request is being reviewed</p>
+            </div>
+            <div class="guide-card">
+              <div class="ico">✅</div>
+              <h4>Paid</h4>
+              <p>Money has been sent to your PayPal</p>
+            </div>
+            <div class="guide-card">
+              <div class="ico">❌</div>
+              <h4>Rejected</h4>
+              <p>Request was denied; points returned</p>
+            </div>
+            <div class="guide-card">
+              <div class="ico">🚫</div>
+              <h4>Cancelled</h4>
+              <p>You cancelled the request; points returned</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Points History Section -->
+        <section class="guide-section card" style="padding:24px;margin-bottom:24px">
+          <h2>📊 Points History</h2>
+          <p>View a detailed log of all your point transactions in one place.</p>
+
+          <h3>What You Can See</h3>
+          <ul class="guide-list">
+            <li>All purchases (money → points)</li>
+            <li>All withdrawals (points → money)</li>
+            <li>Game winnings and losses</li>
+            <li>Complete transaction history</li>
+          </ul>
+
+          <p>Access your history anytime by going to Points menu → Points History, or <a href="history.html">click here</a>.</p>
+        </section>
+
+        <!-- Playing with Points Section -->
+        <section class="guide-section card" style="padding:24px;margin-bottom:24px">
+          <h2>🎮 Playing with Points</h2>
+          <p>Once you have points, you can use them to play competitive games against other players.</p>
+
+          <h3>Key Features</h3>
+          <ul class="guide-list">
+            <li>Play in competitive rooms with point stakes</li>
+            <li>Win points by defeating opponents</li>
+            <li>Participate in tournaments and challenges</li>
+            <li>Track your winnings and losses</li>
+            <li>Withdraw your earnings anytime</li>
+          </ul>
+
+          <div class="success-box">
+            <strong>💡 Tip:</strong> Start with smaller games to practice and build your confidence before joining high-stakes rooms.
+          </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section class="guide-section card" style="padding:24px">
+          <h2>❓ Frequently Asked Questions</h2>
+
+          <h3>Can I withdraw points I purchased?</h3>
+          <p>No, you can only withdraw points that you've earned by winning games. Purchased points can only be used to play competitive games.</p>
+
+          <h3>How long does withdrawal approval take?</h3>
+          <p>Withdrawals are reviewed manually. Most approvals happen within 1-2 business days, and the money is sent within 3-5 days after that.</p>
+
+          <h3>What if I entered the wrong PayPal email?</h3>
+          <p>Contact support immediately if you notice a mistake before your withdrawal is processed. Once money is sent to the wrong address, it cannot be recovered by us.</p>
+
+          <h3>Are my payments safe?</h3>
+          <p>Yes, all payments go through PayPal's secure system. We never store your credit card information on our servers.</p>
+
+          <h3>Can I cancel a withdrawal request?</h3>
+          <p>Yes, you can cancel a pending withdrawal request. Your points will be returned to your balance immediately. Once a withdrawal is marked "Paid", it cannot be cancelled.</p>
+
+          <h3>Why is my withdrawal status still pending?</h3>
+          <p>Our team manually reviews all withdrawal requests to prevent fraud. If it's been more than 2 days, please contact support.</p>
+
+          <h3>What's the minimum amount I can withdraw?</h3>
+          <p>The minimum is usually 100 points, but check the withdrawal page for the exact current minimum.</p>
+
+          <h3>How are the exchange rates calculated?</h3>
+          <p>Check the "Points History" page or the "Buy Points" page to see current conversion rates between points and currency.</p>
+        </section>
+
+        <div style="margin-top:40px;padding:16px;background:var(--c-bg-soft,#16202d);border-radius:10px;text-align:center">
+          <p style="margin:0;opacity:.7">Still have questions? Visit the <a href="profile.html">profile page</a> or contact our support team.</p>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container">
+        © 2026 chinesechess.online — Play Chinese Chess free in your browser.
+      </div>
+    </footer>
+
+    <script src="js/api.js?v=14"></script>
+    <script src="js/ui.js?v=14"></script>
+  </body>
+</html>

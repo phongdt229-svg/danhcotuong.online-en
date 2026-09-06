@@ -1,0 +1,16 @@
+{
+  "name": "Đánh Cờ Tướng Online",
+  "short_name": "Cờ Tướng",
+  "description": "Chơi cờ tướng với máy (AI có tự học) và với người online.",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f1620",
+  "theme_color": "#0f1620",
+  "lang": "vi",
+  "icons": [
+    { "src": "images/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "images/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

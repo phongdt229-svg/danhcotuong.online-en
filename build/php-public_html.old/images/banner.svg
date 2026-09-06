@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="90" viewBox="0 0 720 90" role="img" aria-label="Advertise here 720x90">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#1c2836"/>
+      <stop offset="1" stop-color="#2a3a4d"/>
+    </linearGradient>
+  </defs>
+  <rect width="720" height="90" rx="10" fill="url(#bg)"/>
+  <rect x="6" y="6" width="708" height="78" rx="7" fill="none" stroke="#e8543c" stroke-opacity="0.5" stroke-dasharray="7 6"/>
+  <text x="34" y="52" font-family="Segoe UI, Arial, sans-serif" font-size="34" fill="#e8543c" font-weight="bold">將</text>
+  <text x="80" y="42" font-family="Segoe UI, Arial, sans-serif" font-size="19" fill="#e7edf3" font-weight="bold">Advertise here — 720×90 banner</text>
+  <text x="80" y="66" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#93a4b5">Replace images/banner.svg, or change the src &amp; href</text>
+  <text x="690" y="52" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#5a6b7b">720×90</text>
+</svg>

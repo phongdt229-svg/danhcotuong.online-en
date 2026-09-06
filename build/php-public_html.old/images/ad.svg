@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="250" viewBox="0 0 300 250" role="img" aria-label="Advertise here">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#b91c1c"/>
+      <stop offset="1" stop-color="#7f1d1d"/>
+    </linearGradient>
+  </defs>
+  <rect width="300" height="250" rx="14" fill="url(#g)"/>
+  <rect x="8" y="8" width="284" height="234" rx="10" fill="none" stroke="#ffffff" stroke-opacity="0.25" stroke-dasharray="6 6"/>
+  <text x="150" y="96" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="58" fill="#ffffff" font-weight="bold">將</text>
+  <text x="150" y="150" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" fill="#ffffff" font-weight="bold">Advertise here</text>
+  <text x="150" y="178" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#ffe4e4">Place your banner here</text>
+  <text x="150" y="208" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#fecaca">images/ad.svg · 300×250</text>
+</svg>

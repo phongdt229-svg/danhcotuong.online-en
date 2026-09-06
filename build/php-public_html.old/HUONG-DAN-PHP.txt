@@ -1,0 +1,168 @@
+====================================================================
+ CHINESECHESS ONLINE — BẢN PHP (chạy trên hosting thường, không cần Node)
+====================================================================
+
+Gói này chạy được trên hosting chỉ hỗ trợ PHP + MySQL. Không cần cài gì,
+không cần chạy lệnh — upload lên là chạy.
+
+YÊU CẦU HOSTING
+  - PHP 7.4 trở lên (khuyến nghị 8.x), có sẵn PDO MySQL và cURL
+  - MySQL / MariaDB
+  - Apache có mod_rewrite (để .htaccess định tuyến /api/...)
+  - Cho phép PHP gọi ra Internet (bắt buộc, để gọi PayPal)
+
+--------------------------------------------------------------------
+ BƯỚC 1 — UPLOAD
+--------------------------------------------------------------------
+Giải nén và upload TOÀN BỘ nội dung thư mục này vào public_html
+(hoặc thư mục gốc của domain). Sau khi upload phải thấy:
+  index.html, api/, js/, css/, images/, .htaccess
+
+Nhớ upload cả file .htaccess (File Manager thường ẩn file bắt đầu bằng
+dấu chấm — bật "Show hidden files").
+
+--------------------------------------------------------------------
+ BƯỚC 2 — TẠO DATABASE (cPanel > MySQL Databases)
+--------------------------------------------------------------------
+  1. Create New Database  -> ghi nhớ TÊN ĐẦY ĐỦ (có tiền tố tài khoản)
+  2. Add New User         -> đặt mật khẩu MẠNH, ghi nhớ tên đầy đủ
+  3. Add User To Database -> tích ALL PRIVILEGES
+
+Không cần import SQL. App tự tạo đủ bảng khi chạy lần đầu:
+  users, games, matches, ai_book,
+  point_transactions, stake_matches, point_ledger
+
+--------------------------------------------------------------------
+ BƯỚC 3 — SỬA api/config.php
+--------------------------------------------------------------------
+Điền TÊN ĐẦY ĐỦ (có tiền tố) vào 3 dòng:
+  'DB_USER' => 'taikhoan_dbuser',
+  'DB_PASS' => 'mat-khau-vua-dat',
+  'DB_NAME' => 'taikhoan_chinesechess',
+
+--------------------------------------------------------------------
+ BƯỚC 4 — SỬA api/payment-config.php (nạp điểm qua PayPal)
+--------------------------------------------------------------------
+  'PAYPAL_MODE'          => 'live',      // 'live' = TIỀN THẬT
+  'PAYPAL_CLIENT_ID'     => '...',
+  'PAYPAL_CLIENT_SECRET' => '...',
+
+Key LIVE lấy ở developer.paypal.com > Apps & Credentials > tab Live
+(cần tài khoản business đã xác minh). Key live KHÁC HOÀN TOÀN key sandbox —
+dùng nhầm sandbox thì tiền KHÔNG vào thật.
+
+Để trống 2 dòng key thì trang Buy Points hiện "Payments are not configured",
+phần chơi cờ vẫn chạy bình thường.
+
+Cùng file này còn cấu hình cược điểm và rút điểm:
+  'STAKE_MIN'            => '150',   // cược tối thiểu mỗi bên
+  'STAKE_WINNER_PERCENT' => '80',    // thắng ăn 80%, admin 20%
+  'ADMIN_USER_ID'        => '',      // id tài khoản admin (xem bước 6) — BẮT BUỘC
+                                     // nếu muốn dùng trang duyệt rút điểm
+  'WITHDRAW_ENABLED'     => '1',     // '0' = tạm ngừng cho rút
+  'WITHDRAW_MIN_POINTS'  => '1000',  // rút tối thiểu 1000 điểm (~$100)
+  'WITHDRAW_POINTS_PER_USD' => '10', // 10 điểm = $1 khi rút ra
+
+--------------------------------------------------------------------
+ BƯỚC 5 — BẬT HTTPS
+--------------------------------------------------------------------
+cPanel > SSL/TLS Status > chọn domain + www > Run AutoSSL.
+Có HTTPS rồi, mở api/db.php và BỎ DẤU // ở dòng:
+      // 'secure' => true,
+để cookie đăng nhập chỉ đi qua HTTPS.
+
+--------------------------------------------------------------------
+ BƯỚC 6 — KIỂM TRA
+--------------------------------------------------------------------
+  https://TENMIEN/api/health           -> {"ok":true}
+  https://TENMIEN/api/payments/config  -> "configured":true, "mode":"live"
+
+  mode "sandbox" trên production = đang dùng nhầm key sandbox, tiền không vào thật.
+
+Kiểm bằng tay:
+  1. Đăng ký -> đăng nhập -> chơi với máy (không tốn điểm)
+  2. Nạp thử 1 USD bằng PayPal thật -> phải nhận đúng 10 điểm
+  3. Hai trình duyệt, hai tài khoản -> tạo phòng cược 150 -> đánh xong kiểm điểm
+  4. Vào trang Points History -> số dư và lịch sử phải khớp
+
+Đặt tài khoản admin (nhận 20% hoa hồng):
+  - Đăng ký tài khoản tên 'admin' trên web
+  - phpMyAdmin:  SELECT id FROM users WHERE username='admin';
+  - Điền id đó vào ADMIN_USER_ID trong api/payment-config.php
+
+--------------------------------------------------------------------
+ RÚT ĐIỂM VỀ PAYPAL — BẠN DUYỆT TAY
+--------------------------------------------------------------------
+Người dùng vào trang "Withdraw Points", nhập số điểm + địa chỉ PayPal.
+Điểm bị TRỪ NGAY khi gửi yêu cầu (để cùng số điểm không thể vừa xin rút
+vừa đem đi cược). Mỗi người chỉ có một yêu cầu chờ tại một thời điểm.
+
+Bạn duyệt tại:  https://TENMIEN/admin.html
+(chỉ tài khoản có id trùng ADMIN_USER_ID mới vào được — trang này KHÔNG
+có link trong menu, phải gõ thẳng địa chỉ.)
+
+Xử lý một yêu cầu:
+  1. Mở PayPal > Send money > dán địa chỉ ở cột "PayPal address",
+     gửi đúng số tiền ở cột "Amount".
+  2. Quay lại admin.html bấm "Mark paid", dán mã giao dịch PayPal vào.
+
+  ⚠ "Mark paid" KHÔNG tự chuyển tiền. Nó chỉ đóng yêu cầu và giữ nguyên
+    số điểm đã trừ. Chỉ bấm SAU KHI tiền đã thực sự gửi đi.
+
+  "Reject" hoàn lại TOÀN BỘ điểm cho người dùng, kèm lý do bạn nhập.
+
+Ô "You owe (pending)" trên trang admin là tổng số tiền bạn đang nợ
+người chơi — theo dõi ô này để biết cần giữ bao nhiêu trong PayPal.
+
+--------------------------------------------------------------------
+ CƯỢC ĐIỂM HOẠT ĐỘNG THẾ NÀO
+--------------------------------------------------------------------
+  - Chơi với MÁY: miễn phí, không cần điểm.
+  - Chơi với NGƯỜI: bắt buộc đăng nhập và cược tối thiểu 150 điểm.
+    Hai bên bị trừ tiền cược khi ván bắt đầu. Thắng ăn 80% tổng cược,
+    20% về admin. Hòa thì hoàn nguyên cho cả hai. Bỏ trận bị xử thua.
+
+CHỐNG GIAN LẬN (đã kiểm chứng):
+  - Server tự kiểm luật cờ từng nước (api/xiangqi.php) — nước phạm luật bị từ chối.
+  - Server TỰ kết luận ai thắng. Client KHÔNG gửi kết quả ván lên được.
+  - Danh tính lấy từ phiên đăng nhập, không nhận tên do client khai.
+  - Mỗi ván chỉ chia điểm đúng một lần; mỗi đơn PayPal chỉ cộng điểm một lần.
+
+--------------------------------------------------------------------
+ ĐỐI SOÁT ĐỊNH KỲ (có tiền thật nên nên làm)
+--------------------------------------------------------------------
+Chạy trong phpMyAdmin > SQL:
+
+-- Sổ điểm có khớp số dư không? (KHÔNG trả về dòng nào = khớp)
+SELECT u.id, u.points, COALESCE(SUM(l.delta),0) AS ledger_total
+  FROM users u LEFT JOIN point_ledger l ON l.user_id = u.id
+ GROUP BY u.id, u.points HAVING u.points <> ledger_total;
+
+-- Đơn nạp bị treo (khách đã trả tiền nhưng đóng tab trước khi cộng điểm)
+SELECT * FROM point_transactions
+ WHERE status = 'created' AND created_at < NOW() - INTERVAL 1 HOUR;
+
+-- Yêu cầu rút đang chờ bạn xử lý (đừng để người ta đợi lâu)
+SELECT w.id, u.username, w.points, w.amount_usd, w.paypal_email, w.created_at
+  FROM withdrawals w JOIN users u ON u.id = w.user_id
+ WHERE w.status = 'pending' ORDER BY w.id;
+
+-- Tổng tiền đang nợ người chơi
+SELECT COALESCE(SUM(amount_usd),0) AS dang_no_usd
+  FROM withdrawals WHERE status = 'pending';
+
+--------------------------------------------------------------------
+ SỰ CỐ THƯỜNG GẶP
+--------------------------------------------------------------------
+  - Trang trắng / lỗi 500      -> sai thông tin trong api/config.php
+  - /api/... trả về 404        -> thiếu .htaccess hoặc host tắt mod_rewrite
+  - Đăng nhập xong bị văng     -> đã bật 'secure' => true nhưng vào bằng http://
+  - Nạp điểm báo lỗi tạo đơn   -> host chặn PHP gọi ra ngoài; cần mở kết nối
+                                  tới api-m.paypal.com (cURL)
+  - Sửa file mà không thấy đổi -> Ctrl+F5 một lần (đã có header no-cache)
+
+--------------------------------------------------------------------
+ CẬP NHẬT VỀ SAU
+--------------------------------------------------------------------
+Upload đè file mới, GIỮ NGUYÊN api/config.php và api/payment-config.php
+(hai file này chứa cấu hình riêng của bạn). Bảng mới tự tạo khi chạy.

@@ -1,0 +1,182 @@
+/* board.css — Giao diện bàn cờ tướng */
+
+.board-frame {
+  --cell: clamp(30px, 8.2vw, 58px);
+  --board-w: calc(var(--cell) * 8);
+  --board-h: calc(var(--cell) * 9);
+  position: relative;
+  width: calc(var(--board-w) + var(--cell));
+  padding: calc(var(--cell) / 2);
+  background: linear-gradient(160deg, #f3d9a4, #e8c179);
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(60, 35, 0, 0.35), inset 0 0 0 3px #b9852f;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.board-inner {
+  position: relative;
+  width: var(--board-w);
+  height: var(--board-h);
+  margin: 0 auto;
+}
+
+.board-lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.board-lines line {
+  stroke: #6b4a1d;
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+}
+
+.board-lines .river-text {
+  fill: #9c6b2b;
+  font-size: 0.9px;
+  font-weight: 700;
+  letter-spacing: 0.25px;
+}
+
+/* Lớp chứa quân & điểm bấm */
+.board-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.bpiece,
+.bpoint {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+
+.bpoint {
+  width: var(--cell);
+  height: var(--cell);
+  border-radius: 50%;
+  cursor: pointer;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+/* Chấm gợi ý nước đi hợp lệ */
+.bpoint .hint {
+  width: 30%;
+  height: 30%;
+  border-radius: 50%;
+  background: rgba(34, 139, 34, 0.55);
+}
+.bpoint.capture .hint {
+  width: 78%;
+  height: 78%;
+  background: transparent;
+  border: 3px solid rgba(200, 40, 40, 0.7);
+  box-sizing: border-box;
+}
+
+/* Đánh dấu gợi ý nước đi (ô đi & ô đến) */
+.hint-mark {
+  position: absolute;
+  width: var(--cell);
+  height: var(--cell);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  box-sizing: border-box;
+  pointer-events: none;
+  z-index: 3;
+  animation: hint-pulse 1s ease-in-out infinite;
+}
+.hint-mark.hint-from {
+  border: 3px dashed rgba(255, 193, 7, 0.95);
+}
+.hint-mark.hint-to {
+  border: 4px solid rgba(255, 152, 0, 0.95);
+  background: rgba(255, 193, 7, 0.22);
+}
+@keyframes hint-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+.bpiece {
+  width: calc(var(--cell) * 0.84);
+  height: calc(var(--cell) * 0.84);
+  border-radius: 50%;
+  pointer-events: auto;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: calc(var(--cell) * 0.5);
+  background: radial-gradient(circle at 32% 30%, #fff7e6, #f0dcb0 70%);
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.35), inset 0 0 0 2px rgba(0, 0, 0, 0.12);
+  z-index: 3;
+  transition: left 0.18s ease, top 0.18s ease;
+  font-family: "Noto Serif", "SimSun", serif;
+}
+
+.bpiece.red {
+  color: #c0392b;
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.35), inset 0 0 0 2px #c0392b;
+}
+.bpiece.black {
+  color: #1d2733;
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.35), inset 0 0 0 2px #1d2733;
+}
+
+.bpiece.selected {
+  outline: 3px solid #2e86de;
+  outline-offset: 1px;
+}
+
+/* Cờ úp: quân chưa lật (mặt sau). Chữ "?" do play-up.js đặt (chạy được cả khi CSS cũ). */
+.bpiece.covered {
+  background: radial-gradient(circle at 32% 30%, #8a949f, #4a5560 72%);
+  color: rgba(255, 255, 255, 0.8);
+}
+.bpiece.red.covered {
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.35), inset 0 0 0 3px #e8543c;
+}
+.bpiece.black.covered {
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.35), inset 0 0 0 3px #2b3a4d;
+}
+
+.bpoint.last-move::after,
+.bpiece.last-move::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border: 2px dashed rgba(46, 134, 222, 0.8);
+  border-radius: 50%;
+}
+
+/* Lật bàn 180° cho bên Đen, quay ngược lại quân/điểm để chữ không bị lộn ngược */
+.board-frame.flip .board-inner {
+  transform: rotate(180deg);
+}
+.board-frame.flip .bpiece,
+.board-frame.flip .bpoint {
+  transform: translate(-50%, -50%) rotate(180deg);
+}
+
+.bpiece.in-check {
+  animation: checkpulse 0.7s ease-in-out infinite alternate;
+}
+@keyframes checkpulse {
+  from {
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.35), 0 0 0 3px rgba(231, 76, 60, 0.4);
+  }
+  to {
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.35), 0 0 0 9px rgba(231, 76, 60, 0);
+  }
+}
