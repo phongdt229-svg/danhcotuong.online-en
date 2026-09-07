@@ -2,7 +2,7 @@
  * sw.js — Service Worker: cache app shell để cài app + chơi với máy OFFLINE.
  * Chiến lược: /api/ luôn dùng mạng; tài nguyên tĩnh cache-first (kèm cập nhật ngầm).
  */
-const CACHE = 'dct-cache-v15';
+const CACHE = 'dct-cache-v16';
 
 // Tài nguyên lõi cho "chơi với máy" (precache để offline dùng được ngay).
 const CORE = [
@@ -13,24 +13,24 @@ const CORE = [
   'topup.html',
   'history.html',
   'withdraw.html',
-  'js/withdraw.js?v=15',
-  'js/topup.js?v=15',
-  'js/history.js?v=15',
-  'puzzles.json?v=15',
-  'js/puzzles.js?v=15',
-  'js/play-up.js?v=15',
-  'css/style.css?v=15',
-  'css/board.css?v=15',
-  'js/engine/xiangqi.js?v=15',
-  'js/engine/ai.worker.js?v=15',
-  'js/board.js?v=15',
-  'js/play.js?v=15',
-  'js/api.js?v=15',
-  'js/ui.js?v=15',
-  'images/ad.svg?v=15',
-  'images/banner.svg?v=15',
+  'js/withdraw.js?v=16',
+  'js/topup.js?v=16',
+  'js/history.js?v=16',
+  'puzzles.json?v=16',
+  'js/puzzles.js?v=16',
+  'js/play-up.js?v=16',
+  'css/style.css?v=16',
+  'css/board.css?v=16',
+  'js/engine/xiangqi.js?v=16',
+  'js/engine/ai.worker.js?v=16',
+  'js/board.js?v=16',
+  'js/play.js?v=16',
+  'js/api.js?v=16',
+  'js/ui.js?v=16',
+  'images/ad.svg?v=16',
+  'images/banner.svg?v=16',
   'images/icon.svg',
-  'manifest.json',
+  'manifest.json?v=16',
 ];
 
 self.addEventListener('install', (e) => {
