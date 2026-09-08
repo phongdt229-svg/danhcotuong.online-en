@@ -32,7 +32,7 @@ try {
 } catch (Throwable $e) {
     http_response_code(500);
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(['error' => 'Không kết nối được cơ sở dữ liệu. Kiểm tra thông tin trong api/config.php']);
+    echo json_encode(['error' => 'Database connection failed.']);
     exit;
 }
 

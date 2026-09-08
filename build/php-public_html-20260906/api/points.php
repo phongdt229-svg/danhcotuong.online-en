@@ -87,12 +87,12 @@ function pp_call($method, $path, $payload = null, $requestId = null)
 // Rút gọn lỗi PayPal thành một dòng để ghi sổ.
 function pp_describe_error($data)
 {
-    if (!is_array($data)) return 'không có phản hồi';
+    if (!is_array($data)) return 'no response';
     $parts = [];
     if (!empty($data['name'])) $parts[] = $data['name'];
     if (!empty($data['details'][0]['issue'])) $parts[] = $data['details'][0]['issue'];
     if (!empty($data['message'])) $parts[] = $data['message'];
-    return $parts ? implode(' | ', $parts) : 'lỗi không rõ';
+    return $parts ? implode(' | ', $parts) : 'unknown error';
 }
 
 // Lấy capture đã hoàn tất (kèm số tiền thật) từ payload capture hoặc order.
@@ -376,5 +376,5 @@ function handle_payments($pdo, $sub, $method, $input)
         }
     }
 
-    out(['error' => 'Không tìm thấy đường dẫn thanh toán'], 404);
+    out(['error' => 'Endpoint not found (payments)'], 404);
 }

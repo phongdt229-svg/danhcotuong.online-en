@@ -389,5 +389,5 @@ function handle_match($pdo, $sub, $method, $input) {
         out(['ok' => true, 'agreed' => false]);
     }
 
-    out(['error' => 'Không tìm thấy đường dẫn đấu online'], 404);
+    out(['error' => 'Endpoint not found (match)'], 404);
 }

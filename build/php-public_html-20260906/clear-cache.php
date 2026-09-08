@@ -9,17 +9,17 @@ require __DIR__ . '/api/db.php'; // khởi tạo session + $pdo
 
 function page($body) {
     $v = time();
-    echo '<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8">'
+    echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">'
         . '<meta name="viewport" content="width=device-width,initial-scale=1">'
-        . '<link rel="stylesheet" href="css/style.css?v=' . $v . '"><title>Xóa cache CSS/JS</title></head>'
+        . '<link rel="stylesheet" href="css/style.css?v=' . $v . '"><title>Clear CSS/JS cache</title></head>'
         . '<body><main class="container" style="max-width:560px;padding-top:48px">'
         . '<div class="card center" style="padding:32px">' . $body . '</div></main></body></html>';
     exit;
 }
 
 if (empty($_SESSION['userId'])) {
-    page('<h2>🔒 Cần đăng nhập</h2><p class="text-muted">Bạn cần đăng nhập để dùng chức năng này.</p>'
-        . '<a class="btn btn-primary" href="login.html">Đăng nhập</a>');
+    page('<h2>🔒 Sign in required</h2><p class="text-muted">You need to sign in to use this feature.</p>'
+        . '<a class="btn btn-primary" href="login.html">Sign in</a>');
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -43,14 +43,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         if ($s !== $o && @file_put_contents($f, $s) !== false) $count++;
     }
-    page('<h2>✅ Đã xóa cache!</h2>'
-        . '<p class="text-muted">Đã cập nhật <b>' . $count . '</b> file sang phiên bản <code>v=' . $ts . '</code>.<br>'
-        . 'Mọi người sẽ tự tải CSS/JS mới khi mở lại trang.</p>'
-        . '<a class="btn btn-primary" href="index.html">Về trang chủ</a>');
+    page('<h2>✅ Cache cleared</h2>'
+        . '<p class="text-muted">Updated <b>' . $count . '</b> files to version <code>v=' . $ts . '</code>.<br>'
+        . 'Everyone will load the new CSS/JS the next time they open the site.</p>'
+        . '<a class="btn btn-primary" href="index.html">Back to home</a>');
 }
 
-page('<h2>🔄 Xóa cache CSS/JS</h2>'
-    . '<p class="text-muted">Bấm nút dưới để buộc tất cả trình duyệt tải lại CSS/JS mới nhất '
-    . '(dùng sau khi bạn cập nhật code trên host).</p>'
-    . '<form method="post"><button class="btn btn-primary btn-lg" type="submit">Xóa cache ngay</button></form>'
-    . '<p class="text-muted" style="margin-top:14px;font-size:0.85rem">Sau đó người dùng chỉ cần mở lại trang (F5 thường) là thấy bản mới.</p>');
+page('<h2>🔄 Clear CSS/JS cache</h2>'
+    . '<p class="text-muted">Press the button below to force every browser to reload the latest CSS/JS '
+    . '(use this after you upload new code to the host).</p>'
+    . '<form method="post"><button class="btn btn-primary btn-lg" type="submit">Clear cache now</button></form>'
+    . '<p class="text-muted" style="margin-top:14px;font-size:0.85rem">After that, visitors only need to reload the page (a normal F5) to get the new version.</p>');

@@ -136,5 +136,5 @@ function handle_book($pdo, $action, $method, $input) {
         out(['positions' => (int) $row['positions'], 'plays' => (int) $row['plays']]);
     }
 
-    out(['error' => 'Không tìm thấy đường dẫn (book)'], 404);
+    out(['error' => 'Endpoint not found (book)'], 404);
 }

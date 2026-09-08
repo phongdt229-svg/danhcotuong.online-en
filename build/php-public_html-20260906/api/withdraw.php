@@ -203,7 +203,7 @@ function handle_withdraw($pdo, $sub, $method, $input)
         out(wd_close($pdo, $id, 'rejected', $note, null, null, $admin));
     }
 
-    out(['error' => 'Không tìm thấy đường dẫn rút điểm'], 404);
+    out(['error' => 'Endpoint not found (withdraw)'], 404);
 }
 
 /*

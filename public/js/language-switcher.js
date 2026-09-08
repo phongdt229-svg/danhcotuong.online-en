@@ -14,8 +14,8 @@ class LanguageSwitcher {
         EN
       </button>
       <button class="lang-btn lang-vi ${i18n.getLang() === 'vi' ? 'active' : ''}"
-              title="Tiếng Việt"
-              aria-label="Chuyển sang tiếng Việt">
+              title="Vietnamese"
+              aria-label="Switch to Vietnamese">
         VI
       </button>
     `;
