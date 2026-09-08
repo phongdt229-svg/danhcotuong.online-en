@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /
+
+# Private account pages
+Disallow: /login.html
+Disallow: /register.html
+Disallow: /profile.html
+Disallow: /history.html
+
+# Payment and withdrawal pages
+Disallow: /topup.html
+Disallow: /withdraw.html
+
+# Internal and dynamic URLs
+Disallow: /admin/
+Disallow: /api/
+Disallow: /*?room=
+Disallow: /*?code=
+Disallow: /*?session=
+
+Sitemap: https://chinesechess.online/sitemap.xml
