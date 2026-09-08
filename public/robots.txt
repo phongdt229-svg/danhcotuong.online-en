@@ -11,8 +11,12 @@ Disallow: /history.html
 Disallow: /topup.html
 Disallow: /withdraw.html
 
+# Admin and maintenance
+Disallow: /admin.html
+Disallow: /check-server.php
+Disallow: /clear-cache.php
+
 # Internal and dynamic URLs
-Disallow: /admin/
 Disallow: /api/
 Disallow: /*?room=
 Disallow: /*?code=

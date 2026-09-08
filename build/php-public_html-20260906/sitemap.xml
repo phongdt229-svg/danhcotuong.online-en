@@ -1,45 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?xml-stylesheet type="text/css" href="https://www.xml-sitemaps.com/css/sitemap.css"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
-
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-       <loc>https://danhcotuong.online/</loc>
-       <lastmod>2026-07-25T02:16:35+00:00</lastmod>
-       <priority>1.0000</priority>
+    <loc>https://chinesechess.online/</loc>
+    <lastmod>2026-09-08T04:01:04+00:00</lastmod>
+    <priority>1.0</priority>
   </url>
   <url>
-       <loc>https://danhcotuong.online/index.html</loc>
-       <lastmod>2026-07-25T02:16:35+00:00</lastmod>
-       <priority>0.8000</priority>
+    <loc>https://chinesechess.online/play.html</loc>
+    <lastmod>2026-09-08T04:01:04+00:00</lastmod>
+    <priority>0.9</priority>
   </url>
   <url>
-       <loc>https://danhcotuong.online/play.html</loc>
-       <lastmod>2026-07-25T02:10:54+00:00</lastmod>
-       <priority>0.8000</priority>
+    <loc>https://chinesechess.online/play-online.html</loc>
+    <lastmod>2026-09-08T04:01:04+00:00</lastmod>
+    <priority>0.9</priority>
   </url>
   <url>
-       <loc>https://danhcotuong.online/play-up.html</loc>
-       <lastmod>2026-07-25T02:10:54+00:00</lastmod>
-       <priority>0.8000</priority>
+    <loc>https://chinesechess.online/play-up.html</loc>
+    <lastmod>2026-09-08T04:01:04+00:00</lastmod>
+    <priority>0.8</priority>
   </url>
   <url>
-       <loc>https://danhcotuong.online/puzzles.html</loc>
-       <lastmod>2026-07-25T02:10:54+00:00</lastmod>
-       <priority>0.8000</priority>
+    <loc>https://chinesechess.online/puzzles.html</loc>
+    <lastmod>2026-09-08T04:01:04+00:00</lastmod>
+    <priority>0.8</priority>
   </url>
   <url>
-       <loc>https://danhcotuong.online/play-online.html</loc>
-       <lastmod>2026-07-25T02:10:54+00:00</lastmod>
-       <priority>0.8000</priority>
+    <loc>https://chinesechess.online/rooms.html</loc>
+    <lastmod>2026-09-08T04:01:04+00:00</lastmod>
+    <priority>0.7</priority>
   </url>
   <url>
-       <loc>https://danhcotuong.online/rooms.html</loc>
-       <lastmod>2026-07-25T02:10:54+00:00</lastmod>
-       <priority>0.8000</priority>
+    <loc>https://chinesechess.online/leaderboard.html</loc>
+    <lastmod>2026-09-08T04:01:04+00:00</lastmod>
+    <priority>0.7</priority>
   </url>
   <url>
-       <loc>https://danhcotuong.online/leaderboard.html</loc>
-       <lastmod>2026-07-25T02:10:54+00:00</lastmod>
-       <priority>0.8000</priority>
+    <loc>https://chinesechess.online/guide.html</loc>
+    <lastmod>2026-09-08T04:01:04+00:00</lastmod>
+    <priority>0.6</priority>
   </url>
 </urlset>
