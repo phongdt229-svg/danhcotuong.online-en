@@ -51,19 +51,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $notice = '<p class="topup-status err">Invalid form token. Please reload and try again.</p>';
     } elseif (($_POST['action'] ?? '') === 'on') {
         $msg = trim((string) ($_POST['message'] ?? ''));
-        $payload = json_encode([
+        $notice = maint_write([
             'message'   => $msg !== '' ? $msg : 'We are updating the site. Please come back in a few minutes.',
             'started'   => time(),
             // IP của chính bạn được cho qua, để tự kiểm tra site trong lúc bảo trì.
             'allow_ips' => [$_SERVER['REMOTE_ADDR'] ?? ''],
-        ], JSON_UNESCAPED_UNICODE);
-        $notice = @file_put_contents(maint_flag_path(), $payload) !== false
+        ])
             ? '<p class="topup-status ok">Maintenance mode is ON. Visitors now see maintenance.html.</p>'
-            : '<p class="topup-status err">Could not write api/maintenance.flag — check folder permissions.</p>';
+            : '<p class="topup-status err">Could not write api/maintenance.flag.php — check folder permissions.</p>';
     } elseif (($_POST['action'] ?? '') === 'off') {
-        $notice = (!is_file(maint_flag_path()) || @unlink(maint_flag_path()))
+        $notice = maint_clear()
             ? '<p class="topup-status ok">Maintenance mode is OFF. The site is live again.</p>'
-            : '<p class="topup-status err">Could not delete api/maintenance.flag — check folder permissions.</p>';
+            : '<p class="topup-status err">Could not delete the flag file — check folder permissions.</p>';
     }
 }
 
@@ -103,6 +102,7 @@ page(
   . '• Stripe webhooks keep working, so payments are still credited.<br>'
   . '• Sign-in stays open so you can log back in if your session expires.<br><br>'
   . '<strong>If this page ever fails:</strong> create or delete the file '
-  . '<code>api/maintenance.flag</code> in cPanel File Manager — that file <em>is</em> the switch.'
+  . '<code>api/maintenance.flag.php</code> in cPanel File Manager — that file <em>is</em> the switch. '
+  . 'An empty file is enough to turn maintenance on.'
   . '</p>'
 );

@@ -19,22 +19,55 @@
  *                                    Stripe vẫn cộng điểm được trong lúc bảo trì
  */
 
-function maint_flag_path() { return __DIR__ . '/maintenance.flag'; }
+/*
+ * File cờ phải có đuôi .php: Apache sẽ THỰC THI nó (in ra rỗng) thay vì trả nội dung.
+ * Bản đầu dùng 'maintenance.flag' — ai cũng tải về đọc được, lộ cả IP quản trị.
+ */
+function maint_flag_path() { return __DIR__ . '/maintenance.flag.php'; }
 
-function maint_on() { return is_file(maint_flag_path()); }
+/* Tên cũ, chỉ còn để nhận diện và xoá đi khi tắt bảo trì. */
+function maint_legacy_path() { return __DIR__ . '/maintenance.flag'; }
 
-/* Đọc cấu hình trong flag. File rỗng hoặc hỏng JSON vẫn tính là ĐANG BẬT. */
+function maint_on() { return is_file(maint_flag_path()) || is_file(maint_legacy_path()); }
+
+/* Ghi trạng thái. Lưu dạng PHP trả về mảng nên mở thẳng bằng trình duyệt không thấy gì. */
+function maint_write(array $d)
+{
+    $php = "<?php\n"
+         . "/* File NAY la cong tac bao tri. Xoa file = tat bao tri. */\n"
+         . 'return ' . var_export($d, true) . ";\n";
+    return @file_put_contents(maint_flag_path(), $php) !== false;
+}
+
+/* Tắt bảo trì: xoá cả file mới lẫn file kiểu cũ. */
+function maint_clear()
+{
+    $ok = true;
+    foreach ([maint_flag_path(), maint_legacy_path()] as $p) {
+        if (is_file($p) && !@unlink($p)) $ok = false;
+    }
+    return $ok;
+}
+
+/* Đọc cấu hình trong flag. File rỗng hoặc hỏng vẫn tính là ĐANG BẬT. */
 function maint_data()
 {
     if (!maint_on()) return null;
-    $raw = @file_get_contents(maint_flag_path());
-    $d = json_decode((string) $raw, true);
+
+    $d = null;
+    if (is_file(maint_flag_path())) {
+        $d = @include maint_flag_path();          // file rỗng -> trả về 1
+    } elseif (is_file(maint_legacy_path())) {
+        $d = json_decode((string) @file_get_contents(maint_legacy_path()), true);
+    }
     if (!is_array($d)) $d = [];
+
+    $mtime = @filemtime(is_file(maint_flag_path()) ? maint_flag_path() : maint_legacy_path());
     return [
         'message'   => isset($d['message']) && $d['message'] !== ''
             ? (string) $d['message']
             : 'We are updating the site. Please come back in a few minutes.',
-        'started'   => isset($d['started']) ? (int) $d['started'] : @filemtime(maint_flag_path()),
+        'started'   => isset($d['started']) ? (int) $d['started'] : (int) $mtime,
         'allow_ips' => isset($d['allow_ips']) && is_array($d['allow_ips']) ? $d['allow_ips'] : [],
     ];
 }
