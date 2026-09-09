@@ -71,8 +71,9 @@ return [
     //
     // Mặc định nhận diện theo TÊN tài khoản 'admin' — cứ đăng ký tài khoản tên
     // 'admin' trên web là xong, không phải sửa file này.
-    'ADMIN_USERNAME' => 'phongdt29',
+    'ADMIN_USERNAME' => 'phongdt229',
     // (tuỳ chọn) Chỉ định thẳng bằng id, sẽ được ưu tiên hơn ADMIN_USERNAME.
     // Dùng khi tài khoản quản trị của bạn mang tên khác.
-    'ADMIN_USER_ID' => '',
+    // Điền id thì gõ sai tên cũng không hỏng — an toàn hơn ADMIN_USERNAME.
+    'ADMIN_USER_ID' => '22',
 ];
