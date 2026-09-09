@@ -1,28 +1,28 @@
 /*
- * play-online.js — Đấu Cờ Tướng NGƯỜI với NGƯỜI qua WebSocket (/ws).
+ * play-online.js — Đấu Cờ Tướng NGƯỜI với NGƯỜI bằng POLLING (bản PHP, không WebSocket).
+ * Cứ ~1.5s hỏi server lấy nước đi mới của đối thủ. Tái dùng xiangqi.js + board.js.
  *
- * Trước đây file này gọi REST /api/match/* của bản PHP — server Node không có
- * các route đó nên trang bị hỏng. Nay dùng thẳng backend WebSocket (server/realtime/match.js),
- * vốn tự kiểm tra luật cờ nên chống gian lận tốt hơn, và có sẵn phần cược điểm.
- *
- * Mọi trận với người đều CÓ CƯỢC: hai bên bị trừ tiền cược khi ván bắt đầu,
- * người thắng nhận phần lớn tổng cược, hòa thì hoàn lại. Server quyết định
- * toàn bộ việc cộng/trừ — trang này chỉ hiển thị.
+ * MỌI TRẬN ĐỀU CÓ CƯỢC ĐIỂM. Trang này chỉ HIỂN THỊ — server mới là nơi quyết định:
+ *   - server kiểm luật từng nước (nước phạm luật bị trả về 'illegal'),
+ *   - server tự kết luận ai thắng và tự chia điểm,
+ *   - trang này KHÔNG gửi kết quả ván lên nữa (trước đây có, và đó là lỗ hổng ăn cược).
  */
 (function () {
   'use strict';
   const X = window.Xiangqi;
   const $ = (id) => document.getElementById(id);
+  const POLL_MS = 1500;
 
   const state = {
-    ws: null, code: null, myColor: null,
+    code: null, token: null, myColor: null,
     game: null, board: null, started: false, over: false,
-    name: 'Guest', startTs: null, auto: null, loggedIn: false,
+    applied: 0, // số nước đã áp dụng (mình + đối thủ)
+    pollTimer: null, name: 'Guest', startTs: null, auto: null, loggedIn: false,
     balance: 0, minStake: 150, winnerPercent: 80, housePercent: 20,
-    stake: 0, pot: 0,
+    stake: 0, pot: 0, settled: false,
     capturedByRed: [], capturedByBlack: [],
-    reconnectTimer: null,
-    seenRooms: null, // mã các phòng đã thấy, để chỉ báo phòng MỚI (null = chưa tải lần nào)
+    seenRooms: null,  // mã phòng đã thấy, để chỉ báo phòng MỚI (null = chưa tải lần nào)
+    seenOnline: null, // tên người đã thấy online, để chỉ báo người MỚI vào
     onlineCount: 0,
   };
 
@@ -43,139 +43,6 @@
   const lobbyStatus = (m) => { const e = $('lobby-status'); if (e) e.textContent = m; };
   function escapeHtml(s) { return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
   const fmtPts = (n) => Number(n || 0).toLocaleString('en-US');
-
-  /* ---------------- Kết nối ---------------- */
-  function wsSend(obj) {
-    if (state.ws && state.ws.readyState === WebSocket.OPEN) state.ws.send(JSON.stringify(obj));
-  }
-
-  function connect() {
-    const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-    const ws = new WebSocket(proto + '://' + location.host + '/ws');
-    state.ws = ws;
-
-    ws.onopen = () => { lobbyStatus('Connected. Choose how you want to play.'); wsSend({ type: 'list' }); };
-    ws.onmessage = (ev) => { let m; try { m = JSON.parse(ev.data); } catch (e) { return; } handle(m); };
-    ws.onclose = () => {
-      if (state.started && !state.over) status('⚠ Lost connection to the server.');
-      else lobbyStatus('Lost connection. Reconnecting…');
-      // Thử nối lại để người chơi không phải tải lại trang.
-      clearTimeout(state.reconnectTimer);
-      state.reconnectTimer = setTimeout(connect, 2000);
-    };
-    ws.onerror = () => {};
-  }
-
-  /* ---------------- Xử lý bản tin từ server ---------------- */
-  function handle(m) {
-    switch (m.type) {
-      case 'welcome':
-        state.loggedIn = Boolean(m.loggedIn);
-        if (m.name) state.name = m.name;
-        state.balance = m.balance || 0;
-        state.onlineCount = (m.online || []).length;
-        paintOnlineCount();
-        state.minStake = m.minStake || 150;
-        state.winnerPercent = m.winnerPercent || 80;
-        state.housePercent = m.housePercent != null ? m.housePercent : 20;
-        paintStakeUI();
-        if (!state.loggedIn) { lobbyStatus('You need to sign in to play against other people.'); requireLoginUI(); }
-        else if (state.auto) runAuto();
-        break;
-
-      case 'rooms':
-        renderRooms(m.rooms || []);
-        break;
-
-      // Có người vừa online / offline (server chỉ gửi khi trạng thái THẬT SỰ đổi).
-      case 'user-online':
-        state.onlineCount = m.count || 0;
-        paintOnlineCount();
-        if (!state.started) {
-          window.UI.toast(m.name + ' is online', {
-            kind: 'ok',
-            sub: m.count + ' player' + (m.count === 1 ? '' : 's') + ' online now',
-            timeout: 4000,
-          });
-        }
-        break;
-
-      case 'user-offline':
-        state.onlineCount = m.count || 0;
-        paintOnlineCount();
-        break;
-
-      case 'balance':
-        state.balance = m.balance || 0;
-        paintStakeUI();
-        break;
-
-      case 'need-login':
-        state.loggedIn = false;
-        requireLoginUI();
-        break;
-
-      case 'stake-error':
-        hideWaiting();
-        lobbyStatus(m.message || 'Could not start the staked game.');
-        $('lobby-overlay').classList.remove('hidden');
-        break;
-
-      case 'waiting':
-        showWaiting('Looking for an opponent staking ' + fmtPts(m.stake) + ' points…', null);
-        break;
-
-      case 'created':
-        state.code = m.code;
-        showWaiting('Waiting for someone to join (' + fmtPts(m.stake) + ' points)…', m.code);
-        break;
-
-      case 'start':
-        beginGame(m);
-        break;
-
-      case 'move': {
-        if (!state.game || state.over) return;
-        const rec = state.game.move(m.from, m.to);
-        if (rec) afterMove(rec);
-        break;
-      }
-
-      case 'illegal':
-        // Server từ chối nước đi -> tải lại trang là cách chắc chắn nhất để đồng bộ.
-        status('That move was rejected by the server. Reload if the board looks wrong.');
-        break;
-
-      case 'resign':
-        finish('win', 'Your opponent resigned');
-        break;
-
-      case 'opponent-timeout':
-        finish('win', 'Your opponent ran out of time');
-        break;
-
-      case 'opponent-left':
-        finish('win', 'Your opponent left the game');
-        break;
-
-      case 'draw-accept':
-        finish(null, 'Both players agreed to a draw');
-        break;
-
-      case 'chat':
-        addChat(m.text, false);
-        break;
-
-      case 'stake-settled':
-        showSettlement(m);
-        break;
-
-      case 'error':
-        lobbyStatus(m.message || 'Something went wrong.');
-        hideWaiting();
-        break;
-    }
-  }
 
   /* ---------------- Sảnh ---------------- */
   function showWaiting(text, code) {
@@ -201,7 +68,6 @@
     if (input) {
       input.min = String(state.minStake);
       if (!input.value) input.value = String(state.minStake);
-      input.placeholder = 'min ' + state.minStake;
     }
     const note = $('stake-note');
     if (note) {
@@ -240,17 +106,22 @@
     return v;
   }
 
+  async function refreshRooms() {
+    try {
+      const data = await window.API.matchList();
+      renderRooms((data && data.rooms) || []);
+      notifyOnline((data && data.online) || []);
+    } catch (e) {}
+  }
+
   /*
-   * Báo phòng MỚI xuất hiện. So danh sách lần này với lần trước để chỉ báo phòng
-   * chưa từng thấy — không báo lại mỗi lần làm mới (4 giây/lần).
-   * Lần đầu vào trang thì chỉ ghi nhớ, không đổ một loạt thông báo.
+   * Báo phòng MỚI xuất hiện. So với lần trước để không báo lại mỗi 4 giây.
+   * Lần tải đầu chỉ ghi nhớ, không đổ một loạt thông báo.
    */
   function notifyNewRooms(list) {
     const seen = state.seenRooms;
-    const isFirstLoad = seen === null;
     const now = new Set(list.map((r) => r.code));
-
-    if (!isFirstLoad && !state.started) {
+    if (seen !== null && !state.started) {
       list.forEach((r) => {
         if (seen.has(r.code)) return;
         const enough = Number(r.stake) <= state.balance;
@@ -269,7 +140,26 @@
     state.seenRooms = now;
   }
 
-  // Hiện số người đang online ở sảnh.
+  // Báo người MỚI online (server trả danh sách người hoạt động trong 30 giây gần đây).
+  function notifyOnline(names) {
+    const others = names.filter((n) => n !== state.name);
+    const seen = state.seenOnline;
+    const now = new Set(others);
+    state.onlineCount = names.length;
+    paintOnlineCount();
+    if (seen !== null && !state.started) {
+      others.forEach((n) => {
+        if (seen.has(n)) return;
+        window.UI.toast(n + ' is online', {
+          kind: 'ok',
+          sub: names.length + ' player' + (names.length === 1 ? '' : 's') + ' online now',
+          timeout: 4000,
+        });
+      });
+    }
+    state.seenOnline = now;
+  }
+
   function paintOnlineCount() {
     const el = $('online-count');
     if (!el) return;
@@ -318,46 +208,100 @@
   }
 
   /* ---------------- Vào trận ---------------- */
-  function doQuick() {
+  async function doQuick() {
     if (!state.loggedIn) return requireLoginUI();
     const stake = currentStake();
     if (stake === null) return;
-    wsSend({ type: 'quick', stake });
+    try {
+      const r = await window.API.matchQuick(stake);
+      state.code = r.code; state.token = r.token; state.myColor = r.color; state.stake = r.stake;
+      if (r.waiting) showWaiting('Looking for an opponent staking ' + fmtPts(stake) + ' points…', null);
+      startPoll();
+    } catch (e) { lobbyStatus(e.message || 'Could not find a match.'); }
   }
-  function doCreate() {
+  async function doCreate() {
     if (!state.loggedIn) return requireLoginUI();
     const stake = currentStake();
     if (stake === null) return;
-    wsSend({ type: 'create', stake });
+    try {
+      const r = await window.API.matchCreate(stake);
+      state.code = r.code; state.token = r.token; state.myColor = r.color; state.stake = r.stake;
+      showWaiting('Waiting for someone to join (' + fmtPts(stake) + ' points)…', r.code);
+      startPoll();
+    } catch (e) { lobbyStatus(e.message || 'Could not create the room.'); }
   }
-  function doJoin(code) {
+  async function doJoin(code) {
     if (!state.loggedIn) return requireLoginUI();
     code = (code || '').toUpperCase().trim();
     if (code.length < 3) { lobbyStatus('Enter a valid room code.'); return; }
-    wsSend({ type: 'join', code });
+    try {
+      const r = await window.API.matchJoin(code);
+      state.code = r.code; state.token = r.token; state.myColor = r.color; state.stake = r.stake;
+      startPoll();
+    } catch (e) {
+      lobbyStatus((e && e.data && e.data.error) || e.message || 'Could not join that room.');
+    }
+  }
+
+  /* ---------------- Polling ---------------- */
+  function startPoll() { stopPoll(); poll(); state.pollTimer = setInterval(poll, POLL_MS); }
+  function stopPoll() { if (state.pollTimer) clearInterval(state.pollTimer); state.pollTimer = null; }
+
+  async function poll() {
+    if (!state.code || !state.token) return;
+    let s;
+    try { s = await window.API.matchState(state.code, state.token, state.applied); }
+    catch (e) { return; }
+    if (!s) return;
+
+    if (!state.started) {
+      if (s.status === 'playing') beginGame(s);
+      else if (s.status === 'ended') { lobbyStatus('The game has ended.'); stopPoll(); }
+      return;
+    }
+
+    // Áp dụng nước đi mới của đối thủ (server đã kiểm luật rồi mới lưu).
+    if (s.moves && s.moves.length) {
+      for (const m of s.moves) {
+        const rec = state.game.move(m.from, m.to);
+        if (rec) { afterMove(rec); state.applied++; }
+      }
+    }
+    renderChat(s.chat || []);
+
+    if (s.status === 'ended') {
+      if (s.settlement) showSettlement(s.settlement);
+      if (!state.over) {
+        const result = s.winner ? (s.winner === state.myColor ? 'win' : 'loss') : null;
+        finish(result, s.result || 'Game over.');
+      }
+      stopPoll();
+    } else if (!state.over) {
+      const my = state.game.turn === state.myColor;
+      if (s.opponentOnline === false) status('⚠ Your opponent lost connection…');
+      else status(my ? 'YOUR turn to move.' : 'Waiting for your opponent…');
+    }
   }
 
   /* ---------------- Bắt đầu ---------------- */
   function beginGame(s) {
-    state.started = true; state.over = false; state.startTs = Date.now();
-    state.myColor = s.color;
-    state.stake = s.stake || 0;
-    state.pot = s.pot || 0;
-    state.capturedByRed = []; state.capturedByBlack = [];
+    state.started = true; state.over = false; state.settled = false; state.startTs = Date.now();
+    state.applied = 0; state.capturedByRed = []; state.capturedByBlack = [];
+    state.stake = Number(s.stake) || state.stake || 0;
+    state.pot = Number(s.pot) || state.stake * 2;
     state.game = new X.Game();
     state.board = new window.Board($('board'), { humanColor: state.myColor, onMove: onMyMove });
-    state.board.setHint = () => {}; state.board.clearHint = () => {}; state.board.hintMove = null;
     const flip = state.myColor === 'b';
     $('board').classList.toggle('flip', flip);
     const col = document.querySelector('.board-col'); if (col) col.classList.toggle('flip', flip);
     state.board.clearSelection(); state.board.setLastMove(null); state.board.render(state.game);
 
-    const opp = s.opponent || 'Opponent';
+    const opp = state.myColor === 'r' ? (s.black || 'Opponent') : (s.red || 'Opponent');
     if (state.myColor === 'r') { $('name-red').textContent = state.name + ' (You — Red)'; $('name-black').textContent = opp + ' (Black)'; }
     else { $('name-red').textContent = opp + ' (Red)'; $('name-black').textContent = state.name + ' (You — Black)'; }
 
     const sb = $('stake-banner');
-    if (sb) {
+    if (sb && state.stake > 0) {
       sb.style.display = '';
       sb.textContent = '💰 Staked game — ' + fmtPts(state.stake) + ' points each, pot ' + fmtPts(state.pot) +
         '. Winner takes ' + fmtPts(Math.floor((state.pot * state.winnerPercent) / 100)) + '.';
@@ -367,8 +311,12 @@
     $('lobby-overlay').classList.add('hidden');
     $('result-modal').classList.add('hidden');
     hideWaiting();
-    const cb = $('chat-box'); if (cb) cb.innerHTML = '';
     renderCaptured(); renderHistory(); updateTurn();
+
+    // Vào giữa chừng: áp dụng các nước đã có.
+    if (s.moves && s.moves.length) {
+      for (const m of s.moves) { const rec = state.game.move(m.from, m.to); if (rec) { afterMove(rec); state.applied++; } }
+    }
   }
 
   function updateTurn() {
@@ -381,12 +329,23 @@
   }
 
   /* ---------------- Nước đi ---------------- */
-  function onMyMove(from, to) {
-    if (state.over || !state.game || state.game.turn !== state.myColor) return;
+  async function onMyMove(from, to) {
+    if (state.over || state.game.turn !== state.myColor) return;
     const rec = state.game.move(from, to);
     if (!rec) return;
+    state.applied++;
     afterMove(rec);
-    wsSend({ type: 'move', from, to });
+    try {
+      await window.API.matchMove(state.code, state.token, from, to);
+    } catch (e) {
+      // Server từ chối (lệch thế cờ) -> tải lại cho chắc, tránh hai bên hiểu khác nhau.
+      if (e && e.data && e.data.illegal) {
+        status('That move was rejected by the server. Reloading…');
+        setTimeout(() => location.reload(), 1200);
+        return;
+      }
+    }
+    poll(); // lấy kết quả ngay nếu nước vừa rồi là chiếu hết
   }
 
   function afterMove(rec) {
@@ -397,14 +356,6 @@
     renderCaptured(); renderHistory();
     const st = state.game.status();
     if (st.check) Sound.check(); else if (rec.captured) Sound.capture(); else Sound.move();
-    if (st.over) {
-      // Server cũng tự phát hiện hết ván và chia điểm — ở đây chỉ hiện kết quả.
-      const winner = st.loser === X.RED ? X.BLACK : X.RED;
-      const iWon = winner === state.myColor;
-      finish(iWon ? 'win' : 'loss',
-        (iWon ? 'You' : 'Your opponent') + ' won (' + (st.reason === 'checkmate' ? 'checkmate' : 'stalemate') + ')');
-      return;
-    }
     if (!state.over) updateTurn();
   }
 
@@ -412,6 +363,7 @@
   function finish(result, reason) {
     if (state.over) return;
     state.over = true;
+    stopPoll();
     if (state.board) state.board.setInteractive(false);
     $('btn-resign').disabled = true;
     $('bar-red').classList.remove('active'); $('bar-black').classList.remove('active');
@@ -426,10 +378,11 @@
     if (result) saveResult(result);
   }
 
-  // Hiện chi tiết chia điểm do server gửi về (nguồn sự thật duy nhất).
+  // Chi tiết chia điểm do SERVER gửi về (nguồn sự thật duy nhất).
   function showSettlement(m) {
-    state.balance = m.balance != null ? m.balance : state.balance;
-    paintStakeUI();
+    if (state.settled) return;
+    state.settled = true;
+    if (m.balance != null) { state.balance = m.balance; paintStakeUI(); }
     const el = $('result-stake');
     if (!el) return;
     el.style.display = '';
@@ -467,23 +420,29 @@
   function moveSpan(rec) { const s = document.createElement('span'); s.className = 'move-cell ' + (X.colorOf(rec.piece) === X.RED ? 'mv-red' : 'mv-black'); s.textContent = NAME[X.typeOf(rec.piece)] + ' ' + sq(rec.from.x, rec.from.y) + '→' + sq(rec.to.x, rec.to.y); return s; }
 
   /* ---------------- Chat ---------------- */
-  function addChat(text, mine) {
+  function renderChat(list) {
     const box = $('chat-box');
-    if (!box || !text) return;
-    const div = document.createElement('div');
-    div.className = 'chat-msg' + (mine ? ' mine' : '');
-    div.innerHTML = '<span class="chat-name">' + escapeHtml(mine ? 'You' : 'Opponent') + '</span>' + escapeHtml(text);
-    box.appendChild(div);
+    if (!box || !Array.isArray(list)) return;
+    // Bỏ tin nội bộ (lời đề nghị hoà) khỏi khung chat.
+    const shown = list.filter((m) => (m.text || '') !== '__draw_offer__');
+    if (box._n === shown.length) return;
+    box._n = shown.length;
+    box.innerHTML = shown
+      .map((msg) => {
+        const mine = msg.who === state.myColor;
+        return '<div class="chat-msg ' + (mine ? 'mine' : '') + '"><span class="chat-name">' +
+          escapeHtml(msg.name || '') + '</span>' + escapeHtml(msg.text || '') + '</div>';
+      })
+      .join('');
     box.scrollTop = box.scrollHeight;
   }
-  function sendChat() {
+  async function sendChat() {
     const inp = $('chat-input');
     if (!inp) return;
     const text = inp.value.trim();
-    if (!text || !state.started) return;
+    if (!text || !state.code || !state.token) return;
     inp.value = '';
-    wsSend({ type: 'chat', text });
-    addChat(text, true);
+    try { await window.API.matchChat(state.code, state.token, text); poll(); } catch (e) {}
   }
 
   function fallbackCopy(text, cb) {
@@ -509,31 +468,41 @@
 
   /* ---------------- Reset ---------------- */
   function resetToLobby() {
-    state.over = true; state.started = false;
-    state.code = null; state.game = null; state.stake = 0; state.pot = 0;
-    wsSend({ type: 'cancel' });
+    state.over = true; state.started = false; stopPoll();
+    state.code = null; state.token = null; state.game = null; state.applied = 0;
+    state.stake = 0; state.pot = 0; state.settled = false;
     if (state.board) { $('board').innerHTML = ''; $('board').classList.remove('flip'); const c = document.querySelector('.board-col'); if (c) c.classList.remove('flip'); state.board = null; }
     $('result-modal').classList.add('hidden');
     $('lobby-overlay').classList.remove('hidden');
     const rs = $('result-stake'); if (rs) rs.style.display = 'none';
     const sb = $('stake-banner'); if (sb) sb.style.display = 'none';
-    const cb = $('chat-box'); if (cb) cb.innerHTML = '';
+    const cb = $('chat-box'); if (cb) { cb.innerHTML = ''; cb._n = undefined; }
     hideWaiting();
     $('btn-resign').disabled = true;
     lobbyStatus('Choose how you want to play.');
-    wsSend({ type: 'list' });
+    refreshBalance();
+    refreshRooms();
   }
 
-  function runAuto() {
-    if (!state.auto) return;
-    const a = state.auto;
-    state.auto = null;
-    if (a.t === 'join') doJoin(a.code);
-    else if (a.t === 'create') doCreate();
-    else if (a.t === 'quick') doQuick();
+  async function refreshBalance() {
+    if (!state.loggedIn) return;
+    try {
+      const r = await window.API.matchRules();
+      state.balance = r.balance || 0;
+      state.minStake = r.minStake || state.minStake;
+      state.winnerPercent = r.winnerPercent != null ? r.winnerPercent : state.winnerPercent;
+      state.housePercent = r.housePercent != null ? r.housePercent : state.housePercent;
+      paintStakeUI();
+    } catch (e) {}
   }
 
-  function init() {
+  async function init() {
+    let me = null;
+    try { me = window.API && (await window.API.me()); } catch (e) {}
+    state.loggedIn = !!(me && me.user);
+    state.name = state.loggedIn ? me.user.username : 'Guest';
+    if (state.loggedIn) state.balance = Number(me.user.points) || 0;
+
     const p = new URLSearchParams(location.search);
     if (p.get('join')) state.auto = { t: 'join', code: String(p.get('join')).toUpperCase() };
     else if (p.get('create') === '1') state.auto = { t: 'create' };
@@ -542,39 +511,36 @@
     $('btn-quick').addEventListener('click', doQuick);
     $('btn-create').addEventListener('click', doCreate);
     $('btn-join').addEventListener('click', () => doJoin($('join-code').value));
-    $('btn-refresh').addEventListener('click', () => wsSend({ type: 'list' }));
-    $('btn-cancel').addEventListener('click', () => {
-      wsSend({ type: 'cancel' });
-      hideWaiting();
-      state.code = null;
-      lobbyStatus('Cancelled. Choose how you want to play.');
-      wsSend({ type: 'list' });
-    });
-    $('btn-resign').addEventListener('click', () => {
+    $('btn-refresh').addEventListener('click', refreshRooms);
+    $('btn-cancel').addEventListener('click', () => { stopPoll(); hideWaiting(); state.code = null; state.token = null; lobbyStatus('Cancelled. Choose how you want to play.'); refreshRooms(); });
+    $('btn-resign').addEventListener('click', async () => {
       if (state.over || !state.game) return;
-      wsSend({ type: 'resign' });
-      finish('loss', 'You resigned');
+      try { await window.API.matchResign(state.code, state.token); } catch (e) {}
+      poll(); // server chia điểm xong, lấy kết quả về hiển thị
     });
     $('btn-new').addEventListener('click', resetToLobby);
     $('btn-again').addEventListener('click', resetToLobby);
     const cs = $('chat-send'); if (cs) cs.addEventListener('click', sendChat);
     const ci = $('chat-input'); if (ci) ci.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendChat(); } });
     const bi = $('btn-copy-invite'); if (bi) bi.addEventListener('click', copyInvite);
-    const si = $('stake-input'); if (si) si.addEventListener('input', () => lobbyStatus('Choose how you want to play.'));
 
+    await refreshBalance();
     paintStakeUI();
-    connect();
-    // Sảnh tự làm mới danh sách phòng + số dư khi chưa vào trận
-    // (số dư có thể đổi vì vừa nạp điểm ở tab khác).
-    setInterval(async () => {
-      if (state.started) return;
-      wsSend({ type: 'list' });
-      if (!state.loggedIn) return;
-      try {
-        const r = await window.API.pointsBalance();
-        if (r && r.balance !== state.balance) { state.balance = r.balance; paintStakeUI(); }
-      } catch (e) {}
-    }, 4000);
+    refreshRooms();
+    setInterval(() => { if (!state.started && !state.pollTimer) { refreshRooms(); refreshBalance(); } }, 4000);
+
+    if (!state.loggedIn) {
+      lobbyStatus('You need to sign in to play against other people.');
+      if (state.auto) requireLoginUI();
+      return;
+    }
+
+    lobbyStatus('Choose how you want to play.');
+    if (state.auto) {
+      if (state.auto.t === 'join') doJoin(state.auto.code);
+      else if (state.auto.t === 'create') doCreate();
+      else if (state.auto.t === 'quick') doQuick();
+    }
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

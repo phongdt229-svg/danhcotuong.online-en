@@ -114,7 +114,7 @@
     state.board.render(state.game);
 
     if (!state.worker) {
-      state.worker = new Worker('js/engine/ai.worker.js?v=11');
+      state.worker = new Worker('js/engine/ai.worker.js?v=1788851767');
       state.worker.onmessage = onAiReply;
     }
 

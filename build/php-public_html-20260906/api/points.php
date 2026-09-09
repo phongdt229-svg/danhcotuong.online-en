@@ -234,6 +234,9 @@ function ledger_summary($pdo, $userId)
     ];
 }
 
+// Stripe Checkout (thanh toán bằng thẻ) — dùng chung bảng point_transactions và sổ cái.
+require_once __DIR__ . '/stripe.php';
+
 // ===== Router =====
 function handle_payments($pdo, $sub, $method, $input)
 {
@@ -244,6 +247,10 @@ function handle_payments($pdo, $sub, $method, $input)
             'configured' => pp_configured(),
             'clientId' => pp_client_id(),
             'mode' => pp_is_live() ? 'live' : 'sandbox',
+            // Stripe: chỉ báo bật/tắt và chế độ. Khoá bí mật KHÔNG bao giờ ra khỏi máy chủ —
+            // Checkout là luồng chuyển hướng nên trình duyệt không cần khoá nào cả.
+            'stripeConfigured' => stripe_configured(),
+            'stripeMode' => stripe_is_live() ? 'live' : 'test',
             'pointsPerUsd' => points_per_usd(),
             'currency' => 'USD',
             'packages' => $packages,
@@ -374,6 +381,11 @@ function handle_payments($pdo, $sub, $method, $input)
             $pdo->rollBack();
             out(['error' => 'Could not confirm the payment. Please contact support if you were charged.'], 502);
         }
+    }
+
+    // Nạp điểm bằng thẻ qua Stripe Checkout: stripe/session, stripe/confirm.
+    if (strpos($sub, 'stripe/') === 0) {
+        handle_stripe($pdo, substr($sub, 7), $method, $input);
     }
 
     out(['error' => 'Endpoint not found (payments)'], 404);

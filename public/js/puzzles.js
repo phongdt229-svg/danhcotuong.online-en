@@ -142,7 +142,7 @@
     $('btn-retry').addEventListener('click', retry);
     $('btn-next').addEventListener('click', next);
     try {
-      const res = await fetch('puzzles.json?v=7');
+      const res = await fetch('puzzles.json?v=1788851767');
       state.list = await res.json();
     } catch (e) {
       state.list = [];

@@ -56,6 +56,11 @@ function rate_limit() {
 $USERNAME_RE = '/^[a-zA-Z0-9_.]{3,50}$/';
 $EMAIL_RE    = '/^[^\s@]+@[^\s@]+\.[^\s@]+$/';
 
+// Chế độ bảo trì: chặn mọi route (trừ vài route cần cho quản trị viên đăng nhập).
+// Quản trị viên và IP trong allow_ips vẫn đi tiếp bình thường.
+require_once __DIR__ . '/maintenance.php';
+maint_gate($pdo, $route);
+
 try {
     // ---------- ĐẤU ONLINE (polling) ----------
     if (strpos($route, 'match/') === 0) {

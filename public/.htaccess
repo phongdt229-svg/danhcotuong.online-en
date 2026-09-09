@@ -1,0 +1,22 @@
+# Không cache JS/CSS/HTML — luôn tải bản mới (tránh kẹt bản cũ khi cập nhật).
+<IfModule mod_headers.c>
+  <FilesMatch "\.(js|css|html)$">
+    Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+    Header set Pragma "no-cache"
+  </FilesMatch>
+</IfModule>
+# Tắt LiteSpeed cache cho tài nguyên tĩnh (nếu host dùng LiteSpeed).
+<IfModule LiteSpeed>
+  CacheDisable public /
+</IfModule>
+
+# Định tuyến mọi /api/... vào router api/index.php (giữ nguyên cách frontend gọi /api/...).
+RewriteEngine On
+
+# Không can thiệp file/thư mục có thật (html, css, js, ảnh…)
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# /api/<đường dẫn>  ->  api/index.php?_route=<đường dẫn>
+RewriteRule ^api/(.*)$ api/index.php?_route=$1 [QSA,L]

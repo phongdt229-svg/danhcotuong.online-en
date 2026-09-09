@@ -116,6 +116,71 @@
       .catch(() => setStatus('Could not display the PayPal buttons.', 'err'));
   }
 
+  /* ---------- Thanh toán bằng thẻ (Stripe Checkout) ---------- */
+  function setupStripe(cfg) {
+    const box = el('stripe-pay');
+    if (!box) return;
+    // Máy chủ chưa cấu hình Stripe (hoặc đang chạy backend Node chưa có Stripe) -> ẩn hẳn.
+    if (!cfg.stripeConfigured) {
+      box.style.display = 'none';
+      return;
+    }
+    box.style.display = '';
+    if (cfg.stripeMode === 'test') {
+      const note = el('stripe-test-note');
+      if (note) note.style.display = '';
+    }
+
+    const btn = el('stripe-btn');
+    btn.addEventListener('click', async function () {
+      if (!state.amount) {
+        setStatus('Please pick a package first.', 'err');
+        return;
+      }
+      btn.disabled = true;
+      setStatus('Taking you to the secure card payment page…', 'info');
+      try {
+        // Máy chủ tạo phiên và quyết số tiền — trình duyệt chỉ nói "tôi chọn gói này".
+        const out = await window.API.payStripeSession(state.amount);
+        window.location.assign(out.url);
+      } catch (err) {
+        btn.disabled = false;
+        setStatus(err.message || 'Could not start the card payment. Please try again.', 'err');
+      }
+    });
+  }
+
+  // Khách vừa từ Stripe quay về. Webhook có thể đã cộng điểm trước rồi —
+  // khi đó máy chủ trả alreadyCredited, không cộng lần hai.
+  async function handleStripeReturn() {
+    const q = new URLSearchParams(window.location.search);
+    const sessionId = q.get('stripe_session_id');
+    const cancelled = q.get('stripe_cancelled');
+    if (!sessionId && !cancelled) return;
+
+    // Dọn tham số khỏi thanh địa chỉ để F5 không chạy lại bước xác nhận.
+    window.history.replaceState({}, '', window.location.pathname);
+
+    if (cancelled) {
+      setStatus('Card payment cancelled. You have not been charged.', 'info');
+      return;
+    }
+
+    setStatus('Confirming your card payment…', 'info');
+    try {
+      const out = await window.API.payStripeConfirm(sessionId);
+      paintBalance(out.balance);
+      setStatus(
+        out.alreadyCredited
+          ? 'This payment was already credited. Your balance is up to date.'
+          : 'Payment complete — ' + out.points.toLocaleString('en-US') + ' points added to your account.',
+        'ok'
+      );
+      loadHistory();
+    } catch (err) {
+      setStatus(err.message || 'We could not confirm your card payment.', 'err');
+    }
+  }
   /* ---------- Lịch sử giao dịch ---------- */
   async function loadHistory() {
     const body = el('history-body');
@@ -179,8 +244,12 @@
     renderPackages(cfg);
     loadHistory();
 
+    // Stripe chay doc lap voi PayPal: thieu PayPal van tra the duoc.
+    setupStripe(cfg);
+    handleStripeReturn();
+
     if (!cfg.configured) {
-      setStatus('Payments are not configured on this server yet.', 'err');
+      if (!cfg.stripeConfigured) setStatus('Payments are not configured on this server yet.', 'err');
       return;
     }
     if (cfg.mode === 'sandbox') el('sandbox-note').style.display = '';

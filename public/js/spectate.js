@@ -1,122 +1,79 @@
 /*
- * spectate.js — Xem trực tiếp một trận đang đánh (spectate.html?code=ABCD).
- * Kết nối WebSocket, nhận trạng thái ván + từng nước đi và dựng lại bằng engine xiangqi.js.
- * Chỉ xem, không tương tác.
+ * spectate.js — Xem trận trực tiếp (bản PHP, polling). Chỉ xem, không tương tác.
  */
 (function () {
   'use strict';
   const X = window.Xiangqi;
   const $ = (id) => document.getElementById(id);
   const NAME = { K: 'General', A: 'Advisor', E: 'Elephant', H: 'Horse', R: 'Chariot', C: 'Cannon', P: 'Soldier' };
+  const POLL_MS = 1500;
 
-  let ws = null;
-  let game = null;
-  let board = null;
-  let over = false;
+  let code = null, game = null, board = null, applied = 0, started = false, over = false, timer = null;
 
-  function status(m) { const el = $('status-msg'); if (el) el.textContent = m; }
-  function sq(x, y) { return String.fromCharCode(65 + x) + (10 - y); }
+  const status = (m) => { const e = $('status-msg'); if (e) e.textContent = m; };
+  const sq = (x, y) => String.fromCharCode(65 + x) + (10 - y);
 
-  function renderAll(lastMove) {
+  function ensureBoard() {
     if (!board) board = new window.Board($('board'), { humanColor: null });
     board.setInteractive(false);
-    board.setLastMove(lastMove || null);
-    board.clearSelection();
-    board.render(game);
-    renderMoveList();
-    updateTurnBars();
   }
-
-  function updateTurnBars() {
-    $('bar-red').classList.toggle('active', !over && game && game.turn === 'r');
-    $('bar-black').classList.toggle('active', !over && game && game.turn === 'b');
-  }
-
   function renderMoveList() {
-    const list = $('move-list');
-    if (!list || !game) return;
+    const list = $('move-list'); if (!list || !game) return;
     list.innerHTML = '';
     const h = game.history;
     for (let i = 0; i < h.length; i += 2) {
-      const row = document.createElement('div');
-      row.className = 'move-row';
-      const num = document.createElement('span');
-      num.className = 'move-no';
-      num.textContent = i / 2 + 1 + '.';
-      row.appendChild(num);
-      row.appendChild(cell(h[i]));
-      if (h[i + 1]) row.appendChild(cell(h[i + 1]));
+      const row = document.createElement('div'); row.className = 'move-row';
+      const num = document.createElement('span'); num.className = 'move-no'; num.textContent = i / 2 + 1 + '.';
+      row.appendChild(num); row.appendChild(cell(h[i])); if (h[i + 1]) row.appendChild(cell(h[i + 1]));
       list.appendChild(row);
     }
     list.scrollTop = list.scrollHeight;
   }
-  function cell(rec) {
-    const s = document.createElement('span');
-    s.className = 'move-cell ' + (X.colorOf(rec.piece) === X.RED ? 'mv-red' : 'mv-black');
-    s.textContent = NAME[X.typeOf(rec.piece)] + ' ' + sq(rec.from.x, rec.from.y) + '→' + sq(rec.to.x, rec.to.y);
-    return s;
+  function cell(rec) { const s = document.createElement('span'); s.className = 'move-cell ' + (X.colorOf(rec.piece) === X.RED ? 'mv-red' : 'mv-black'); s.textContent = NAME[X.typeOf(rec.piece)] + ' ' + sq(rec.from.x, rec.from.y) + '→' + sq(rec.to.x, rec.to.y); return s; }
+
+  function applyMoves(moves) {
+    let last = null;
+    for (const m of moves) { const rec = game.move(m.from, m.to); if (rec) { last = rec; applied++; } }
+    if (last) {
+      board.setLastMove({ from: last.from, to: last.to });
+      board.render(game);
+      renderMoveList();
+      $('bar-red').classList.toggle('active', !over && game.turn === 'r');
+      $('bar-black').classList.toggle('active', !over && game.turn === 'b');
+    }
   }
 
-  function applyMove(m) {
-    if (!game) return;
-    const rec = game.move(m.from, m.to);
-    if (!rec) return;
-    renderAll({ from: rec.from, to: rec.to });
+  async function poll() {
+    if (!code) return;
+    let s;
+    try { s = await window.API.matchState(code, '', applied); } catch (e) { return; }
+    if (!s || s.error) { status('This game cannot be watched (it may have ended).'); $('live-dot').style.display = 'none'; stop(); return; }
+    if (!started) {
+      started = true;
+      $('name-red').textContent = (s.red || 'Red') + ' (Red)';
+      $('name-black').textContent = (s.black || 'Black') + ' (Black)';
+      game = new X.Game(); ensureBoard(); board.render(game);
+    }
+    if (s.moves && s.moves.length) applyMoves(s.moves);
     const st = game.status();
-    if (st.over) {
+    if (s.status === 'ended' || st.over) {
       over = true;
-      updateTurnBars();
-      status('Game over: ' + (st.reason === 'checkmate' ? 'Checkmate.' : 'Stalemate.'));
-    } else if (st.check) {
-      status((game.turn === 'r' ? 'Red' : 'Black') + ' is in check!');
+      $('live-dot').style.display = 'none';
+      status('🏁 ' + (s.result || (st.reason === 'checkmate' ? 'Checkmate.' : 'Game over.')));
+      $('bar-red').classList.remove('active'); $('bar-black').classList.remove('active');
+      stop();
     } else {
-      status('Watching: ' + (game.turn === 'r' ? 'Red' : 'Black') + ' to move.');
+      status('Watching live — ' + (game.turn === 'r' ? 'Red' : 'Black') + ' to move.');
     }
   }
 
-  function handle(msg) {
-    switch (msg.type) {
-      case 'spectate-start': {
-        over = false;
-        $('name-red').textContent = (msg.red || 'Red') + ' (Red)';
-        $('name-black').textContent = (msg.black || 'Black') + ' (Black)';
-        game = new X.Game();
-        const ms = msg.moves || [];
-        for (const m of ms) { if (!game.move(m.from, m.to)) break; }
-        const last = ms.length ? ms[ms.length - 1] : null;
-        renderAll(last);
-        status('Watching live — ' + (game.turn === 'r' ? 'Red' : 'Black') + ' to move.');
-        break;
-      }
-      case 'move':
-        applyMove(msg);
-        break;
-      case 'spectate-end':
-        over = true;
-        updateTurnBars();
-        $('live-dot').style.display = 'none';
-        status('🏁 ' + (msg.text || 'The game has ended.'));
-        break;
-      case 'error':
-        status('⚠ ' + (msg.message || 'This game cannot be watched.'));
-        $('live-dot').style.display = 'none';
-        break;
-    }
-  }
+  function stop() { if (timer) clearInterval(timer); timer = null; }
 
   function init() {
-    const code = (new URLSearchParams(location.search).get('code') || '').toUpperCase().trim();
+    code = (new URLSearchParams(location.search).get('code') || '').toUpperCase().trim();
     if (!code) { status('Missing game code.'); return; }
-    const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-    ws = new WebSocket(proto + '://' + location.host + '/ws');
-    ws.onopen = () => {
-      ws.send(JSON.stringify({ type: 'hello', name: 'Spectator' }));
-      ws.send(JSON.stringify({ type: 'spectate', code }));
-      status('Joining game ' + code + '…');
-    };
-    ws.onclose = () => { $('live-dot').style.display = 'none'; if (!over) status('Lost connection to the server.'); };
-    ws.onerror = () => status('Could not reach the server.');
-    ws.onmessage = (ev) => { let m; try { m = JSON.parse(ev.data); } catch (e) { return; } handle(m); };
+    poll();
+    timer = setInterval(poll, POLL_MS);
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

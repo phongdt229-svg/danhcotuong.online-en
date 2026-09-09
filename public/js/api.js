@@ -1,8 +1,28 @@
 /*
  * api.js — Lớp gọi REST API tới backend. Dùng cookie session (credentials: include).
+ *
+ * Đường dẫn viết dạng '/api/...' cho dễ đọc, nhưng khi gọi thật được đổi thành
+ * '/api/index.php?_route=...'. Lý do: nhiều hosting chia sẻ TẮT mod_rewrite hoặc
+ * đặt AllowOverride None, khiến .htaccess không có tác dụng và mọi '/api/...'
+ * trả về 404. Gọi thẳng router PHP thì chạy được ở mọi nơi, có hay không có
+ * mod_rewrite đều như nhau.
  */
 (function (root) {
   'use strict';
+
+  // '/api/match/state?code=AB12&since=3'  ->  'api/index.php?_route=match/state&code=AB12&since=3'
+  //
+  // Trả về đường dẫn TƯƠNG ĐỐI (không có '/' đầu) để chạy được cả khi site nằm
+  // trong thư mục con, vd http://localhost/du-an/build/php-public_html/.
+  // Dùng '/api/...' tuyệt đối thì trong thư mục con nó sẽ rơi về gốc domain và 404.
+  // Mọi trang .html đều nằm cùng cấp với thư mục api/ nên tương đối luôn đúng.
+  function apiUrl(path) {
+    const m = /^\/api\/([^?]*)(?:\?(.*))?$/.exec(path);
+    if (!m) return path; // không phải đường dẫn API -> để nguyên
+    const route = m[1];
+    const rest = m[2] ? '&' + m[2] : '';
+    return 'api/index.php?_route=' + route + rest;
+  }
 
   async function req(method, url, body) {
     const opts = {
@@ -11,7 +31,7 @@
       credentials: 'same-origin',
     };
     if (body) opts.body = JSON.stringify(body);
-    const res = await fetch(url, opts);
+    const res = await fetch(apiUrl(url), opts);
     let data = null;
     try {
       data = await res.json();
@@ -41,17 +61,20 @@
     leaderboard: () => req('GET', '/api/users/leaderboard'),
     gameDetail: (id) => req('GET', '/api/games/' + id),
 
-    // Đấu online (polling)
-    matchCreate: (name) => req('POST', '/api/match/create', { name }),
-    matchJoin: (code, name) => req('POST', '/api/match/join', { code, name }),
-    matchQuick: (name) => req('POST', '/api/match/quick', { name }),
+    // Đấu online (polling). Tên người chơi lấy từ phiên đăng nhập ở server,
+    // client không gửi lên nữa — trận có cược nên không thể để mạo danh.
+    matchRules: () => req('GET', '/api/match/rules'),
+    matchCreate: (stake) => req('POST', '/api/match/create', { stake }),
+    matchJoin: (code) => req('POST', '/api/match/join', { code }),
+    matchQuick: (stake) => req('POST', '/api/match/quick', { stake }),
     matchList: () => req('GET', '/api/match/list'),
     matchState: (code, token, since) =>
       req('GET', '/api/match/state?code=' + encodeURIComponent(code) + '&token=' + encodeURIComponent(token || '') + '&since=' + (since || 0)),
     matchMove: (code, token, from, to) => req('POST', '/api/match/move', { code, token, from, to }),
     matchResign: (code, token) => req('POST', '/api/match/resign', { code, token }),
-    matchOver: (code, token, text, winner) => req('POST', '/api/match/over', { code, token, text, winner }),
+    matchDraw: (code, token) => req('POST', '/api/match/draw', { code, token }),
     matchChat: (code, token, text) => req('POST', '/api/match/chat', { code, token, text }),
+    // Không còn matchOver: server tự kết luận ai thắng, client không khai được.
 
     // Nạp điểm qua PayPal
     payConfig: () => req('GET', '/api/payments/config'),

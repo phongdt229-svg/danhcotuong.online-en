@@ -113,7 +113,7 @@
     state.board.setInteractive(true);
     state.board.render(state.game);
 
-    if (!state.worker) { state.worker = new Worker('js/engine/ai.worker.js?v=11'); state.worker.onmessage = onAiReply; }
+    if (!state.worker) { state.worker = new Worker('js/engine/ai.worker.js?v=1788851767'); state.worker.onmessage = onAiReply; }
 
     renderCaptured(); renderHistory(); updateBars();
     status('Your turn (Red). Face-down pieces move by their square — they flip once moved!');

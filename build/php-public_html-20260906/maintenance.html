@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#0f1620" />
+    <link rel="stylesheet" href="css/style.css?v=20" />
+    <link rel="stylesheet" href="css/style-enhanced.css?v=20" />
+    <link rel="icon" href="favicon.ico" sizes="32x32" />
+    <link rel="icon" type="image/svg+xml" href="images/icon.svg" />
+    <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+    <title>Be right back — Chinesechess Online</title>
+    <meta name="description" content="Chinesechess Online is being updated. We will be back shortly." />
+    <style>
+      .maint-wrap {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      .maint-card {
+        max-width: 520px;
+        width: 100%;
+        text-align: center;
+        padding: 44px 32px;
+      }
+      .maint-seal {
+        width: 96px;
+        height: 96px;
+        margin: 0 auto 22px;
+        border-radius: 22px;
+        background: linear-gradient(150deg, #e8543c, #b91c1c);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 52px;
+        font-weight: 700;
+        color: #fff7e6;
+        font-family: KaiTi, STKaiti, SimSun, serif;
+        line-height: 1;
+      }
+      .maint-card h1 {
+        margin: 0 0 12px;
+        font-size: 1.7rem;
+      }
+      .maint-msg {
+        color: var(--c-muted, #a0aec0);
+        line-height: 1.7;
+        margin: 0 0 24px;
+      }
+      .maint-dots span {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        margin: 0 3px;
+        border-radius: 50%;
+        background: var(--c-accent, #f2b134);
+        opacity: 0.35;
+        animation: maintPulse 1.4s infinite;
+      }
+      .maint-dots span:nth-child(2) { animation-delay: 0.2s; }
+      .maint-dots span:nth-child(3) { animation-delay: 0.4s; }
+      @keyframes maintPulse {
+        0%, 100% { opacity: 0.35; transform: translateY(0); }
+        50%      { opacity: 1;    transform: translateY(-4px); }
+      }
+      .maint-foot {
+        margin-top: 26px;
+        font-size: 0.85rem;
+        color: var(--c-muted, #a0aec0);
+      }
+      .maint-foot a { color: var(--c-accent, #f2b134); }
+    </style>
+  </head>
+  <body>
+    <div class="maint-wrap">
+      <div class="card maint-card">
+        <div class="maint-seal">將</div>
+        <h1>Be right back</h1>
+        <p class="maint-msg" id="maint-msg">
+          We are updating Chinesechess Online. The site will be back in a few minutes.
+        </p>
+        <div class="maint-dots"><span></span><span></span><span></span></div>
+        <p class="maint-foot">
+          This page checks every 30 seconds and returns you to the site automatically.<br />
+          Need help? <a href="https://t.me/onlineservice202" target="_blank" rel="noopener">Message us on Telegram</a>.
+        </p>
+      </div>
+    </div>
+
+    <script>
+      /*
+       * Trang nay KHONG nap api.js / ui.js — nap vao se bi day nguoc lai chinh no.
+       * Tu hoi trang thai bang fetch tho, xong thi quay ve trang chu.
+       */
+      (function () {
+        'use strict';
+        var STATUS = 'api/index.php?_route=maintenance/status';
+
+        function check() {
+          fetch(STATUS, { credentials: 'same-origin', cache: 'no-store' })
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+              if (!d) return;
+              if (d.message) document.getElementById('maint-msg').textContent = d.message;
+              // Het bao tri, hoac minh la quan tri vien duoc di tiep -> ve trang chu.
+              if (!d.maintenance || d.exempt) window.location.replace('index.html');
+            })
+            .catch(function () { /* mang loi thi cho lan sau */ });
+        }
+
+        check();
+        setInterval(check, 30000);
+      })();
+    </script>
+  </body>
+</html>

@@ -542,3 +542,62 @@ input::placeholder {
 
 /* Chua chan duoi footer de nut noi khong che mat dong ban quyen */
 .footer { padding-bottom: 84px; }
+
+/* ===== Stripe: nut thanh toan bang the ===== */
+.pay-or {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0 14px;
+  color: var(--c-muted, #a0aec0);
+  font-size: 0.85rem;
+}
+
+.pay-or::before,
+.pay-or::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--c-border, #2a3a4d);
+}
+
+.btn-stripe {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  background: #635bff;
+  color: #fff;
+  border: none;
+  font-weight: 700;
+}
+
+.btn-stripe:hover:not(:disabled) {
+  background: #544dff;
+  color: #fff;
+}
+
+.btn-stripe:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-stripe svg {
+  width: 19px;
+  height: 19px;
+  fill: currentColor;
+  flex: none;
+}
+
+.pay-note {
+  font-size: 0.82rem;
+  margin: 10px 0 0;
+  text-align: center;
+}
+
+#stripe-test-note code {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 1px 6px;
+  border-radius: 4px;
+}

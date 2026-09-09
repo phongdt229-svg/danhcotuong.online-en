@@ -3,7 +3,7 @@
  * Thuật toán: Negamax + cắt tỉa alpha-beta, lượng giá = giá trị quân + bảng vị trí (PST).
  * Nhận message: { board, difficulty } -> trả về { move, nodes }.
  */
-importScripts('xiangqi.js?v=4');
+importScripts('xiangqi.js?v=1788851767');
 
 const X = self.Xiangqi;
 const RED = X.RED;

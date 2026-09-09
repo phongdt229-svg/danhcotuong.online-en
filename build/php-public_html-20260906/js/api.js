@@ -38,6 +38,13 @@
     } catch (e) {
       data = null;
     }
+    // Site dang bao tri -> dua khach sang trang thong bao.
+    // Quan tri vien khong bao gio nhan 503 nay (may chu cho di tiep), nen van vao duoc.
+    if (res.status === 503 && data && data.maintenance) {
+      if (!/maintenance\.html$/i.test(window.location.pathname)) {
+        window.location.replace('maintenance.html');
+      }
+    }
     if (!res.ok) {
       const err = new Error((data && data.error) || 'Server error');
       err.status = res.status;
@@ -90,6 +97,10 @@
     },
     payCreateOrder: (amount) => req('POST', '/api/payments/paypal/order', { amount }),
     payCapture: (orderId) => req('POST', '/api/payments/paypal/capture', { orderId }),
+
+    // Nap diem bang the qua Stripe Checkout (chuyen huong sang trang cua Stripe)
+    payStripeSession: (amount) => req('POST', '/api/payments/stripe/session', { amount }),
+    payStripeConfirm: (sessionId) => req('POST', '/api/payments/stripe/confirm', { sessionId }),
 
     // Rút điểm về PayPal (admin duyệt tay)
     wdRules: () => req('GET', '/api/withdraw/rules'),

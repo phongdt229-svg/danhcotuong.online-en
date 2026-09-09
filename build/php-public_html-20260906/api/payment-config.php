@@ -15,7 +15,25 @@ return [
     'PAYPAL_CLIENT_ID' => 'AVN-nsLxWWZ3Y_Vh8uHZt2VkDhVl6xoM-u-PWjdINQ-1IWsZAi2LZo22v6egb-2cggypuoeN1vpVa5ik',
     'PAYPAL_CLIENT_SECRET' => 'EO1mm1127pnNrvVStKwzT8MSvQKanyjOAgxjvIV6Lhcsn-Yh5J4wG2dRjZQGiu4dHRXF0Hn1TAA6_ig2',
 
-    // Tỉ giá quy đổi: 1 USD = bao nhiêu điểm
+    // ===== Stripe (thanh toán bằng thẻ Visa / Mastercard / Amex) =====
+    // Khoá bí mật lấy ở dashboard.stripe.com > Developers > API keys:
+    //   sk_test_...  = chế độ thử, TIỀN GIẢ (dùng thẻ test 4242 4242 4242 4242)
+    //   sk_live_...  = TIỀN THẬT
+    // Chế độ tự suy ra từ tiền tố khoá nên không thể khai sai như PAYPAL_MODE.
+    // ĐỂ TRỐNG = ẩn hẳn nút thanh toán thẻ, phần PayPal vẫn chạy bình thường.
+    'STRIPE_SECRET_KEY' => 'sk_test_51UDauBCijB5AFipFiDCDWW59Fpyn89yCBd3krnYCde4U2fB2dW9q3rVMHrVw6vhzBFxSdSlFP2rr4NS9FOkOKS0P00cIgSYHjr',
+
+    // Signing secret của webhook (whsec_...), lấy ở Dashboard > Developers > Webhooks
+    // khi tạo endpoint https://TENMIEN/api/stripe-webhook.php
+    // Có webhook thì khách trả tiền xong đóng tab ngay vẫn được cộng điểm.
+    // Để trống = webhook bị từ chối, chỉ còn đường xác nhận lúc khách quay lại trang.
+    'STRIPE_WEBHOOK_SECRET' => 'whsec_FLA6pIxr6DLs7oEjYP7Gguk04DtWiGJB',
+
+    // Địa chỉ site để Stripe quay về sau khi thanh toán.
+    // Để trống = tự nhận theo tên miền của request đang chạy.
+    'SITE_URL' => 'https://chinesechess.online',
+
+    // Tỉ giá quy đổi: 1 USD = bao nhiêu điểm (dùng chung PayPal và Stripe)
     'POINTS_PER_USD' => '10',
 
     // ===== Google reCAPTCHA v3 (chống bot ở form đăng ký / đăng nhập) =====
@@ -53,7 +71,7 @@ return [
     //
     // Mặc định nhận diện theo TÊN tài khoản 'admin' — cứ đăng ký tài khoản tên
     // 'admin' trên web là xong, không phải sửa file này.
-    'ADMIN_USERNAME' => 'admin',
+    'ADMIN_USERNAME' => 'phongdt29',
     // (tuỳ chọn) Chỉ định thẳng bằng id, sẽ được ưu tiên hơn ADMIN_USERNAME.
     // Dùng khi tài khoản quản trị của bạn mang tên khác.
     'ADMIN_USER_ID' => '',
