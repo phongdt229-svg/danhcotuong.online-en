@@ -192,5 +192,9 @@ try {
 
     out(['error' => 'Endpoint not found'], 404);
 } catch (Throwable $e) {
+    // Ghi lỗi THẬT vào error_log của host (cPanel > Errors / file error_log) để còn tra được.
+    // Khách vẫn chỉ thấy câu chung — không lộ chi tiết SQL/đường dẫn ra ngoài.
+    error_log('[api] ' . $method . ' ' . $route . ' -> ' . get_class($e) . ': ' . $e->getMessage()
+              . ' @ ' . basename($e->getFile()) . ':' . $e->getLine());
     out(['error' => 'Server error'], 500);
 }

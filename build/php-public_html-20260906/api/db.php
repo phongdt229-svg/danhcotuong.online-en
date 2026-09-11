@@ -100,14 +100,15 @@ try { $pdo->exec("ALTER TABLE users ADD COLUMN points INT NOT NULL DEFAULT 0 AFT
 try { $pdo->exec("ALTER TABLE users ADD COLUMN last_seen DATETIME NULL"); } catch (Throwable $e) { /* đã có */ }
 try { $pdo->exec("CREATE INDEX idx_users_last_seen ON users (last_seen)"); } catch (Throwable $e) { /* đã có */ }
 
-// Đơn nạp điểm qua PayPal.
+// Đơn nạp điểm (PayPal + Stripe).
 // UNIQUE (provider, order_id) là chốt chặn chống cộng điểm hai lần cho cùng một đơn.
+// order_id VARCHAR(128): id phiên Stripe Checkout dài 66 ký tự, VARCHAR(64) cũ không chứa nổi.
 $pdo->exec("CREATE TABLE IF NOT EXISTS point_transactions (
     id           INT AUTO_INCREMENT PRIMARY KEY,
     user_id      INT           NOT NULL,
     provider     VARCHAR(20)   NOT NULL DEFAULT 'paypal',
-    order_id     VARCHAR(64)   NOT NULL,
-    capture_id   VARCHAR(64)   NULL,
+    order_id     VARCHAR(128)  NOT NULL,
+    capture_id   VARCHAR(128)  NULL,
     amount_usd   DECIMAL(10,2) NOT NULL,
     points       INT           NOT NULL,
     status       ENUM('created','completed','failed') NOT NULL DEFAULT 'created',
@@ -118,6 +119,19 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS point_transactions (
     CONSTRAINT fk_ptx_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX idx_ptx_user (user_id, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+// Nới order_id/capture_id cho bảng đã tạo từ bản cũ (VARCHAR(64)).
+// Id phiên Stripe 66 ký tự -> INSERT bị MySQL strict từ chối ("Data too long") -> API trả "Server error".
+// ĐỌC độ dài trước, chỉ ALTER khi còn hẹp: MODIFY chạy thành công ở mọi lần gọi, để trần sẽ
+// khoá bảng giao dịch ở MỖI request. 128 x 4 byte (utf8mb4) + provider vẫn dưới giới hạn index 767 byte.
+try {
+    $col = $pdo->query("SHOW COLUMNS FROM point_transactions LIKE 'order_id'")->fetch(PDO::FETCH_ASSOC);
+    if ($col && preg_match('/varchar\((\d+)\)/i', (string) $col['Type'], $mm) && (int) $mm[1] < 128) {
+        $pdo->exec("ALTER TABLE point_transactions
+                      MODIFY COLUMN order_id   VARCHAR(128) NOT NULL,
+                      MODIFY COLUMN capture_id VARCHAR(128) NULL");
+    }
+} catch (Throwable $e) { /* không chặn app */ }
 
 // Sổ ván cược điểm. Điểm bị TRỪ khi ván bắt đầu, chỉ chia lại một lần khi kết thúc
 // — cột `status` là chốt chặn chống chia hai lần.

@@ -75,7 +75,8 @@
 
     window.paypal
       .Buttons({
-        style: { layout: 'vertical', shape: 'rect', label: 'paypal' },
+        // height ghim 45px: dung bang nut 'Pay by card' (.btn-stripe) — doi mot ben thi doi ca hai.
+        style: { layout: 'vertical', shape: 'rect', label: 'paypal', height: 45 },
 
         // Máy chủ tạo đơn — trình duyệt chỉ nói "tôi chọn gói này".
         createOrder: async function () {

@@ -545,24 +545,75 @@ input::placeholder {
 
 /* ===== Doan gioi thieu SEO duoi nut CTA (trang chu) ===== */
 .hero-copy {
-  max-width: 900px;
-  margin: 34px auto 0;
+  max-width: 1100px;
+  margin: 48px auto 0;
+}
+
+/* Dung lai .card.feature nhung chinh cho the DOC: chu dai nen canh trai */
+.hero-cards {
+  margin-top: 0;
+  align-items: stretch;
+}
+
+.hero-cards .card.feature {
   text-align: left;
-  color: var(--c-muted, #a0aec0);
-  line-height: 1.8;
+  display: flex;
+  flex-direction: column;
+  padding: 26px;
 }
 
-.hero-copy p {
+/* Icon tinh (bo hieu ung nhun cua .feature .ico), nen vang nhat hop ca 2 giao dien */
+.hero-cards .feature .ico {
+  width: 50px;
+  height: 50px;
   margin: 0 0 16px;
-  font-size: 1.02rem;
+  font-size: 1.55rem;
+  border-radius: 14px;
+  animation: none;
+  background: rgba(242, 177, 52, 0.12);
+  border: 1px solid rgba(242, 177, 52, 0.28);
 }
 
-.hero-copy p:last-child {
-  margin-bottom: 0;
+.hero-cards .feature h3 {
+  margin: 0 0 10px;
+  font-size: 1.12rem;
+  color: var(--c-text);
 }
 
-/* Gioi thieu ngan ngay duoi tieu de, tren cum nut */
-.hero-lead {
+.hero-cards .feature p {
+  animation: none;
+  max-width: none;
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: var(--c-muted);
+}
+
+/* Cau ket: canh giua, gach vang ngan phia tren, ten mien noi bat */
+.hero .hero-close {
+  animation: none;
   max-width: 760px;
-  margin: 0 auto 24px;
+  margin: 36px auto 0;
+  padding-top: 26px;
+  position: relative;
+  text-align: center;
+  font-size: 1.1rem;
+  line-height: 1.7;
+  color: var(--c-text);
+}
+
+.hero .hero-close::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 56px;
+  height: 3px;
+  margin-left: -28px;
+  border-radius: 3px;
+  background: var(--c-accent);
+}
+
+.hero .hero-close strong {
+  color: var(--c-accent);
 }
