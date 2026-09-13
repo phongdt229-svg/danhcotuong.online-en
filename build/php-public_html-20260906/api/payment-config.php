@@ -11,9 +11,12 @@ return [
     // 'sandbox' = tiền giả để test | 'live' = TIỀN THẬT
     // Key LIVE lấy ở developer.paypal.com > Apps & Credentials > tab Live
     // (khác hoàn toàn key sandbox — dùng nhầm sandbox thì tiền KHÔNG vào thật).
-    'PAYPAL_MODE' => 'sandbox',
-    'PAYPAL_CLIENT_ID' => 'AVN-nsLxWWZ3Y_Vh8uHZt2VkDhVl6xoM-u-PWjdINQ-1IWsZAi2LZo22v6egb-2cggypuoeN1vpVa5ik',
-    'PAYPAL_CLIENT_SECRET' => 'EO1mm1127pnNrvVStKwzT8MSvQKanyjOAgxjvIV6Lhcsn-Yh5J4wG2dRjZQGiu4dHRXF0Hn1TAA6_ig2',
+    //
+    // TẠM TẮT (2026-09-11): bộ key cũ là SANDBOX — gọi api-m.paypal.com bị 401 nên nút PayPal hỏng.
+    // Để trống = ẩn nút PayPal. Dán bộ key tab LIVE vào 2 dòng dưới là chạy lại, giữ nguyên 'live'.
+    'PAYPAL_MODE' => 'live',
+    'PAYPAL_CLIENT_ID' => '',
+    'PAYPAL_CLIENT_SECRET' => '',
 
     // ===== Stripe (thanh toán bằng thẻ Visa / Mastercard / Amex) =====
     // Khoá bí mật lấy ở dashboard.stripe.com > Developers > API keys:
@@ -21,13 +24,16 @@ return [
     //   sk_live_...  = TIỀN THẬT
     // Chế độ tự suy ra từ tiền tố khoá nên không thể khai sai như PAYPAL_MODE.
     // ĐỂ TRỐNG = ẩn hẳn nút thanh toán thẻ, phần PayPal vẫn chạy bình thường.
-    'STRIPE_SECRET_KEY' => 'sk_test_51UDauBCijB5AFipFiDCDWW59Fpyn89yCBd3krnYCde4U2fB2dW9q3rVMHrVw6vhzBFxSdSlFP2rr4NS9FOkOKS0P00cIgSYHjr',
+    // TẠM TẮT (2026-09-11): chờ khoá sk_live_. Khoá sk_test_ cũ vẫn lấy lại được ở Dashboard (Test mode).
+    'STRIPE_SECRET_KEY' => '',
 
     // Signing secret của webhook (whsec_...), lấy ở Dashboard > Developers > Webhooks
     // khi tạo endpoint https://TENMIEN/api/stripe-webhook.php
     // Có webhook thì khách trả tiền xong đóng tab ngay vẫn được cộng điểm.
     // Để trống = webhook bị từ chối, chỉ còn đường xác nhận lúc khách quay lại trang.
-    'STRIPE_WEBHOOK_SECRET' => 'whsec_FLA6pIxr6DLs7oEjYP7Gguk04DtWiGJB',
+    // Khi bật lại bằng sk_live_ thì PHẢI dùng whsec_ của endpoint tạo trong LIVE mode —
+    // secret của Test mode không xác thực được sự kiện thật.
+    'STRIPE_WEBHOOK_SECRET' => '',
 
     // Địa chỉ site để Stripe quay về sau khi thanh toán.
     // Để trống = tự nhận theo tên miền của request đang chạy.

@@ -14,7 +14,9 @@
     const box = el('status');
     box.textContent = message || '';
     box.className = 'topup-status' + (kind ? ' ' + kind : '');
-    box.style.display = message ? '' : 'none';
+    // Phai la 'block': .topup-status trong topup.html mac dinh display:none, gan '' chi xoa style inline
+    // nen trinh duyet quay ve display:none -> MOI thong bao (loi, 'Payment complete'...) deu bi an.
+    box.style.display = message ? 'block' : 'none';
   }
 
   function fmtUsd(v) {
@@ -250,7 +252,7 @@
     handleStripeReturn();
 
     if (!cfg.configured) {
-      if (!cfg.stripeConfigured) setStatus('Payments are not configured on this server yet.', 'err');
+      if (!cfg.stripeConfigured) setStatus('Buying points is temporarily unavailable. Please check back soon.', 'info');
       return;
     }
     if (cfg.mode === 'sandbox') el('sandbox-note').style.display = '';

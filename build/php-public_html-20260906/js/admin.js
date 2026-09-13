@@ -17,7 +17,7 @@
     const box = $('adm-msg');
     box.textContent = text || '';
     box.className = 'adm-msg' + (kind ? ' ' + kind : '');
-    box.style.display = text ? '' : 'none';
+    box.style.display = text ? 'block' : 'none'; // 'block': CSS mac dinh display:none, gan '' khong hien lai
   }
 
   const STATUS = {
