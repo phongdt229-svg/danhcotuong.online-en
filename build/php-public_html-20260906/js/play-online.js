@@ -12,6 +12,8 @@
   const X = window.Xiangqi;
   const $ = (id) => document.getElementById(id);
   const POLL_MS = 1500;
+  // Server cho lời mời sống 90 giây; chờ thêm một nhịp rồi mới kết luận "không trả lời".
+  const INVITE_TTL_MS = 95000;
 
   const state = {
     code: null, token: null, myColor: null,
@@ -24,6 +26,11 @@
     seenRooms: null,  // mã phòng đã thấy, để chỉ báo phòng MỚI (null = chưa tải lần nào)
     seenOnline: null, // tên người đã thấy online, để chỉ báo người MỚI vào
     onlineCount: 0,
+    // Mời đấu trực tiếp
+    players: [],       // người đang online (trừ mình)
+    seenInvites: null, // mã lời mời đã thấy, để chỉ toast lời mời MỚI
+    invitedName: null, // đang chờ ai trả lời lời mời của mình
+    inviteTimer: null, // hẹn giờ kết luận "không trả lời"
   };
 
   const GLYPH = {
@@ -207,6 +214,186 @@
     });
   }
 
+  /* ---------------- Mời đấu trực tiếp ----------------
+   * Chọn một người đang online -> mở phòng GIỮ RIÊNG cho họ (server chốt bằng
+   * matches.invited_user_id, người khác dò được mã cũng không vào được).
+   * Điểm cược CHƯA bị trừ lúc mời — chỉ trừ khi người kia bấm nhận, nên từ chối
+   * hay hết hạn đều không tốn của ai đồng nào.
+   */
+
+  // Một lượt hỏi lấy cả 3: ai đang online, lời mời chờ mình, số dư mới nhất.
+  async function refreshPlayers() {
+    if (!state.loggedIn) { renderPlayers([]); return; }
+    let d;
+    try { d = await window.API.matchPlayers(); } catch (e) { return; }
+    state.players = (d && d.players) || [];
+    if (d && d.balance != null) { state.balance = Number(d.balance); paintStakeUI(); }
+    renderPlayers(state.players);
+    handleInvites((d && d.invites) || []);
+  }
+
+  function renderPlayers(list) {
+    const box = $('player-list');
+    if (!box) return;
+    const count = $('player-count');
+    box.innerHTML = '';
+    if (!state.loggedIn) {
+      box.innerHTML = '<div class="room-empty">Sign in to see who is online and invite them.</div>';
+      if (count) count.textContent = '';
+      return;
+    }
+    if (count) count.textContent = list.length ? '(' + list.length + ')' : '';
+    if (!list.length) {
+      box.innerHTML = '<div class="room-empty">Nobody else is online right now.</div>';
+      return;
+    }
+    list.forEach((p) => {
+      const row = document.createElement('div');
+      row.className = 'room-item' + (p.busy ? ' is-busy' : '');
+      const info = document.createElement('span');
+      info.className = 'room-info';
+      info.innerHTML =
+        '<span class="player-name"><i class="player-dot' + (p.busy ? ' busy' : '') + '"></i>' +
+        escapeHtml(p.name) + '</span>' +
+        '<span class="room-code-sm">' +
+        (p.busy ? 'In a game' : 'Elo ' + (p.elo || 0) + ' · ' + (p.wins || 0) + 'W / ' + (p.losses || 0) + 'L') +
+        '</span>';
+
+      // KHÔNG khoá nút (giống danh sách phòng): bấm vào phải giải thích được vì
+      // sao chưa mời được, nút im lặng thì người dùng tưởng web lỗi.
+      const btn = document.createElement('button');
+      if (p.busy) {
+        btn.className = 'btn btn-ghost';
+        btn.textContent = 'In a game';
+        btn.addEventListener('click', () => lobbyStatus(p.name + ' is in a game — try again when they finish.'));
+      } else if (p.invited) {
+        btn.className = 'btn btn-ghost';
+        btn.textContent = '✓ Invited';
+        btn.addEventListener('click', () => lobbyStatus('Still waiting for ' + p.name + ' to answer.'));
+      } else {
+        btn.className = 'btn btn-primary';
+        btn.textContent = '⚔ Invite';
+        btn.addEventListener('click', () => doInvite(p));
+      }
+      row.appendChild(info); row.appendChild(btn);
+      box.appendChild(row);
+    });
+  }
+
+  async function doInvite(p) {
+    if (!state.loggedIn) return requireLoginUI();
+    const stake = currentStake(); // kiểm mức cược + số dư của mình trước khi gọi
+    if (stake === null) return;
+    try {
+      const r = await window.API.matchInvite(p.id, stake);
+      state.code = r.code; state.token = r.token; state.myColor = r.color;
+      state.stake = Number(r.stake) || stake;
+      state.invitedName = r.to || p.name;
+      showWaiting('Invite sent to ' + state.invitedName + ' — waiting for them to accept (' +
+                  fmtPts(state.stake) + ' points each)…', null);
+      lobbyStatus('Waiting for ' + state.invitedName + ' to answer…');
+      startPoll();      // ván bắt đầu ngay khi họ bấm nhận (status -> 'playing')
+      armInviteTimeout();
+      refreshPlayers(); // đánh dấu "✓ Invited" trong danh sách
+    } catch (e) {
+      lobbyStatus((e && e.data && e.data.error) || e.message || 'Could not send the invite.');
+    }
+  }
+
+  function clearInviteTimeout() {
+    if (state.inviteTimer) clearTimeout(state.inviteTimer);
+    state.inviteTimer = null;
+  }
+
+  // Hết hạn mà không ai trả lời -> trả mình về sảnh, nói rõ vì sao.
+  function armInviteTimeout() {
+    clearInviteTimeout();
+    state.inviteTimer = setTimeout(() => {
+      state.inviteTimer = null;
+      if (state.started || !state.invitedName) return;
+      const who = state.invitedName;
+      stopPoll(); hideWaiting();
+      state.code = null; state.token = null; state.invitedName = null;
+      lobbyStatus('No answer from ' + who + '. Invite someone else, or create an open room.');
+      window.UI.toast('No answer from ' + who, {
+        kind: 'warn',
+        sub: 'The invite expired — you can invite again.',
+      });
+      refreshPlayers();
+    }, INVITE_TTL_MS);
+  }
+
+  /* ---- Lời mời người khác gửi cho mình ---- */
+  function handleInvites(list) {
+    renderInvites(list);
+    // Toast một lần cho mỗi lời mời MỚI: hộp ở sảnh có thể đang ngoài tầm mắt.
+    const now = new Set(list.map((i) => i.code));
+    if (state.seenInvites !== null) {
+      list.forEach((i) => {
+        if (state.seenInvites.has(i.code)) return;
+        window.UI.toast(i.from + ' invited you to play', {
+          kind: 'room',
+          icon: '將',
+          sub: '💰 ' + fmtPts(i.stake) + ' points each · expires in about a minute',
+          cta: '▶ Accept',
+          timeout: 15000,
+          onClick: () => acceptInvite(i),
+        });
+      });
+    }
+    state.seenInvites = now;
+  }
+
+  function renderInvites(list) {
+    const box = $('invite-box');
+    if (!box) return;
+    box.innerHTML = '';
+    if (!list.length) { box.classList.add('hidden'); return; }
+    box.classList.remove('hidden');
+    list.forEach((i) => {
+      const enough = Number(i.stake) <= state.balance;
+      const card = document.createElement('div');
+      card.className = 'invite-card';
+      const head = document.createElement('div');
+      head.innerHTML =
+        '<b>⚔ ' + escapeHtml(i.from) + ' invited you to play</b>' +
+        '<span class="invite-sub">💰 ' + fmtPts(i.stake) + ' points each' +
+        (enough ? '' : ' · you need ' + fmtPts(Number(i.stake) - state.balance) + ' more') +
+        '</span>';
+      const acts = document.createElement('div');
+      acts.className = 'invite-actions';
+      const yes = document.createElement('button');
+      yes.className = 'btn ' + (enough ? 'btn-accept' : 'btn-decline');
+      yes.textContent = enough ? '✓ Accept' : 'Buy points';
+      yes.addEventListener('click', () => (enough ? acceptInvite(i) : (location.href = 'topup.html')));
+      const no = document.createElement('button');
+      no.className = 'btn btn-decline';
+      no.textContent = '✕ Decline';
+      no.addEventListener('click', () => declineInvite(i));
+      acts.appendChild(yes); acts.appendChild(no);
+      card.appendChild(head); card.appendChild(acts);
+      box.appendChild(card);
+    });
+  }
+
+  function clearInviteBox() {
+    const box = $('invite-box');
+    if (box) { box.innerHTML = ''; box.classList.add('hidden'); }
+  }
+
+  // Nhận lời mời = vào phòng như thường: server trừ cược hai bên ở 'join'.
+  function acceptInvite(i) {
+    clearInviteBox();
+    doJoin(i.code);
+  }
+
+  async function declineInvite(i) {
+    try { await window.API.matchInviteDecline(i.code); } catch (e) {}
+    clearInviteBox();
+    lobbyStatus('Declined the invite from ' + i.from + '.');
+    refreshPlayers();
+  }
+
   /* ---------------- Vào trận ---------------- */
   async function doQuick() {
     if (!state.loggedIn) return requireLoginUI();
@@ -255,8 +442,23 @@
     if (!s) return;
 
     if (!state.started) {
-      if (s.status === 'playing') beginGame(s);
-      else if (s.status === 'ended') { lobbyStatus('The game has ended.'); stopPoll(); }
+      if (s.status === 'playing') {
+        clearInviteTimeout();
+        state.invitedName = null;
+        beginGame(s);
+      } else if (s.status === 'ended') {
+        /*
+         * Phòng đóng TRƯỚC khi vào ván. Hay gặp nhất: lời mời bị từ chối —
+         * s.result là câu server đã ghi sẵn, nói đúng chuyện gì xảy ra, nên
+         * hiện nguyên văn thay vì câu chung "the game has ended".
+         */
+        stopPoll(); clearInviteTimeout(); hideWaiting();
+        const why = s.result || 'That room is no longer available.';
+        state.code = null; state.token = null; state.invitedName = null;
+        lobbyStatus(why);
+        window.UI.toast(why, { kind: 'warn' });
+        refreshPlayers();
+      }
       return;
     }
 
@@ -471,6 +673,7 @@
     state.over = true; state.started = false; stopPoll();
     state.code = null; state.token = null; state.game = null; state.applied = 0;
     state.stake = 0; state.pot = 0; state.settled = false;
+    clearInviteTimeout(); clearInviteBox(); state.invitedName = null;
     if (state.board) { $('board').innerHTML = ''; $('board').classList.remove('flip'); const c = document.querySelector('.board-col'); if (c) c.classList.remove('flip'); state.board = null; }
     $('result-modal').classList.add('hidden');
     $('lobby-overlay').classList.remove('hidden');
@@ -482,6 +685,7 @@
     lobbyStatus('Choose how you want to play.');
     refreshBalance();
     refreshRooms();
+    refreshPlayers();
   }
 
   async function refreshBalance() {
@@ -512,7 +716,13 @@
     $('btn-create').addEventListener('click', doCreate);
     $('btn-join').addEventListener('click', () => doJoin($('join-code').value));
     $('btn-refresh').addEventListener('click', refreshRooms);
-    $('btn-cancel').addEventListener('click', () => { stopPoll(); hideWaiting(); state.code = null; state.token = null; lobbyStatus('Cancelled. Choose how you want to play.'); refreshRooms(); });
+    const brp = $('btn-refresh-players'); if (brp) brp.addEventListener('click', refreshPlayers);
+    $('btn-cancel').addEventListener('click', () => {
+      stopPoll(); hideWaiting(); clearInviteTimeout();
+      state.code = null; state.token = null; state.invitedName = null;
+      lobbyStatus('Cancelled. Choose how you want to play.');
+      refreshRooms(); refreshPlayers();
+    });
     $('btn-resign').addEventListener('click', async () => {
       if (state.over || !state.game) return;
       try { await window.API.matchResign(state.code, state.token); } catch (e) {}
@@ -527,7 +737,17 @@
     await refreshBalance();
     paintStakeUI();
     refreshRooms();
-    setInterval(() => { if (!state.started && !state.pollTimer) { refreshRooms(); refreshBalance(); } }, 4000);
+    refreshPlayers();
+    /*
+     * Nhịp sảnh: 2 request mỗi 4 giây (danh sách phòng + trạng thái của mình).
+     * refreshPlayers đã trả về số dư nên không gọi refreshBalance ở đây nữa —
+     * thêm lời mời mà vẫn giữ đúng số lượt hỏi như trước.
+     */
+    setInterval(() => {
+      if (state.started || state.pollTimer) return;
+      refreshRooms();
+      refreshPlayers();
+    }, 4000);
 
     if (!state.loggedIn) {
       lobbyStatus('You need to sign in to play against other people.');

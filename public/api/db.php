@@ -187,6 +187,15 @@ try { $pdo->exec("ALTER TABLE matches ADD COLUMN stake INT NOT NULL DEFAULT 0");
 try { $pdo->exec("ALTER TABLE matches ADD COLUMN red_user_id INT NULL"); } catch (Throwable $e) { /* đã có */ }
 try { $pdo->exec("ALTER TABLE matches ADD COLUMN black_user_id INT NULL"); } catch (Throwable $e) { /* đã có */ }
 
+/*
+ * Mời đấu trực tiếp: phòng được GIỮ RIÊNG cho một người.
+ * NULL = phòng công khai (ai cũng vào được, hiện trong danh sách phòng).
+ * Có giá trị = chỉ đúng người đó vào được — mã phòng chỉ có 4 chữ số nên nếu
+ * không chốt ở đây thì người khác dò mã là chiếm được suất đã mời.
+ */
+try { $pdo->exec("ALTER TABLE matches ADD COLUMN invited_user_id INT NULL"); } catch (Throwable $e) { /* đã có */ }
+try { $pdo->exec("CREATE INDEX idx_matches_invited ON matches (invited_user_id, status)"); } catch (Throwable $e) { /* đã có */ }
+
 // Sổ tay nước đi tự học của AI (chơi với máy). Khoá = thế cờ (lúc Đen tới lượt) + nước đi.
 $pdo->exec("CREATE TABLE IF NOT EXISTS ai_book (
     pos_hash  CHAR(32)   NOT NULL,

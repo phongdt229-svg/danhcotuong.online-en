@@ -191,6 +191,9 @@
         <h2>♟ Play vs Human <span class="online-pill" id="online-count" style="display: none"></span></h2>
         <p class="text-muted" id="lobby-status">Connecting…</p>
 
+        <!-- Lời mời người khác gửi cho mình: để ngay đầu sảnh vì cần trả lời ngay -->
+        <div id="invite-box" class="invite-box hidden"></div>
+
         <!-- Cược điểm: mọi trận với người đều phải cược -->
         <div class="opt-group stake-group">
           <label style="display: flex; justify-content: space-between; align-items: center">
@@ -211,6 +214,16 @@
         <div class="opt-group">
           <button class="btn btn-accent btn-block btn-lg" id="btn-create">＋ Create a room</button>
         </div>
+        <!-- Chọn người đang online để mời đấu riêng -->
+        <div class="opt-group">
+          <label style="display: flex; justify-content: space-between; align-items: center">
+            <span>Players online <span class="text-muted" id="player-count"></span></span>
+            <button class="btn btn-ghost" id="btn-refresh-players" style="padding: 4px 12px; font-size: 0.8rem">↻ Refresh</button>
+          </label>
+          <div id="player-list" class="room-list"><div class="room-empty">Loading…</div></div>
+          <p class="text-muted stake-note">Invite someone and the room is held just for them — nobody else can take it.</p>
+        </div>
+
         <div class="opt-group">
           <label style="display: flex; justify-content: space-between; align-items: center">
             <span>Open rooms</span>

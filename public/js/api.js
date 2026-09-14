@@ -76,6 +76,12 @@
     matchChat: (code, token, text) => req('POST', '/api/match/chat', { code, token, text }),
     // Không còn matchOver: server tự kết luận ai thắng, client không khai được.
 
+    // Mời đấu trực tiếp: chọn người đang online -> mở phòng giữ riêng cho họ.
+    // matchPlayers trả 1 lượt cả 3 thứ: ai đang online, lời mời chờ mình, số dư.
+    matchPlayers: () => req('GET', '/api/match/players'),
+    matchInvite: (toUserId, stake) => req('POST', '/api/match/invite', { toUserId, stake }),
+    matchInviteDecline: (code) => req('POST', '/api/match/invite/decline', { code }),
+
     // Nạp điểm qua PayPal
     payConfig: () => req('GET', '/api/payments/config'),
     pointsBalance: () => req('GET', '/api/payments/balance'),

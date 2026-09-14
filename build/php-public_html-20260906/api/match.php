@@ -17,7 +17,40 @@ require_once __DIR__ . '/stake.php';
 // Đối thủ không hỏi thăm quá ngần này giây thì coi như bỏ trận.
 const M_ABANDON_SECONDS = 90;
 
+/*
+ * Coi là ĐANG ONLINE nếu có hoạt động trong 30 giây gần đây — gấp ~7 lần nhịp
+ * poll của sảnh (4s), đủ rộng để mạng chậm không làm nhấp nháy online/offline.
+ */
+const M_ONLINE_SECONDS = 30;
+
+/*
+ * Lời mời sống 90 giây rồi tự hết hạn. Ngắn có chủ ý: lời mời là thứ cần trả
+ * lời ngay, để lâu thì người mời đã bỏ đi mà người được mời vẫn thấy.
+ */
+const M_INVITE_SECONDS = 90;
+
+// Mời rộng tay hơn mốc online một nhịp: người vừa rời mắt khỏi máy vẫn kịp nhận.
+const M_INVITE_ONLINE_SECONDS = 60;
+
 function gen_token() { return bin2hex(random_bytes(16)); }
+
+// Đánh dấu "còn hoạt động" — bản polling không có kết nối thường trực nên mốc
+// online chỉ dựa vào cột này.
+function m_touch($pdo, $userId) {
+    if (!$userId) return;
+    $pdo->prepare('UPDATE users SET last_seen = NOW() WHERE id = ?')->execute([(int) $userId]);
+}
+
+// Người này đang đánh dở một ván nào đó? (đang đánh thì không mời được)
+function m_is_playing($pdo, $userId) {
+    $st = $pdo->prepare("SELECT id FROM matches
+                          WHERE status = 'playing'
+                            AND updated_at > (NOW() - INTERVAL 1 MINUTE)
+                            AND (red_user_id = ? OR black_user_id = ?)
+                          LIMIT 1");
+    $st->execute([(int) $userId, (int) $userId]);
+    return (bool) $st->fetch();
+}
 
 /*
  * Mã phòng: 4 CHỮ SỐ (0000–9999), không có chữ cái.
@@ -135,6 +168,16 @@ function handle_match($pdo, $sub, $method, $input) {
         if ($m['status'] !== 'waiting' || $m['black_token']) out(['error' => 'That room is already full or has started'], 409);
         if ((int) $m['red_user_id'] === (int) $u['id']) out(['error' => 'You cannot join your own room'], 409);
 
+        /*
+         * Phòng mời riêng: CHỈ người được mời vào được.
+         * Chốt chặn thật sự của tính năng mời đấu — mã phòng chỉ có 4 chữ số,
+         * thiếu dòng này thì dò 10.000 mã là chiếm được suất người khác đã mời.
+         */
+        $invited = (int) ($m['invited_user_id'] ?? 0);
+        if ($invited && $invited !== (int) $u['id']) {
+            out(['error' => 'That room is reserved for another player.'], 403);
+        }
+
         $stake = (int) $m['stake'];
         if ((int) $u['points'] < $stake) {
             out(['error' => 'You need ' . $stake . ' points for this room — you have ' . (int) $u['points'] . '.'], 400);
@@ -211,17 +254,14 @@ function handle_match($pdo, $sub, $method, $input) {
         $pdo->exec("DELETE FROM matches WHERE status='waiting' AND updated_at < (NOW() - INTERVAL 30 MINUTE)");
 
         // Sảnh hỏi danh sách mỗi ~4s -> dùng luôn làm nhịp tim để biết ai đang online.
-        $uid = $_SESSION['userId'] ?? null;
-        if ($uid) {
-            $pdo->prepare('UPDATE users SET last_seen = NOW() WHERE id = ?')->execute([$uid]);
-        }
-        // Coi là online nếu có hoạt động trong 30 giây gần đây (gấp ~7 lần nhịp poll,
-        // đủ rộng để mạng chậm không bị nhấp nháy online/offline).
+        m_touch($pdo, $_SESSION['userId'] ?? null);
         $onlineRows = $pdo->query("SELECT username FROM users
-                                    WHERE last_seen > (NOW() - INTERVAL 30 SECOND)
+                                    WHERE last_seen > (NOW() - INTERVAL " . (int) M_ONLINE_SECONDS . " SECOND)
                                     ORDER BY username LIMIT 100")->fetchAll();
 
-        $rooms = $pdo->query("SELECT code, host_name, stake FROM matches WHERE status='waiting' AND is_quick=0 AND updated_at > (NOW() - INTERVAL 2 MINUTE) ORDER BY id DESC LIMIT 50")->fetchAll();
+        // invited_user_id IS NULL: phòng mời riêng KHÔNG hiện ở danh sách công khai,
+        // nếu không thì người ngoài thấy và bấm vào chỉ để nhận lỗi "dành cho người khác".
+        $rooms = $pdo->query("SELECT code, host_name, stake FROM matches WHERE status='waiting' AND is_quick=0 AND invited_user_id IS NULL AND updated_at > (NOW() - INTERVAL 2 MINUTE) ORDER BY id DESC LIMIT 50")->fetchAll();
         $liveRows = $pdo->query("SELECT code, red_name, black_name, moves, stake FROM matches WHERE status='playing' AND updated_at > (NOW() - INTERVAL 1 MINUTE) ORDER BY id DESC LIMIT 50")->fetchAll();
         out([
             'rooms' => array_map(fn($r) => ['code' => $r['code'], 'host' => $r['host_name'], 'stake' => (int) $r['stake']], $rooms),
@@ -240,6 +280,13 @@ function handle_match($pdo, $sub, $method, $input) {
         $token = $_GET['token'] ?? '';
         $since = max(0, (int) ($_GET['since'] ?? 0));
         $color = m_color($m, $token);
+
+        /*
+         * Đang ở trong phòng cũng là đang online. Cần dòng này vì sảnh chỉ gọi
+         * 'list' (nhịp tim cũ) khi CHƯA vào phòng — thiếu nó thì người đang chờ
+         * trong phòng của mình sẽ rơi khỏi danh sách "đang online" sau 30 giây.
+         */
+        m_touch($pdo, $_SESSION['userId'] ?? null);
 
         // cập nhật "đang xem" cho người chơi
         if ($color === 'r') $pdo->prepare("UPDATE matches SET red_seen=? WHERE id=?")->execute([$now, $m['id']]);
@@ -387,6 +434,141 @@ function handle_match($pdo, $sub, $method, $input) {
         $pdo->prepare("UPDATE matches SET chat=?, updated_at=? WHERE id=?")
             ->execute([json_encode($chat, JSON_UNESCAPED_UNICODE), $now, $m['id']]);
         out(['ok' => true, 'agreed' => false]);
+    }
+
+    /* ==================== MỜI ĐẤU TRỰC TIẾP ====================
+     * Chọn người đang online -> mở phòng GIỮ RIÊNG cho người đó.
+     * Điểm cược CHƯA bị trừ lúc mời; chỉ trừ khi người kia bấm nhận (đi qua
+     * 'join' như phòng thường). Nên từ chối / hết hạn không tốn của ai đồng nào.
+     */
+
+    /*
+     * ---- Trạng thái sảnh của RIÊNG mình ----
+     * Gộp 3 thứ vào một lượt hỏi (ai đang online + lời mời đang chờ mình + số dư)
+     * vì sảnh gọi endpoint này mỗi 4 giây — tách ra là nhân ba số request.
+     */
+    if ($sub === 'players' && $method === 'GET') {
+        $u = m_require_user($pdo);
+        m_touch($pdo, $u['id']); // ngồi ở sảnh chờ lời mời cũng là đang online
+
+        /*
+         * KHÔNG trả về số điểm của người khác: biết ai nhiều điểm là biết nên
+         * nhắm vào ai. Người được mời có đủ điểm hay không thì lúc bấm nhận
+         * ('join') server kiểm và báo cho chính họ.
+         */
+        $st = $pdo->prepare(
+            "SELECT u.id, u.username, u.elo, u.wins, u.losses,
+                    EXISTS(SELECT 1 FROM matches m
+                            WHERE m.status = 'playing'
+                              AND m.updated_at > (NOW() - INTERVAL 1 MINUTE)
+                              AND (m.red_user_id = u.id OR m.black_user_id = u.id)) AS playing,
+                    EXISTS(SELECT 1 FROM matches i
+                            WHERE i.status = 'waiting' AND i.black_token IS NULL
+                              AND i.red_user_id = ? AND i.invited_user_id = u.id
+                              AND i.created_at > (NOW() - INTERVAL " . (int) M_INVITE_SECONDS . " SECOND)) AS invited
+               FROM users u
+              WHERE u.last_seen > (NOW() - INTERVAL " . (int) M_ONLINE_SECONDS . " SECOND)
+                AND u.id <> ?
+              ORDER BY u.username
+              LIMIT 100"
+        );
+        $st->execute([$u['id'], $u['id']]);
+        $players = array_map(function ($r) {
+            return [
+                'id'      => (int) $r['id'],
+                'name'    => $r['username'],
+                'elo'     => (int) $r['elo'],
+                'wins'    => (int) $r['wins'],
+                'losses'  => (int) $r['losses'],
+                'busy'    => (bool) $r['playing'],
+                'invited' => (bool) $r['invited'],
+            ];
+        }, $st->fetchAll());
+
+        // Lời mời đang chờ MÌNH trả lời.
+        $st = $pdo->prepare("SELECT code, host_name, stake FROM matches
+                              WHERE invited_user_id = ? AND status = 'waiting' AND black_token IS NULL
+                                AND created_at > (NOW() - INTERVAL " . (int) M_INVITE_SECONDS . " SECOND)
+                              ORDER BY id DESC LIMIT 5");
+        $st->execute([$u['id']]);
+        $invites = array_map(function ($r) {
+            return ['code' => $r['code'], 'from' => $r['host_name'], 'stake' => (int) $r['stake']];
+        }, $st->fetchAll());
+
+        out(['players' => $players, 'invites' => $invites, 'balance' => (int) $u['points']]);
+    }
+
+    // ---- Mời một người cụ thể ----
+    if ($sub === 'invite' && $method === 'POST') {
+        $u = m_require_user($pdo);
+        m_touch($pdo, $u['id']);
+        $stake = m_read_stake($input, $u); // kiểm mức cược + số dư của CHÍNH mình
+
+        $toId = (int) ($input['toUserId'] ?? 0);
+        if ($toId <= 0) out(['error' => 'Pick a player to invite.'], 400);
+        if ($toId === (int) $u['id']) out(['error' => 'You cannot invite yourself.'], 400);
+
+        $st = $pdo->prepare('SELECT id, username, last_seen FROM users WHERE id = ? LIMIT 1');
+        $st->execute([$toId]);
+        $to = $st->fetch();
+        if (!$to) out(['error' => 'That player no longer exists.'], 404);
+        if (!$to['last_seen'] || (time() - strtotime($to['last_seen'])) > M_INVITE_ONLINE_SECONDS) {
+            out(['error' => $to['username'] . ' just went offline.'], 409);
+        }
+        if (m_is_playing($pdo, $toId)) {
+            out(['error' => $to['username'] . ' is in a game right now.'], 409);
+        }
+
+        // Bấm mời hai lần -> trả lại đúng lời mời đang treo, không mở phòng thứ hai.
+        $st = $pdo->prepare("SELECT code, red_token, stake FROM matches
+                              WHERE status = 'waiting' AND black_token IS NULL
+                                AND red_user_id = ? AND invited_user_id = ?
+                                AND created_at > (NOW() - INTERVAL " . (int) M_INVITE_SECONDS . " SECOND)
+                              ORDER BY id DESC LIMIT 1");
+        $st->execute([$u['id'], $toId]);
+        if ($old = $st->fetch()) {
+            out(['code' => $old['code'], 'token' => $old['red_token'], 'color' => 'r',
+                 'stake' => (int) $old['stake'], 'to' => $to['username'], 'resent' => true]);
+        }
+
+        /*
+         * Dọn lời mời cũ của chính mình -> mỗi người chỉ treo một lời mời.
+         * Chỉ xoá dòng CÓ invited_user_id: phòng công khai đang chờ (tạo bằng
+         * 'create') không được biến mất chỉ vì người ta mời thêm ai đó.
+         */
+        $pdo->prepare("DELETE FROM matches
+                        WHERE status = 'waiting' AND black_token IS NULL
+                          AND red_user_id = ? AND invited_user_id IS NOT NULL")
+            ->execute([$u['id']]);
+
+        $code = gen_code($pdo);
+        $token = gen_token();
+        $pdo->prepare("INSERT INTO matches (code, status, is_quick, host_name, red_name, red_token, red_user_id, invited_user_id, stake, turn, moves, red_seen, created_at, updated_at)
+                       VALUES (?, 'waiting', 0, ?, ?, ?, ?, ?, ?, 'r', '[]', ?, ?, ?)")
+            ->execute([$code, $u['username'], $u['username'], $token, $u['id'], $toId, $stake, $now, $now, $now]);
+
+        out(['code' => $code, 'token' => $token, 'color' => 'r', 'stake' => $stake,
+             'to' => $to['username'], 'expiresIn' => M_INVITE_SECONDS]);
+    }
+
+    // ---- Từ chối lời mời ----
+    if ($sub === 'invite/decline' && $method === 'POST') {
+        $u = m_require_user($pdo);
+        $m = m_find($pdo, $input['code'] ?? '');
+        if (!$m) out(['ok' => true]); // đã hết hạn hoặc bị dọn -> coi như xong
+        if ((int) ($m['invited_user_id'] ?? 0) !== (int) $u['id']) {
+            out(['error' => 'That invite is not for you.'], 403);
+        }
+        /*
+         * Đóng phòng lại là đủ: chưa ai bị trừ điểm (điểm chỉ trừ ở 'join').
+         * Giữ lại dòng thay vì xoá để người mời poll 'state' là biết bị từ chối
+         * — result_text chính là câu hiện lên cho họ.
+         */
+        if ($m['status'] === 'waiting') {
+            $pdo->prepare("UPDATE matches SET status='ended', result_text=?, updated_at=? WHERE id=? AND status='waiting'")
+                ->execute([$u['username'] . ' declined your invite.', $now, $m['id']]);
+        }
+        out(['ok' => true]);
     }
 
     out(['error' => 'Endpoint not found (match)'], 404);

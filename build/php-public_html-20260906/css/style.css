@@ -945,6 +945,89 @@ table.games th {
   padding: 14px 6px;
 }
 
+/* Danh sách người đang online (mời đấu riêng) — dùng lại .room-item/.room-info */
+.player-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+.player-dot.busy {
+  background: #f2b134;
+}
+.room-item.is-busy {
+  opacity: 0.62;
+}
+.room-info .player-name {
+  display: flex;
+  align-items: center;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Lời mời đang chờ mình trả lời — phải nổi hẳn, đây là thứ cần bấm ngay */
+.invite-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0 4px;
+}
+.invite-card {
+  padding: 12px 14px;
+  border-radius: 11px;
+  background: linear-gradient(150deg, #f2b134, #e08c1a);
+  color: #2a1d00;
+  border: 2px solid rgba(255, 220, 140, 0.9);
+  box-shadow: 0 10px 28px rgba(240, 180, 41, 0.38);
+  animation: invite-glow 1.6s ease-in-out infinite;
+}
+.invite-card b {
+  font-size: 1rem;
+}
+.invite-sub {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-top: 2px;
+  color: #3d2b00;
+}
+.invite-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.invite-actions .btn {
+  padding: 6px 14px;
+  font-size: 0.85rem;
+}
+.btn-accept {
+  background: #1f7a4d;
+  color: #fff;
+}
+.btn-decline {
+  background: rgba(0, 0, 0, 0.16);
+  color: #2a1d00;
+}
+@keyframes invite-glow {
+  0%,
+  100% {
+    box-shadow: 0 10px 28px rgba(240, 180, 41, 0.3);
+  }
+  50% {
+    box-shadow: 0 10px 34px rgba(240, 180, 41, 0.68);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .invite-card {
+    animation: none;
+  }
+}
+
 /* Chấm "live" nhấp nháy khi xem trực tiếp */
 .live-dot {
   display: inline-block;
