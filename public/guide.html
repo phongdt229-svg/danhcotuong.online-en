@@ -71,6 +71,30 @@
       .guide-card .ico{font-size:2rem;margin-bottom:10px}
       .guide-card h4{margin:8px 0;font-size:1rem}
       .guide-card p{margin:6px 0;font-size:.9rem;opacity:.8}
+
+      /* Mục lục đầu trang */
+      .guide-toc{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 26px}
+      .guide-toc a{padding:6px 12px;border-radius:999px;border:1px solid var(--c-border,#2a3a4d);background:var(--c-bg-soft,#16202d);font-size:.85rem;text-decoration:none;color:inherit}
+      .guide-toc a:hover{border-color:var(--c-accent,#f0b429)}
+
+      /* Bảng số liệu — cuộn ngang riêng trên màn hình hẹp, không kéo cả trang */
+      .table-wrap{overflow-x:auto;margin:14px 0}
+      .guide-table{width:100%;border-collapse:collapse;font-size:.92rem;min-width:420px}
+      .guide-table th,.guide-table td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--c-border,#2a3a4d)}
+      .guide-table th{font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;opacity:.7;font-weight:700}
+      .guide-table td.num,.guide-table th.num{text-align:right;font-variant-numeric:tabular-nums}
+      .guide-table .pos{color:#10b981;font-weight:700}
+      .guide-table .neg{color:#f87171;font-weight:700}
+
+      /* Công thức */
+      .formula{margin:14px 0;padding:12px 14px;border-radius:10px;background:var(--c-bg-soft,#16202d);border:1px dashed var(--c-border,#2a3a4d);font-family:ui-monospace,Consolas,monospace;font-size:.9rem;line-height:1.7;overflow-x:auto}
+
+      /* Điều khoản */
+      .terms h3{margin-top:24px}
+      .terms ol{margin:8px 0 0 20px;padding:0}
+      .terms ol li{margin:7px 0;line-height:1.6}
+      .terms-updated{font-size:.85rem;opacity:.7;margin-top:0}
+      section[id]{scroll-margin-top:80px}
     </style>
   </head>
   <body>
@@ -125,8 +149,47 @@
         <h1 data-i18n="guide.title">Points System Guide</h1>
         <p class="text-muted" data-i18n="guide.subtitle">Learn how to manage your points and participate in competitive games</p>
 
+        <nav class="guide-toc" aria-label="On this page">
+          <a href="#conversion">💱 Points &amp; money</a>
+          <a href="#buy">💰 Buying</a>
+          <a href="#payouts">🧮 Game payouts &amp; fee</a>
+          <a href="#withdraw">🏦 Withdrawing</a>
+          <a href="#faq">❓ FAQ</a>
+          <a href="#terms">📜 Terms &amp; conditions</a>
+        </nav>
+
+        <!-- Quy đổi điểm <-> tiền thật. Số liệu khớp api/points.php + api/withdraw.php -->
+        <section id="conversion" class="guide-section card" style="padding:24px;margin-bottom:24px">
+          <h2>💱 Points and Real Money</h2>
+          <p>Points are the currency used for staked games on Chinesechess Online. You buy them with real money, and you can cash out your balance to PayPal. Both directions use the same fixed rate:</p>
+
+          <div class="formula">
+            Buying:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$1.00 = 10 points<br />
+            Withdrawing: 10 points = $1.00&nbsp;&nbsp;(no withdrawal fee)
+          </div>
+
+          <div class="table-wrap">
+            <table class="guide-table">
+              <thead>
+                <tr><th>Direction</th><th>Rate</th><th>Minimum</th><th>Fee charged by us</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Buy (money → points)</td><td>$1 = 10 points</td><td>$1 (10 points)</td><td>None</td></tr>
+                <tr><td>Withdraw (points → money)</td><td>10 points = $1</td><td>1,000 points ($100)</td><td>None</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>We charge <strong>one fee only: 20% of the pot of each staked game that has a winner</strong>. It is taken automatically at the end of that game, so the points left in your balance are already net of fees. Buying and withdrawing carry no fee from us — see <a href="#payouts">Game payouts &amp; the 20% fee</a> for the full details.</p>
+          <p>PayPal may charge its own transfer fee when you receive a withdrawal; that fee is set by PayPal, not by us.</p>
+
+          <div class="info-box">
+            <strong>ℹ️ Worked example:</strong> You buy the $20 package and get 200 points. You win some games and your balance grows to 1,500 points. Withdrawing all 1,500 points sends you $150.00, minus any transfer fee PayPal applies.
+          </div>
+        </section>
+
         <!-- Buy Points Section -->
-        <section class="guide-section card" style="padding:24px;margin-bottom:24px">
+        <section id="buy" class="guide-section card" style="padding:24px;margin-bottom:24px">
           <h2 data-i18n="guide.buySection">💰 How to Buy Points</h2>
           <p data-i18n="guide.buyIntro">Points are required to play in competitive games where you can win prizes. Here's how to purchase points:</p>
 
@@ -158,24 +221,23 @@
             <strong>ℹ️ Payment Methods:</strong> We accept PayPal for all transactions. Your payment information is secure and encrypted.
           </div>
 
-          <h3>Payment Packages</h3>
-          <div class="guide-grid">
-            <div class="guide-card">
-              <div class="ico">🎯</div>
-              <h4>Starter</h4>
-              <p>Perfect for trying out competitive games</p>
-            </div>
-            <div class="guide-card">
-              <div class="ico">⭐</div>
-              <h4>Popular</h4>
-              <p>Best value for regular players</p>
-            </div>
-            <div class="guide-card">
-              <div class="ico">👑</div>
-              <h4>Premium</h4>
-              <p>For serious competitors</p>
-            </div>
+          <h3>Point Packages</h3>
+          <p>Every package uses the same rate of 10 points per $1, so no package is cheaper per point than another.</p>
+          <div class="table-wrap">
+            <table class="guide-table">
+              <thead>
+                <tr><th>You pay</th><th class="num">Points you get</th><th>Enough for</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>$1.00</td><td class="num">10</td><td>Trying out the payment flow</td></tr>
+                <tr><td>$5.00</td><td class="num">50</td><td>Topping up a short balance</td></tr>
+                <tr><td>$10.00</td><td class="num">100</td><td>Topping up a short balance</td></tr>
+                <tr><td>$20.00</td><td class="num">200</td><td>One game at the minimum stake (150)</td></tr>
+                <tr><td>$50.00</td><td class="num">500</td><td>Three games at the minimum stake</td></tr>
+              </tbody>
+            </table>
           </div>
+          <p class="text-muted" style="font-size:.9rem">The smallest stake for a game against another player is 150 points ($15), so you need at least 150 points in your balance before you can play a staked game.</p>
 
           <h3>Top-up History</h3>
           <p>You can view all your purchases in the "Top-up history" table on the Buy Points page. This shows:</p>
@@ -187,8 +249,123 @@
           </ul>
         </section>
 
+        <!-- Cách tính tiền thắng + phí 20%. Khớp api/stake.php (STAKE_WINNER_PERCENT=80) -->
+        <section id="payouts" class="guide-section card" style="padding:24px;margin-bottom:24px">
+          <h2>🧮 Game Payouts and the 20% System Fee</h2>
+          <p>Every game against another player is played for points. Here is exactly how the points move.</p>
+
+          <h3>How a staked game works</h3>
+          <ul class="guide-steps">
+            <li data-step="1">
+              <strong>Both players put in the same stake</strong>
+              <p style="margin:6px 0 0">When the game starts, the stake is taken from each player's balance. The two stakes together are the <em>pot</em>.</p>
+            </li>
+            <li data-step="2">
+              <strong>The winner receives 80% of the pot</strong>
+              <p style="margin:6px 0 0">The remaining 20% of the pot is the system fee, which keeps the service running.</p>
+            </li>
+            <li data-step="3">
+              <strong>A draw costs nothing</strong>
+              <p style="margin:6px 0 0">If both players agree to a draw, each gets their full stake back and no fee is taken.</p>
+            </li>
+          </ul>
+
+          <div class="formula">
+            Pot&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= stake × 2<br />
+            Winner gets&nbsp;= pot × 80%&nbsp;&nbsp;(rounded down to a whole point)<br />
+            System fee&nbsp;&nbsp;= pot − winner's share&nbsp;&nbsp;(20% of the pot)<br />
+            Winner's profit = winner's share − own stake
+          </div>
+
+          <h3>Examples</h3>
+          <div class="table-wrap">
+            <table class="guide-table">
+              <thead>
+                <tr>
+                  <th class="num">Stake each</th><th class="num">Pot</th><th class="num">Winner gets</th>
+                  <th class="num">System fee</th><th class="num">Winner's profit</th><th class="num">Loser's loss</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td class="num">150</td><td class="num">300</td><td class="num">240</td><td class="num">60</td><td class="num pos">+90</td><td class="num neg">−150</td></tr>
+                <tr><td class="num">500</td><td class="num">1,000</td><td class="num">800</td><td class="num">200</td><td class="num pos">+300</td><td class="num neg">−500</td></tr>
+                <tr><td class="num">1,000</td><td class="num">2,000</td><td class="num">1,600</td><td class="num">400</td><td class="num pos">+600</td><td class="num neg">−1,000</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="info-box">
+            <strong>ℹ️ In real money:</strong> With a 500-point stake ($50), a win returns 800 points ($80) — a profit of $30. A loss costs your $50 stake. The 20% fee on a 1,000-point pot is 200 points ($20), which is the same as 40% of one player's stake.
+          </div>
+
+          <div class="warning-box">
+            <strong>⚠️ Know the math before you play:</strong> Because of the fee, a win earns less than a loss costs (+60% of your stake versus −100%). To break even over time you need to win about <strong>5 out of every 8</strong> staked games. Only stake points you can afford to lose.
+          </div>
+
+          <h3>When exactly is the 20% fee taken?</h3>
+          <ul class="guide-list">
+            <li><strong>Once per game, automatically.</strong> The fee is taken at the moment a game ends with a winner. You do not pay it by hand and it is never charged twice.</li>
+            <li><strong>From the pot, not from your balance.</strong> Nothing extra is taken from your balance on top of your stake. The winner simply receives 80% of the pot instead of 100%.</li>
+            <li><strong>The loser pays nothing extra.</strong> If you lose, you lose your stake — no more.</li>
+            <li><strong>No winner, no fee.</strong> A draw, or a game that could not start, costs no fee at all. Every point of your stake comes back.</li>
+            <li><strong>Not charged again when you withdraw.</strong> Because the fee is already taken at the end of each game, withdrawing converts your whole balance at 10 points = $1 with no further deduction.</li>
+          </ul>
+
+          <h3>What each result does to your balance</h3>
+          <p>Example with a 500-point stake ($50):</p>
+          <div class="table-wrap">
+            <table class="guide-table">
+              <thead>
+                <tr><th>Result</th><th class="num">When game starts</th><th class="num">When game ends</th><th class="num">Your net change</th><th class="num">20% fee taken</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>🏆 You win</td><td class="num">−500</td><td class="num">+800</td><td class="num pos">+300 ($30)</td><td class="num">200 from the pot</td></tr>
+                <tr><td>❌ You lose</td><td class="num">−500</td><td class="num">0</td><td class="num neg">−500 ($50)</td><td class="num">None from you</td></tr>
+                <tr><td>🤝 Draw</td><td class="num">−500</td><td class="num">+500</td><td class="num">0</td><td class="num">None</td></tr>
+                <tr><td>⛔ Game cannot start</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">None</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>How to check it in Points History</h3>
+          <p>Every game you play appears in <a href="history.html">Points History</a> as one or two rows:</p>
+          <ul class="guide-list">
+            <li><strong>🎲 Stake placed</strong> — your stake leaving your balance when the game starts (for example −500).</li>
+            <li><strong>🏆 Stake won</strong> — the winner's 80% share of the pot arriving when you win (for example +800).</li>
+            <li><strong>↩️ Stake refunded</strong> — your full stake coming back after a draw (for example +500).</li>
+          </ul>
+          <p>The fee does not appear as its own row. To see what you paid on a win, use: <strong>fee = stake × 2 − Stake won</strong>. With −500 and +800, the fee was 1,000 − 800 = 200 points ($20).</p>
+
+          <h3>Example: four games, then a withdrawal</h3>
+          <p>You start with 1,000 points and play four games:</p>
+          <div class="table-wrap">
+            <table class="guide-table">
+              <thead>
+                <tr><th>Game</th><th class="num">Stake</th><th>Result</th><th class="num">Pot</th><th class="num">20% fee</th><th class="num">Your change</th><th class="num">Balance after</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Start</td><td class="num"></td><td></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">1,000</td></tr>
+                <tr><td>1</td><td class="num">200</td><td>Win</td><td class="num">400</td><td class="num">80</td><td class="num pos">+120</td><td class="num">1,120</td></tr>
+                <tr><td>2</td><td class="num">200</td><td>Loss</td><td class="num">400</td><td class="num">—</td><td class="num neg">−200</td><td class="num">920</td></tr>
+                <tr><td>3</td><td class="num">300</td><td>Draw</td><td class="num">600</td><td class="num">0</td><td class="num">0</td><td class="num">920</td></tr>
+                <tr><td>4</td><td class="num">500</td><td>Win</td><td class="num">1,000</td><td class="num">200</td><td class="num pos">+300</td><td class="num">1,220</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>You paid 280 points ($28) in fees on your two wins, and nothing on the loss or the draw. Your final balance of 1,220 points is fully withdrawable: it sends <strong>$122.00</strong> to your PayPal, with no withdrawal fee.</p>
+
+          <h3>How a game ends</h3>
+          <ul class="guide-list">
+            <li><strong>Checkmate or no legal moves:</strong> the server checks every move against the rules and decides the result. Neither player can report a result.</li>
+            <li><strong>Resigning:</strong> counts as a loss.</li>
+            <li><strong>Leaving or losing connection:</strong> if you are gone for more than 90 seconds during a game, you lose the game and your stake.</li>
+            <li><strong>Draw:</strong> only when both players agree. Both stakes are returned in full.</li>
+            <li><strong>Game cannot start:</strong> if one player does not have enough points when the game begins, no points are taken from anyone.</li>
+          </ul>
+        </section>
+
         <!-- Withdraw Points Section -->
-        <section class="guide-section card" style="padding:24px;margin-bottom:24px">
+        <section id="withdraw" class="guide-section card" style="padding:24px;margin-bottom:24px">
           <h2 data-i18n="guide.withdrawSection">🏦 How to Withdraw Points</h2>
           <p data-i18n="guide.withdrawIntro">If you've earned points by winning games, you can withdraw them and receive money to your PayPal account.</p>
 
@@ -196,7 +373,7 @@
           <ul class="guide-steps">
             <li data-step="1">
               <strong>Sign in and check your balance</strong>
-              <p style="margin:6px 0 0">Only points earned through winning are eligible for withdrawal. Your withdrawable balance is shown on the Withdraw page.</p>
+              <p style="margin:6px 0 0">The Withdraw page shows your current balance and the minimum you can withdraw (1,000 points).</p>
             </li>
             <li data-step="2">
               <strong>Go to Withdraw Points</strong>
@@ -220,13 +397,41 @@
             </li>
           </ul>
 
-          <h3>Withdrawal Limits & Rules</h3>
+          <h3>Withdrawal Limits &amp; Rules</h3>
           <ul class="guide-list">
-            <li><strong>Minimum withdrawal:</strong> Usually 100 points or more (check the actual minimum on the withdrawal page)</li>
-            <li><strong>Processing time:</strong> 3-5 business days after approval</li>
-            <li><strong>Eligible points:</strong> Only points earned from winning games, not purchased points</li>
-            <li><strong>Status tracking:</strong> Monitor your request status in the "Your requests" table</li>
+            <li><strong>Minimum withdrawal:</strong> 1,000 points ($100) per request.</li>
+            <li><strong>No withdrawal fee:</strong> the 20% fee was already taken from each game you won, so your whole balance converts at 10 points = $1. The amount shown on the Withdraw page is the amount we send.</li>
+            <li><strong>One request at a time:</strong> you can have only one request waiting for review. Wait for it to be paid, or cancel it, before sending another.</li>
+            <li><strong>Points are held immediately:</strong> the points leave your balance the moment you submit, so they cannot be staked while the request is being reviewed.</li>
+            <li><strong>The dollar amount is locked in:</strong> the USD amount is calculated when you submit and does not change while the request is reviewed.</li>
+            <li><strong>Points for play, not for cash-out:</strong> points you bought and never used in a game are meant for playing. We may decline a withdrawal of points that were bought but not played; if we do, the points go back to your balance.</li>
+            <li><strong>Processing time:</strong> 3-5 business days after approval.</li>
+            <li><strong>Status tracking:</strong> follow your request in the "Your requests" table.</li>
           </ul>
+
+          <h3>How Your Payout Is Calculated</h3>
+          <div class="formula">
+            Sent to your PayPal = points withdrawn ÷ 10<br />
+            You receive&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= that amount − PayPal's own transfer fee (if any)
+          </div>
+          <p>There is no withdrawal fee from us. The 20% fee is taken once, from the pot, at the end of each game that has a winner — never again when you cash out. See <a href="#payouts">Game payouts &amp; the 20% fee</a>.</p>
+          <div class="table-wrap">
+            <table class="guide-table">
+              <thead>
+                <tr><th class="num">Points withdrawn</th><th class="num">Sent to PayPal</th><th>Note</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="num">500</td><td class="num">—</td><td>Below the 1,000-point minimum</td></tr>
+                <tr><td class="num">1,000</td><td class="num pos">$100.00</td><td>Minimum withdrawal</td></tr>
+                <tr><td class="num">2,500</td><td class="num pos">$250.00</td><td>No fee deducted</td></tr>
+                <tr><td class="num">5,000</td><td class="num pos">$500.00</td><td>No fee deducted</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="info-box">
+            <strong>ℹ️ From a game to your PayPal:</strong> You start with 1,000 points and win two games at a 500-point stake. Each win adds a profit of 300 points (the 20% fee is already taken from each pot), so your balance becomes 1,600 points. Withdrawing all of it sends $160.00 to your PayPal.
+          </div>
 
           <div class="warning-box">
             <strong>⚠️ Important:</strong> Withdrawals are reviewed manually and paid by hand. They are not instant. If your request is rejected or cancelled, your points are returned to your balance immediately.
@@ -281,11 +486,11 @@
 
           <h3>Key Features</h3>
           <ul class="guide-list">
-            <li>Play in competitive rooms with point stakes</li>
-            <li>Win points by defeating opponents</li>
-            <li>Participate in tournaments and challenges</li>
-            <li>Track your winnings and losses</li>
-            <li>Withdraw your earnings anytime</li>
+            <li>Play in competitive rooms with point stakes (minimum 150 points)</li>
+            <li>Invite a specific player who is online, or use Quick match</li>
+            <li>Win points by defeating opponents — see <a href="#payouts">how payouts work</a></li>
+            <li>Track your winnings and losses in <a href="history.html">Points History</a></li>
+            <li>Withdraw your balance to PayPal once it reaches 1,000 points</li>
           </ul>
 
           <div class="success-box">
@@ -294,11 +499,17 @@
         </section>
 
         <!-- FAQ Section -->
-        <section class="guide-section card" style="padding:24px">
+        <section id="faq" class="guide-section card" style="padding:24px;margin-bottom:24px">
           <h2>❓ Frequently Asked Questions</h2>
 
           <h3>Can I withdraw points I purchased?</h3>
-          <p>No, you can only withdraw points that you've earned by winning games. Purchased points can only be used to play competitive games.</p>
+          <p>Points are sold for playing. Withdrawals are reviewed by hand, and we may decline a request for points that were bought but never used in a game. If a request is declined, the points are returned to your balance in full.</p>
+
+          <h3>Is there a fee when I withdraw?</h3>
+          <p>No. The 20% fee is taken from the pot at the end of every game that has a winner, so it has already been paid by the time points reach your balance. When you withdraw, 10 points = $1.00 with nothing deducted by us: 1,000 points send $100.00. PayPal may deduct its own transfer fee from the amount you receive.</p>
+
+          <h3>Where can I see the 20% fee I paid?</h3>
+          <p>In <a href="history.html">Points History</a>, each game shows as <em>Stake placed</em> (your stake leaving) and, if you win, <em>Stake won</em> (the winner's share arriving). The fee is the difference: <em>stake × 2 − Stake won</em>. For a 500-point game you see −500 and +800, so the fee was 1,000 − 800 = 200 points.</p>
 
           <h3>How long does withdrawal approval take?</h3>
           <p>Withdrawals are reviewed manually. Most approvals happen within 1-2 business days, and the money is sent within 3-5 days after that.</p>
@@ -316,10 +527,89 @@
           <p>Our team manually reviews all withdrawal requests to prevent fraud. If it's been more than 2 days, please contact support.</p>
 
           <h3>What's the minimum amount I can withdraw?</h3>
-          <p>The minimum is usually 100 points, but check the withdrawal page for the exact current minimum.</p>
+          <p>1,000 points, which sends $100.00 to your PayPal.</p>
 
           <h3>How are the exchange rates calculated?</h3>
-          <p>Check the "Points History" page or the "Buy Points" page to see current conversion rates between points and currency.</p>
+          <p>There is one fixed rate in both directions: 10 points = $1.00, with no fee on buying or withdrawing. The only fee is 20% of the pot of each game with a winner. See <a href="#conversion">Points and Real Money</a> for the full table.</p>
+
+          <h3>What happens to my stake if my internet drops?</h3>
+          <p>You have 90 seconds to reconnect. If you are gone for longer than that, the game counts as a loss and your opponent receives the payout.</p>
+        </section>
+
+        <!-- Điều khoản. Các điều về vận hành khớp hành vi thật của api/stake.php, match.php, withdraw.php -->
+        <section id="terms" class="guide-section card terms" style="padding:24px">
+          <h2>📜 Terms and Conditions for Points</h2>
+          <p class="terms-updated">Last updated: September 21, 2026</p>
+          <p>These terms apply to buying points, playing staked games and withdrawing points on chinesechess.online. By buying points or playing a staked game, you agree to them.</p>
+
+          <h3>1. Who can use points</h3>
+          <ol>
+            <li>You must be at least 18 years old, or the age of majority where you live if that is higher.</li>
+            <li>You may only use points where playing skill games for money is legal for you. Checking this is your responsibility.</li>
+            <li>One account per person. Points, stakes and withdrawals are tied to that account.</li>
+          </ol>
+
+          <h3>2. What points are</h3>
+          <ol>
+            <li>Points are credits for playing staked games on this site. They are not a bank deposit and do not earn interest.</li>
+            <li>Points have cash value only through the withdrawal process described in these terms, at the rate of 10 points = $1.00 USD.</li>
+            <li>Points cannot be transferred between accounts, except by winning or losing a staked game.</li>
+          </ol>
+
+          <h3>3. Buying points</h3>
+          <ol>
+            <li>Points are sold in fixed packages at 10 points per $1.00 USD.</li>
+            <li>Points are added to your balance after the payment provider confirms your payment.</li>
+            <li>Purchases are final. If a payment fails, or a refund is required by law, the matching points are removed from your balance.</li>
+            <li>If you reverse a payment (a chargeback) after receiving points, we remove those points and may suspend your account.</li>
+          </ol>
+
+          <h3>4. Staked games</h3>
+          <ol>
+            <li>The minimum stake is 150 points. Both players stake the same amount, and it is taken from both balances when the game starts.</li>
+            <li>The winner receives 80% of the pot, rounded down to a whole point. The remaining 20% is the system fee.</li>
+            <li>If both players agree to a draw, both stakes are returned in full and no fee is taken.</li>
+            <li>If a game cannot start because a player does not have enough points, no points are taken from either player.</li>
+            <li>The server checks every move against the rules of Chinese Chess and decides the result. Players cannot report or change a result.</li>
+            <li>Resigning is a loss. Being away from a game in progress for more than 90 seconds, for any reason including a lost connection, is a loss.</li>
+            <li>Results are final once a game has ended, except under section 6 (Fair play).</li>
+          </ol>
+
+          <h3>5. Withdrawals</h3>
+          <ol>
+            <li>Points are converted at 10 points = $1.00 USD. We do not charge a withdrawal fee, because the 20% system fee is already taken from the pot of each game with a winner (section 4). PayPal may deduct its own transfer fee from the amount you receive.</li>
+            <li>The minimum is 1,000 points ($100.00) per request. You can have one request waiting for review at a time.</li>
+            <li>When you submit a request, the points leave your balance immediately and the USD amount is fixed at that moment.</li>
+            <li>Requests are reviewed and paid by hand. Payment is usually sent within 3-5 business days after approval.</li>
+            <li>You can cancel a request while it is still pending. If you cancel, or we decline the request, the points are returned to your balance in full.</li>
+            <li>We may decline a withdrawal of points that were bought but never used in a game, and we may ask you to verify your identity or that you own the PayPal account before we pay.</li>
+            <li>You are responsible for giving a correct PayPal email address. We cannot recover money sent to an address you entered incorrectly.</li>
+            <li>A request marked "Paid" is final and cannot be cancelled.</li>
+          </ol>
+
+          <h3>6. Fair play</h3>
+          <ol>
+            <li>You must play your own games, without help from chess engines, bots or other people.</li>
+            <li>You must not use more than one account, arrange results with another player, or lose on purpose to move points to another account.</li>
+            <li>You must not take advantage of bugs or errors in the site.</li>
+            <li>If we find a breach of this section, we may cancel the games involved, remove the points gained from them, decline pending withdrawals, and close the account.</li>
+          </ol>
+
+          <h3>7. Errors</h3>
+          <ol>
+            <li>If points are added to or taken from a balance because of a system error, we may correct the balance to what it should have been.</li>
+          </ol>
+
+          <h3>8. Changes and availability</h3>
+          <ol>
+            <li>We may change rates, fees, minimums and these terms. Changes are published on this page with a new "Last updated" date and apply from that date. A withdrawal request already submitted keeps the USD amount fixed when it was submitted.</li>
+            <li>Buying, staked games or withdrawals may be paused for maintenance or security. Your balance is kept while a feature is paused.</li>
+          </ol>
+
+          <h3>9. Contact</h3>
+          <ol>
+            <li>For questions about your points, a game result or a withdrawal, contact support on <a href="https://t.me/onlineservice202" target="_blank" rel="noopener">Telegram</a>.</li>
+          </ol>
         </section>
 
         <div style="margin-top:40px;padding:16px;background:var(--c-bg-soft,#16202d);border-radius:10px;text-align:center">
