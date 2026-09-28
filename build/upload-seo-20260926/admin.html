@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="google-site-verification" content="yZtze__boB2-07RHNK-ccoKEsxBqBWeM7hwFiMgViOI" />
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17300048482"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'AW-17300048482');
+      gtag('config', 'G-SY53HPB2JV');
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="favicon.ico" sizes="32x32" />
+    <link rel="icon" type="image/svg+xml" href="images/icon.svg" />
+    <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#0f1620" />
+    <link rel="stylesheet" href="css/style.css?v=26" />
+    <link rel="stylesheet" href="css/style-enhanced.css?v=26" />
+    
+    <meta name="description" content="Admin dashboard for managing Chinese chess games and players." />
+    
+    <style>
+      .balance-num{font-size:2.2rem;font-weight:800;line-height:1}
+      .sum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+      .sum-tile{padding:14px;border-radius:11px;background:var(--c-bg-soft,#16202d);border:1px solid var(--c-border,#2a3a4d)}
+      .sum-tile .num{font-size:1.5rem;font-weight:800;line-height:1.2;color:var(--c-accent,#f0b429)}
+      .sum-tile .lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;opacity:.7;margin-top:4px}
+      .filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+      .filter-btn{padding:6px 14px;border-radius:999px;cursor:pointer;font:inherit;font-size:.83rem;font-weight:600;
+        background:var(--c-bg-soft,#16202d);border:1px solid var(--c-border,#2a3a4d);color:inherit}
+      .filter-btn.selected{border-color:var(--c-accent,#f0b429);color:var(--c-accent,#f0b429)}
+      table.adm{width:100%;border-collapse:collapse}
+      table.adm th{text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;
+        opacity:.65;padding:8px 10px;border-bottom:1px solid var(--c-border,#2a3a4d)}
+      table.adm td{padding:11px 10px;border-bottom:1px solid var(--c-border,#2a3a4d);vertical-align:top;font-size:.88rem}
+      .adm-email{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.82rem;word-break:break-all}
+      .adm-note{font-size:.75rem;opacity:.6;margin-top:3px}
+      .adm-actions{white-space:nowrap}
+      .adm-badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.72rem;font-weight:700}
+      .adm-badge.pending{background:rgba(240,180,41,.15);color:#f0b429}
+      .adm-badge.paid{background:rgba(16,185,129,.15);color:#34d399}
+      .adm-badge.rejected,.adm-badge.cancelled{background:rgba(239,68,68,.15);color:#f87171}
+      .adm-msg{margin:0 0 14px;padding:11px 14px;border-radius:10px;font-weight:600;display:none;font-size:.9rem}
+      .adm-msg.ok{background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.45)}
+      .adm-msg.err{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.45)}
+      .table-wrap{overflow-x:auto}
+      .howto{margin-top:22px;font-size:.82rem;line-height:1.7;opacity:.75}
+      .howto b{opacity:1}
+    </style>
+  </head>
+  <body>
+    <header class="navbar">
+      <div class="container nav-inner">
+        <a class="brand" href="/"><span class="logo">將</span><span>Chinesechess Online</span></a>
+        <div class="nav-actions">
+          <span style="font-weight: 700">Hi, <span data-user-name>there</span></span>
+          <a class="btn btn-ghost" href="/">Back to site</a>
+          <a class="btn btn-ghost" href="#" data-action="logout">Log out</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="container" style="padding: 28px 20px 60px">
+      <div id="guard" class="card center" style="display: none">
+        <h2>You are not signed in</h2>
+        <a class="btn btn-primary" href="login.html">Sign in</a>
+      </div>
+
+      <div id="denied" class="card center" style="display: none">
+        <h2>🔒 Admin only</h2>
+        <p class="text-muted" id="denied-msg"></p>
+        <p class="text-muted" style="font-size: 0.82rem">
+          The admin is the account named <code>admin</code> by default. To use a different account,
+          set <code>ADMIN_USERNAME</code> or <code>ADMIN_USER_ID</code> in
+          <code>api/payment-config.php</code>.
+        </p>
+        <a class="btn btn-ghost" href="/">Back to site</a>
+      </div>
+
+      <div id="content" style="display: none">
+        <h1 style="margin: 0 0 18px">Withdrawal requests</h1>
+
+        <div class="card" style="margin-bottom: 22px">
+          <div class="sum-grid">
+            <div class="sum-tile"><div class="num" id="sum-count">0</div><div class="lbl">Awaiting review</div></div>
+            <div class="sum-tile"><div class="num" id="sum-points">0</div><div class="lbl">Points on hold</div></div>
+            <div class="sum-tile"><div class="num" id="sum-usd">$0.00</div><div class="lbl">You owe (pending)</div></div>
+            <div class="sum-tile"><div class="num" id="sum-paid">$0.00</div><div class="lbl">Paid all-time</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="adm-msg" id="adm-msg"></div>
+          <div class="filters">
+            <button class="filter-btn selected" data-status="pending">Awaiting review</button>
+            <button class="filter-btn" data-status="paid">Paid</button>
+            <button class="filter-btn" data-status="rejected">Rejected</button>
+            <button class="filter-btn" data-status="cancelled">Cancelled</button>
+            <button class="filter-btn" data-status="all">All</button>
+          </div>
+          <div class="table-wrap">
+            <table class="adm">
+              <thead>
+                <tr>
+                  <th>Requested</th>
+                  <th>User</th>
+                  <th>PayPal address</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="adm-body">
+                <tr><td colspan="6" class="text-muted">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="howto">
+          <b>How to handle a request:</b><br />
+          1. Open PayPal → Send money → paste the address from the <b>PayPal address</b> column →
+          send the amount shown in the <b>Amount</b> column.<br />
+          2. Come back here and click <b>Mark paid</b>, pasting the PayPal transaction ID so you can
+          reconcile it later.<br />
+          <br />
+          <b>Mark paid does NOT transfer any money</b> — it only closes the request and keeps the
+          points deducted. Only click it after the money has actually been sent.<br />
+          <b>Reject</b> returns <b>all of the points</b> to the user, along with the reason you enter.
+        </div>
+      </div>
+    </main>
+
+
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-social">
+          <a class="social-link is-facebook" href="https://www.facebook.com/chinesechessonline" target="_blank" rel="noopener" title="Facebook" aria-label="Chinesechess Online on Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z"/></svg></a>
+          <a class="social-link is-x" href="https://x.com/chinesechessonl" target="_blank" rel="noopener" title="X" aria-label="Chinesechess Online on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg></a>
+          <a class="social-link is-pinterest" href="https://www.pinterest.com/ChinesechessOnline/" target="_blank" rel="noopener" title="Pinterest" aria-label="Chinesechess Online on Pinterest"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.345-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.401.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.92-7.252 4.158 0 7.392 2.967 7.392 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.354-.629-2.758-1.379l-.749 2.848c-.269 1.045-1.004 2.352-1.498 3.146 1.123.345 2.306.535 3.55.535 6.607 0 11.985-5.365 11.985-11.987C23.97 5.39 18.592.026 11.985.026L12.017 0z"/></svg></a>
+        </div>
+        <div class="footer-copy">© 2026 chinesechess.online — Play Chinese Chess in your browser.</div>
+      </div>
+    </footer>
+
+    <script src="js/api.js?v=26"></script>
+    <script src="js/ui.js?v=26"></script>
+
+    <script src="js/admin.js?v=26"></script>
+    <script src="js/i18n.js?v=26"></script>
+    <a class="tg-float" href="https://t.me/onlineservice202" target="_blank" rel="noopener" title="Support on Telegram" aria-label="Contact support on Telegram"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg><span>Support</span></a>
+
+  </body>
+</html>
