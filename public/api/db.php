@@ -179,7 +179,7 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS withdrawals (
 // Bổ sung 2 loại biến động mới cho sổ cái (DB cũ chỉ có 6 loại).
 try {
     $pdo->exec("ALTER TABLE point_ledger MODIFY COLUMN kind
-        ENUM('topup','stake_hold','stake_win','stake_refund','house_fee','adjust','withdraw_hold','withdraw_refund') NOT NULL");
+        ENUM('topup','stake_hold','stake_win','stake_refund','house_fee','adjust','withdraw_hold','withdraw_refund','referral_bonus') NOT NULL");
 } catch (Throwable $e) { /* đã đủ loại */ }
 
 // Cột cược cho bảng matches đã tồn tại từ bản cũ (bỏ qua nếu đã có).
@@ -195,6 +195,39 @@ try { $pdo->exec("ALTER TABLE matches ADD COLUMN black_user_id INT NULL"); } cat
  */
 try { $pdo->exec("ALTER TABLE matches ADD COLUMN invited_user_id INT NULL"); } catch (Throwable $e) { /* đã có */ }
 try { $pdo->exec("CREATE INDEX idx_matches_invited ON matches (invited_user_id, status)"); } catch (Throwable $e) { /* đã có */ }
+
+/*
+ * Chương trình giới thiệu người chơi.
+ *   referred_by       = ai đã mời người này (NULL = tự vào)
+ *   referral_pending  = hoa hồng lẻ chưa đủ 1 điểm, được cộng dồn lại.
+ *     1% của phí 60 điểm là 0,6 — làm tròn xuống thành 0 thì người cược nhỏ
+ *     không bao giờ nhận được gì, nên phải giữ phần lẻ lại.
+ */
+try { $pdo->exec("ALTER TABLE users ADD COLUMN referred_by INT NULL"); } catch (Throwable $e) { /* đã có */ }
+try { $pdo->exec("ALTER TABLE users ADD COLUMN referral_pending DECIMAL(12,4) NOT NULL DEFAULT 0"); } catch (Throwable $e) { /* đã có */ }
+try { $pdo->exec("CREATE INDEX idx_users_referred_by ON users (referred_by)"); } catch (Throwable $e) { /* đã có */ }
+
+/*
+ * Sổ hoa hồng giới thiệu — mỗi ván sinh tối đa một dòng cho mỗi người được mời.
+ * UNIQUE (match_code, referee_user_id) là chốt chặn chống trả hai lần: stake_settle()
+ * có thể bị gọi lại cho cùng một ván, lần sau INSERT sẽ trượt khóa này.
+ * Số dòng của một người = 0 nghĩa là ván này là ván đầu (hưởng 5%).
+ */
+$pdo->exec("CREATE TABLE IF NOT EXISTS referral_rewards (
+    id               INT AUTO_INCREMENT PRIMARY KEY,
+    referee_user_id  INT           NOT NULL,
+    referrer_user_id INT           NOT NULL,
+    match_code       VARCHAR(12)   NOT NULL,
+    is_first         TINYINT       NOT NULL DEFAULT 0,
+    house_points     INT           NOT NULL DEFAULT 0,
+    rate_percent     DECIMAL(5,2)  NOT NULL DEFAULT 0,
+    bonus_exact      DECIMAL(12,4) NOT NULL DEFAULT 0,
+    bonus_paid       INT           NOT NULL DEFAULT 0,
+    created_at       DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_match_referee (match_code, referee_user_id),
+    INDEX idx_ref_referrer (referrer_user_id, id),
+    INDEX idx_ref_referee (referee_user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
 // Sổ tay nước đi tự học của AI (chơi với máy). Khoá = thế cờ (lúc Đen tới lượt) + nước đi.
 $pdo->exec("CREATE TABLE IF NOT EXISTS ai_book (

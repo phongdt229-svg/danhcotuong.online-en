@@ -49,12 +49,14 @@
 
   root.API = {
     // captcha = token reCAPTCHA v3, lấy ngay lúc bấm nút (token chỉ sống ~2 phút)
-    register: (username, email, password, captcha) =>
-      req('POST', '/api/register', { username, email, password, captcha }),
+    // ref = mã giới thiệu (username người mời), lấy từ link /?ref=...
+    register: (username, email, password, captcha, ref) =>
+      req('POST', '/api/register', { username, email, password, captcha, ref }),
     login: (username, password, captcha) => req('POST', '/api/login', { username, password, captcha }),
     recaptchaConfig: () => req('GET', '/api/recaptcha/config'),
     logout: () => req('POST', '/api/logout'),
     me: () => req('GET', '/api/me'),
+    referralMe: () => req('GET', '/api/referral/me'),
     saveGame: (game) => req('POST', '/api/games', game),
     myGames: () => req('GET', '/api/games'),
     stats: (id) => req('GET', '/api/users/' + id + '/stats'),

@@ -166,8 +166,10 @@
             document.getElementById('username').value.trim(),
             document.getElementById('email').value.trim(),
             document.getElementById('password').value,
-            captcha
+            captcha,
+            window.UI && window.UI.getRef ? window.UI.getRef() : ''
           );
+          if (window.UI && window.UI.clearRef) window.UI.clearRef();
           location.href = 'profile.html';
         } catch (err) {
           btn.disabled = false;

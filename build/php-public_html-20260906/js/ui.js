@@ -317,5 +317,26 @@
 
   document.addEventListener('DOMContentLoaded', startRoomWatch);
 
-  window.UI = { refreshAuthUI, toast };
+  /* ---------- Link giới thiệu ----------
+   * Người dùng mở /?ref=<username> thường đọc vài trang rồi mới bấm đăng ký,
+   * nên phải nhớ mã lại thay vì chỉ đọc URL ở trang register. Chạy ở mọi trang.
+   */
+  const REF_KEY = 'dct-ref';
+  function captureRef() {
+    try {
+      const code = new URLSearchParams(location.search).get('ref');
+      if (!code) return;
+      const clean = String(code).trim().slice(0, 50);
+      if (clean) localStorage.setItem(REF_KEY, clean);
+    } catch (e) {}
+  }
+  function getRef() {
+    try { return localStorage.getItem(REF_KEY) || ''; } catch (e) { return ''; }
+  }
+  function clearRef() {
+    try { localStorage.removeItem(REF_KEY); } catch (e) {}
+  }
+  captureRef();
+
+  window.UI = { refreshAuthUI, toast, getRef, clearRef };
 })();

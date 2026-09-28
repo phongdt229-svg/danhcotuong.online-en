@@ -156,6 +156,7 @@
           <a href="#buy">💰 Buying</a>
           <a href="#payouts">🧮 Game payouts &amp; fee</a>
           <a href="#withdraw">🏦 Withdrawing</a>
+          <a href="#referral">🤝 Invite &amp; earn</a>
           <a href="#faq">❓ FAQ</a>
           <a href="#terms">📜 Terms &amp; conditions</a>
         </nav>
@@ -264,7 +265,7 @@
             </li>
             <li data-step="2">
               <strong>The winner receives 80% of the pot</strong>
-              <p style="margin:6px 0 0">The remaining 20% of the pot is the system fee, which keeps the service running.</p>
+              <p style="margin:6px 0 0">The remaining 20% of the pot is the system fee, which keeps the service running. One exception: if you beat a player you invited yourself, the fee drops to 15% and you keep 85% — see <a href="#referral">Invite &amp; earn</a>.</p>
             </li>
             <li data-step="3">
               <strong>A draw costs nothing</strong>
@@ -501,6 +502,57 @@
         </section>
 
         <!-- FAQ Section -->
+        <!-- Chương trình giới thiệu -->
+        <section id="referral" class="guide-section card" style="padding:24px;margin-bottom:24px">
+          <h2>🤝 Invite Friends and Earn</h2>
+          <p>Every account has its own invite link. When someone joins through your link and plays staked games, you earn a share of the system fee from their games — for as long as they keep playing.</p>
+
+          <h3>Your link</h3>
+          <p>Open your <a href="profile.html">profile page</a> to find it. It looks like this:</p>
+          <div class="formula">https://chinesechess.online/?ref=<em>yourusername</em></div>
+
+          <h3>What you earn</h3>
+          <div class="table-wrap">
+            <table class="guide-table">
+              <thead>
+                <tr><th>Their game</th><th class="num">Your share of the system fee</th><th class="num">Example: they stake 500</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Their first game</td><td class="num">5%</td><td class="num pos">10 points ($1.00)</td></tr>
+                <tr><td>Every game after that</td><td class="num">1%</td><td class="num pos">2 points ($0.20)</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>The share comes out of the system fee, never out of your friend's winnings. Your friend loses nothing by using your link.</p>
+
+          <h3>Beat someone you invited, pay a lower fee</h3>
+          <p>When you play against a person you invited and <strong>you win</strong>, the system fee on that game drops from 20% to <strong>15%</strong>, so you keep 85% of the pot instead of 80%.</p>
+          <div class="table-wrap">
+            <table class="guide-table">
+              <thead>
+                <tr><th>Game (500 stake each)</th><th class="num">System fee</th><th class="num">Winner gets</th><th class="num">Winner's profit</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Against anyone else</td><td class="num">200 (20%)</td><td class="num">800</td><td class="num pos">+300</td></tr>
+                <tr><td>Against someone you invited, you win</td><td class="num">150 (15%)</td><td class="num">850</td><td class="num pos">+350</td></tr>
+                <tr><td>Against someone you invited, they win</td><td class="num">200 (20%)</td><td class="num">800 (to them)</td><td class="num neg">−500</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Conditions</h3>
+          <ul class="guide-list">
+            <li>Your friend must create their account through your link.</li>
+            <li>They must top up at least once — real money has to enter the account.</li>
+            <li>Only games that end with a winner generate a fee, so a draw earns nothing. A draw does <strong>not</strong> use up the 5% first-game rate; it still applies to their next completed game.</li>
+            <li>You cannot invite yourself, and the link has no expiry date.</li>
+          </ul>
+
+          <div class="info-box">
+            <strong>ℹ️ Small amounts add up, nothing is lost:</strong> 1% of a small fee can be less than a whole point — for example 0.6 of a point. Fractions are stored and paid to you as soon as they add up to 1 point. Your profile page shows how much is still accumulating.
+          </div>
+        </section>
+
         <section id="faq" class="guide-section card" style="padding:24px;margin-bottom:24px">
           <h2>❓ Frequently Asked Questions</h2>
 
@@ -541,7 +593,7 @@
         <!-- Điều khoản. Các điều về vận hành khớp hành vi thật của api/stake.php, match.php, withdraw.php -->
         <section id="terms" class="guide-section card terms" style="padding:24px">
           <h2>📜 Terms and Conditions for Points</h2>
-          <p class="terms-updated">Last updated: September 21, 2026</p>
+          <p class="terms-updated">Last updated: September 28, 2026</p>
           <p>These terms apply to buying points, playing staked games and withdrawing points on chinesechess.online. By buying points or playing a staked game, you agree to them.</p>
 
           <h3>1. Who can use points</h3>
@@ -569,12 +621,12 @@
           <h3>4. Staked games</h3>
           <ol>
             <li>The minimum stake is 150 points. Both players stake the same amount, and it is taken from both balances when the game starts.</li>
-            <li>The winner receives 80% of the pot, rounded down to a whole point. The remaining 20% is the system fee.</li>
+            <li>The winner receives 80% of the pot, rounded down to a whole point. The remaining 20% is the system fee. If the winner had invited the losing player through the referral programme, the winner receives 85% and the system fee is 15%.</li>
             <li>If both players agree to a draw, both stakes are returned in full and no fee is taken.</li>
             <li>If a game cannot start because a player does not have enough points, no points are taken from either player.</li>
             <li>The server checks every move against the rules of Chinese Chess and decides the result. Players cannot report or change a result.</li>
             <li>Resigning is a loss. Being away from a game in progress for more than 90 seconds, for any reason including a lost connection, is a loss.</li>
-            <li>Results are final once a game has ended, except under section 6 (Fair play).</li>
+            <li>Results are final once a game has ended, except under section 7 (Fair play).</li>
           </ol>
 
           <h3>5. Withdrawals</h3>
@@ -589,7 +641,18 @@
             <li>A request marked "Paid" is final and cannot be cancelled.</li>
           </ol>
 
-          <h3>6. Fair play</h3>
+          <h3>6. Referral programme</h3>
+          <ol>
+            <li>Every account has an invite link containing its username. A person who creates an account through your link is recorded as invited by you.</li>
+            <li>You earn 5% of the system fee from their first completed staked game with a winner, and 1% of the system fee from every game after that, for as long as they play.</li>
+            <li>No commission is paid until that account has completed at least one top-up, and no commission is paid on drawn games or games that did not start.</li>
+            <li>Amounts below one point are held and paid once they add up to a whole point.</li>
+            <li>When you win a staked game against a person you invited, the system fee on that game is 15% instead of 20%.</li>
+            <li>You may not invite yourself or create additional accounts to earn commission. Doing so is a breach of section 7 and we may remove the points involved and close the accounts.</li>
+            <li>We may change the commission rates or end the programme, with notice on this page. Commission already paid is not taken back.</li>
+          </ol>
+
+          <h3>7. Fair play</h3>
           <ol>
             <li>You must play your own games, without help from chess engines, bots or other people.</li>
             <li>You must not use more than one account, arrange results with another player, or lose on purpose to move points to another account.</li>
@@ -597,18 +660,18 @@
             <li>If we find a breach of this section, we may cancel the games involved, remove the points gained from them, decline pending withdrawals, and close the account.</li>
           </ol>
 
-          <h3>7. Errors</h3>
+          <h3>8. Errors</h3>
           <ol>
             <li>If points are added to or taken from a balance because of a system error, we may correct the balance to what it should have been.</li>
           </ol>
 
-          <h3>8. Changes and availability</h3>
+          <h3>9. Changes and availability</h3>
           <ol>
             <li>We may change rates, fees, minimums and these terms. Changes are published on this page with a new "Last updated" date and apply from that date. A withdrawal request already submitted keeps the USD amount fixed when it was submitted.</li>
             <li>Buying, staked games or withdrawals may be paused for maintenance or security. Your balance is kept while a feature is paused.</li>
           </ol>
 
-          <h3>9. Contact</h3>
+          <h3>10. Contact</h3>
           <ol>
             <li>For questions about your points, a game result or a withdrawal, contact support on <a href="https://t.me/onlineservice202" target="_blank" rel="noopener">Telegram</a>.</li>
           </ol>

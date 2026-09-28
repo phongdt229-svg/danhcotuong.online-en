@@ -64,6 +64,12 @@ try {
     }
 
     // ---------- RÚT ĐIỂM VỀ PAYPAL ----------
+    // ---------- CHƯƠNG TRÌNH GIỚI THIỆU ----------
+    if (strpos($route, 'referral/') === 0) {
+        require __DIR__ . '/referral.php';
+        handle_referral($pdo, substr($route, 9), $method, $input);
+    }
+
     if (strpos($route, 'withdraw/') === 0) {
         require __DIR__ . '/withdraw.php';
         handle_withdraw($pdo, substr($route, 9), $method, $input);
@@ -110,6 +116,12 @@ try {
         $st = $pdo->prepare('INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)');
         $st->execute([$username, $email, $hash]);
         $id = (int) $pdo->lastInsertId();
+
+        // Ghi người giới thiệu nếu đăng ký qua link /?ref=<username>.
+        // Mã sai thì bỏ qua im lặng — không để cái link làm hỏng việc đăng ký.
+        require_once __DIR__ . '/referral.php';
+        ref_attach($pdo, $id, $input['ref'] ?? '');
+
         $_SESSION['userId'] = $id;
         out(['user' => public_user($pdo, $id)], 201);
     }

@@ -122,6 +122,24 @@
           </div>
         </div>
 
+        <!-- Chương trình giới thiệu -->
+        <div class="card" id="ref-card" style="margin-bottom: 22px; display: none">
+          <h3 style="margin-top: 0; color: var(--c-muted)">Invite friends &amp; earn</h3>
+          <p style="margin: 0 0 12px; font-size: .92rem; line-height: 1.6" id="ref-intro"></p>
+          <div class="chat-row">
+            <input type="text" id="ref-link" readonly style="flex: 1; min-width: 0; padding: 9px 12px;
+              border-radius: 8px; border: 1px solid var(--c-border, #2a3a4d);
+              background: var(--c-bg, #0f1620); color: inherit; font: inherit" />
+            <button class="btn btn-primary" id="ref-copy">📋 Copy</button>
+          </div>
+          <div class="stat-grid" style="margin-top: 16px">
+            <div class="stat"><div class="num" id="ref-invited">0</div><div class="lbl">Signed up</div></div>
+            <div class="stat"><div class="num" id="ref-active">0</div><div class="lbl">Played</div></div>
+            <div class="stat"><div class="num" id="ref-paid">0</div><div class="lbl">Points earned</div></div>
+          </div>
+          <p class="text-muted" id="ref-note" style="font-size: .82rem; margin: 12px 0 0"></p>
+        </div>
+
         <div class="card">
           <h3 style="margin-top: 0; color: var(--c-muted)">Recent games</h3>
           <div class="table-wrap">
@@ -179,6 +197,52 @@
         document.getElementById('s-win').textContent = u.wins;
         document.getElementById('s-loss').textContent = u.losses;
         document.getElementById('s-draw').textContent = u.draws;
+
+        /* ---------- Chương trình giới thiệu ---------- */
+        try {
+          const r = await window.API.referralMe();
+          if (r && r.enabled) {
+            const card = document.getElementById('ref-card');
+            const link = location.origin + '/?ref=' + encodeURIComponent(r.code);
+            document.getElementById('ref-link').value = link;
+            document.getElementById('ref-intro').textContent =
+              'Share your link. When someone signs up through it, tops up and plays, you earn ' +
+              r.firstPercent + '% of the system fee on their first game and ' +
+              r.nextPercent + '% on every game after that.';
+            document.getElementById('ref-invited').textContent = r.invitedCount;
+            document.getElementById('ref-active').textContent = r.activePlayers;
+            document.getElementById('ref-paid').textContent = r.pointsPaid;
+            const bits = [];
+            if (r.pendingFraction > 0) {
+              // Giải thích vì sao "đã có người chơi" mà điểm vẫn 0 — không để người dùng tưởng mất tiền.
+              bits.push('You have ' + r.pendingFraction.toFixed(2) +
+                        ' of a point still adding up; it is paid once it reaches 1 point.');
+            }
+            if (r.invitedBy) bits.push('You were invited by ' + r.invitedBy + '.');
+            document.getElementById('ref-note').textContent = bits.join(' ');
+            card.style.display = '';
+
+            document.getElementById('ref-copy').addEventListener('click', function () {
+              const input = document.getElementById('ref-link');
+              input.select();
+              const done = () => {
+                const b = document.getElementById('ref-copy');
+                const t = b.textContent;
+                b.textContent = '✓ Copied!';
+                setTimeout(() => (b.textContent = t), 1500);
+              };
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(input.value).then(done).catch(() => {
+                  try { document.execCommand('copy'); } catch (e) {}
+                  done();
+                });
+              } else {
+                try { document.execCommand('copy'); } catch (e) {}
+                done();
+              }
+            });
+          }
+        } catch (e) { /* chưa bật / lỗi mạng -> ẩn luôn thẻ */ }
 
         const body = document.getElementById('games-body');
         try {

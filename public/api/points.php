@@ -143,6 +143,7 @@ function ledger_labels()
         'adjust' => 'Adjustment',
         'withdraw_hold' => 'Withdrawal requested',
         'withdraw_refund' => 'Withdrawal returned',
+        'referral_bonus' => 'Referral bonus',
     ];
 }
 

@@ -13,6 +13,7 @@
  */
 
 require_once __DIR__ . '/points.php';
+require_once __DIR__ . '/referral.php';
 
 function stake_min()            { return max(1, (int) pay_cfg('STAKE_MIN', '150')); }
 function stake_winner_percent() { return max(0, min(100, (int) pay_cfg('STAKE_WINNER_PERCENT', '80'))); }
@@ -32,10 +33,16 @@ function stake_is_valid($stake)
     return is_numeric($stake) && (int) $stake == $stake && (int) $stake >= stake_min();
 }
 
-function stake_split($pot)
+/*
+ * Chia pot. $winnerPercent = null -> dung ty le mac dinh (80%).
+ * Truyen ty le vao de ap dung uu dai 85% khi nguoi gioi thieu thang van dau
+ * voi nguoi minh moi (xem ref_winner_percent_for()).
+ */
+function stake_split($pot, $winnerPercent = null)
 {
-    $winner = (int) floor(($pot * stake_winner_percent()) / 100);
-    return ['winnerPoints' => $winner, 'housePoints' => $pot - $winner];
+    $pct = $winnerPercent === null ? stake_winner_percent() : max(0, min(100, (int) $winnerPercent));
+    $winner = (int) floor(($pot * $pct) / 100);
+    return ['winnerPoints' => $winner, 'housePoints' => $pot - $winner, 'winnerPercent' => $pct];
 }
 
 /**
@@ -121,7 +128,12 @@ function stake_settle($pdo, $code, $outcome, $winnerUserId = null)
             && ((int) $winnerUserId === (int) $m['red_user_id'] || (int) $winnerUserId === (int) $m['black_user_id']);
 
         if ($isWin) {
-            $split = stake_split((int) $m['pot']);
+            /*
+             * Ty le chia phu thuoc quan he hai nguoi choi: neu nguoi thang la
+             * nguoi da gioi thieu doi thu thi phi san chi 15% thay vi 20%.
+             */
+            $winnerPct = ref_winner_percent_for($pdo, (int) $m['red_user_id'], (int) $m['black_user_id'], (int) $winnerUserId);
+            $split = stake_split((int) $m['pot'], $winnerPct);
             $winnerPoints = $split['winnerPoints'];
             $housePoints = $split['housePoints'];
 
@@ -129,11 +141,20 @@ function stake_settle($pdo, $code, $outcome, $winnerUserId = null)
             ledger_record($pdo, $winnerUserId, $winnerPoints, 'stake_win', 'match', (int) $m['id'],
                           "Won game {$m['code']} (pot {$m['pot']})");
 
+            /*
+             * Hoa hong gioi thieu trich tu phi san, TRONG CUNG transaction nay.
+             * Tra ve so diem nguyen da thuc cong -> san chi nhan phan con lai,
+             * nho vay SUM(point_ledger.delta) luon bang users.points.
+             */
+            $refPaid = ref_pay_for_match($pdo, $m['code'], (int) $m['id'],
+                                         (int) $m['red_user_id'], (int) $m['black_user_id'], $housePoints);
+            $houseNet = $housePoints - $refPaid;
+
             $admin = admin_user_id($pdo);
             // Không cộng hoa hồng cho chính người thắng (trường hợp admin tự chơi).
-            if ($admin > 0 && $admin !== (int) $winnerUserId && $housePoints > 0) {
-                $pdo->prepare('UPDATE users SET points = points + ? WHERE id = ?')->execute([$housePoints, $admin]);
-                ledger_record($pdo, $admin, $housePoints, 'house_fee', 'match', (int) $m['id'],
+            if ($admin > 0 && $admin !== (int) $winnerUserId && $houseNet > 0) {
+                $pdo->prepare('UPDATE users SET points = points + ? WHERE id = ?')->execute([$houseNet, $admin]);
+                ledger_record($pdo, $admin, $houseNet, 'house_fee', 'match', (int) $m['id'],
                               "House fee from game {$m['code']}");
             }
 
