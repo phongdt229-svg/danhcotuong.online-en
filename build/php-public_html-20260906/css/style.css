@@ -612,6 +612,24 @@ img {
   display: block;
   line-height: 0;
 }
+/* Quang cao AdSense: tu an khung khi khong co quang cao phu hop.
+   Google gan data-ad-status="unfilled" vao the <ins>; neu khong an thi trang
+   bi ho mot mang trong giua noi dung. */
+ins.adsbygoogle[data-ad-status="unfilled"] {
+  display: none !important;
+}
+.leaderboard-ad:has(ins[data-ad-status="unfilled"]),
+.ad-panel:has(ins[data-ad-status="unfilled"]) {
+  display: none !important;
+}
+/* O vuong sidebar can co khoang dem, khac voi anh banner cu vien sat mep */
+.ad-panel {
+  padding: 10px;
+}
+.ad-panel ins.adsbygoogle {
+  min-width: 250px;
+}
+
 .ad-image {
   width: 100%;
   height: auto;
