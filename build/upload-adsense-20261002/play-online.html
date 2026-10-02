@@ -119,6 +119,13 @@
         </div>
       </div>
     </header>
+    <!-- BANNER:top (thay ảnh images/banner.svg, đặt link ở href) -->
+    <div class="leaderboard-ad">
+      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Advertisement">
+        <img src="images/banner.svg?v=26" alt="Advertisement" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
+      </a>
+    </div>
+
     <main class="container">
       <div class="play-layout">
         <div class="board-col">
@@ -160,9 +167,28 @@
             </div>
           </div>
 
+          <!-- Quảng cáo: thay ảnh ở images/ad.svg (hoặc đổi src), đặt link ở href -->
+          <div class="panel ad-panel" id="ad-slot">
+            <a href="#" target="_blank" rel="noopener sponsored" aria-label="Advertisement">
+              <img
+                class="ad-image"
+                src="images/ad.svg?v=26"
+                alt="Advertisement"
+                loading="lazy"
+                onerror="var s=document.getElementById('ad-slot'); if(s) s.style.display='none';"
+              />
+            </a>
+          </div>
         </aside>
       </div>
     </main>
+    <!-- BANNER:bottom (thay ảnh images/banner.svg, đặt link ở href) -->
+    <div class="leaderboard-ad">
+      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Advertisement">
+        <img src="images/banner.svg?v=26" alt="Advertisement" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
+      </a>
+    </div>
+
     <!-- Sảnh -->
     <div class="overlay" id="lobby-overlay">
       <div class="modal">

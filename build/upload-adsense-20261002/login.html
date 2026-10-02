@@ -23,23 +23,23 @@
     <link rel="icon" href="favicon.ico" sizes="32x32" />
     <link rel="icon" type="image/svg+xml" href="images/icon.svg" />
     <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
-    <title>Sign up — Chinesechess Online</title>
-    <meta name="description" content="Create a new Chinesechess Online account." />
-    <link rel="canonical" href="https://chinesechess.online/register.html" />
+    <title>Sign in — Chinesechess Online</title>
+    <meta name="description" content="Sign in to your Chinesechess Online account." />
+    <link rel="canonical" href="https://chinesechess.online/login.html" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Chinesechess Online" />
     <meta property="og:locale" content="en_US" />
-    <meta property="og:url" content="https://chinesechess.online/register.html" />
-    <meta property="og:title" content="Sign up — Chinesechess Online" />
-    <meta property="og:description" content="Create a new Chinesechess Online account." />
+    <meta property="og:url" content="https://chinesechess.online/login.html" />
+    <meta property="og:title" content="Sign in — Chinesechess Online" />
+    <meta property="og:description" content="Sign in to your Chinesechess Online account." />
     <meta property="og:image" content="https://chinesechess.online/images/og-image.png" />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Chinesechess Online - play Chinese Chess free" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Sign up — Chinesechess Online" />
-    <meta name="twitter:description" content="Create a new Chinesechess Online account." />
+    <meta name="twitter:title" content="Sign in — Chinesechess Online" />
+    <meta name="twitter:description" content="Sign in to your Chinesechess Online account." />
     <meta name="twitter:image" content="https://chinesechess.online/images/og-image.png" />
     
       <style>
@@ -97,31 +97,34 @@
           <li><a href="profile.html" data-auth="user" style="display: none">Profile</a></li>
         </ul>
         <div class="nav-actions">
-          <a class="btn btn-ghost" href="login.html">Sign in</a>
+          <a class="btn btn-primary" href="register.html">Sign up</a>
         </div>
       </div>
     </header>
+    <!-- BANNER:top (thay ảnh images/banner.svg, đặt link ở href) -->
+    <div class="leaderboard-ad">
+      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Advertisement">
+        <img src="images/banner.svg?v=26" alt="Advertisement" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
+      </a>
+    </div>
+
     <main class="container">
       <div class="auth-wrap card">
-        <h1>Create an account</h1>
-        <p class="center text-muted" style="margin-top: 0">Save your results and track your progress.</p>
-        <form id="register-form">
+        <h1>Sign in</h1>
+        <p class="center text-muted" style="margin-top: 0">Welcome back to the board!</p>
+        <form id="login-form">
           <div class="form-msg" id="msg"></div>
           <div class="form-group">
             <label for="username">Username</label>
-            <input class="input" type="text" id="username" required minlength="3" autocomplete="username" />
+            <input class="input" type="text" id="username" required autocomplete="username" />
           </div>
           <div class="form-group">
-            <label for="email">Email</label>
-            <input class="input" type="email" id="email" required autocomplete="email" />
+            <label for="password">Password</label>
+            <input class="input" type="password" id="password" required autocomplete="current-password" />
           </div>
-          <div class="form-group">
-            <label for="password">Password (at least 6 characters)</label>
-            <input class="input" type="password" id="password" required minlength="6" autocomplete="new-password" />
-          </div>
-          <button class="btn btn-primary btn-block btn-lg" type="submit">Sign up</button>
+          <button class="btn btn-primary btn-block btn-lg" type="submit">Sign in</button>
         </form>
-        <div class="form-foot">Already have an account? <a href="login.html">Sign in</a></div>
+        <div class="form-foot">No account yet? <a href="register.html">Create one</a></div>
           <p class="captcha-notice">
           Protected by reCAPTCHA — Google's
           <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Privacy Policy</a> and
@@ -148,7 +151,7 @@
     <script src="js/recaptcha.js?v=26"></script>
     <script>
       window.Captcha.prepare();
-      document.getElementById('register-form').addEventListener('submit', async (e) => {
+      document.getElementById('login-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const msg = document.getElementById('msg');
         msg.className = 'form-msg';
@@ -157,20 +160,17 @@
         btn.disabled = true;
         try {
           // Lấy token NGAY lúc bấm nút — token reCAPTCHA chỉ sống ~2 phút.
-          const captcha = await window.Captcha.token('register');
-          await window.API.register(
+          const captcha = await window.Captcha.token('login');
+          await window.API.login(
             document.getElementById('username').value.trim(),
-            document.getElementById('email').value.trim(),
             document.getElementById('password').value,
-            captcha,
-            window.UI && window.UI.getRef ? window.UI.getRef() : ''
+            captcha
           );
-          if (window.UI && window.UI.clearRef) window.UI.clearRef();
           location.href = 'profile.html';
         } catch (err) {
           btn.disabled = false;
           msg.className = 'form-msg error';
-          msg.textContent = err.message || 'Sign-up failed';
+          msg.textContent = err.message || 'Sign-in failed';
         }
       });
     </script>

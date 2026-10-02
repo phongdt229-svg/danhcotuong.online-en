@@ -23,25 +23,26 @@
     <link rel="icon" href="favicon.ico" sizes="32x32" />
     <link rel="icon" type="image/svg+xml" href="images/icon.svg" />
     <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
-    <title>Sign up — Chinesechess Online</title>
-    <meta name="description" content="Create a new Chinesechess Online account." />
-    <link rel="canonical" href="https://chinesechess.online/register.html" />
+    <title>Play Xiangqi Puzzle – Solve Chinese Chess Puzzles Online</title>
+    <meta name="description" content="Play Xiangqi Puzzle online and solve Chinese Chess puzzles for free. Train tactics, improve strategy, challenge your mind, and master Xiangqi skills every day." />
+    <link rel="canonical" href="https://chinesechess.online/puzzles.html" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Chinesechess Online" />
     <meta property="og:locale" content="en_US" />
-    <meta property="og:url" content="https://chinesechess.online/register.html" />
-    <meta property="og:title" content="Sign up — Chinesechess Online" />
-    <meta property="og:description" content="Create a new Chinesechess Online account." />
+    <meta property="og:url" content="https://chinesechess.online/puzzles.html" />
+    <meta property="og:title" content="Play Xiangqi Puzzle – Solve Chinese Chess Puzzles Online" />
+    <meta property="og:description" content="Play Xiangqi Puzzle online and solve Chinese Chess puzzles for free. Train tactics, improve strategy, challenge your mind, and master Xiangqi skills every day." />
     <meta property="og:image" content="https://chinesechess.online/images/og-image.png" />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Chinesechess Online - play Chinese Chess free" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Sign up — Chinesechess Online" />
-    <meta name="twitter:description" content="Create a new Chinesechess Online account." />
+    <meta name="twitter:title" content="Play Xiangqi Puzzle – Solve Chinese Chess Puzzles Online" />
+    <meta name="twitter:description" content="Play Xiangqi Puzzle online and solve Chinese Chess puzzles for free. Train tactics, improve strategy, challenge your mind, and master Xiangqi skills every day." />
     <meta name="twitter:image" content="https://chinesechess.online/images/og-image.png" />
     
+    <link rel="stylesheet" href="css/board.css?v=26" />
       <style>
       /* Critical CSS: menu 2 cấp + nút nổi bật (nhúng để chạy kể cả khi style.css chưa cập nhật) */
       .has-sub{position:relative}
@@ -54,12 +55,6 @@
       .btn-puzzle{background:linear-gradient(150deg,#8b5cf6,#6d28d9);color:#fff}
       .badge-new{display:inline-block;background:#ef4444;color:#fff;font-size:.6rem;font-weight:800;line-height:1;padding:3px 6px;border-radius:999px;margin-left:4px;vertical-align:middle}
       @media(max-width:980px){.nav-menu{display:none;position:absolute;top:64px;left:0;right:0;flex-direction:column;align-items:stretch;background:var(--c-bg-soft,#16202d);border-bottom:1px solid var(--c-border,#2a3a4d);padding:10px;gap:2px}.nav-menu.open{display:flex}.sub-menu{position:static;display:block;min-width:0;padding:0 0 0 16px;margin:2px 0;background:transparent;border:none;box-shadow:none}.nav-toggle{display:inline-block}}
-      /* Ghi chú reCAPTCHA. Huy hiệu góc phải để HIỆN cho thấy captcha đang chạy —
-         muốn ẩn cho gọn thì bỏ chú thích dòng .grecaptcha-badge bên dưới
-         (Google chỉ cho ẩn khi trang có ghi chú .captcha-notice này). */
-      .captcha-notice{margin:14px 0 0;font-size:.72rem;line-height:1.5;text-align:center;opacity:.55}
-      .captcha-notice a{text-decoration:underline}
-      /* .grecaptcha-badge{visibility:hidden} */
     </style>
   </head>
   <body>
@@ -97,38 +92,73 @@
           <li><a href="profile.html" data-auth="user" style="display: none">Profile</a></li>
         </ul>
         <div class="nav-actions">
-          <a class="btn btn-ghost" href="login.html">Sign in</a>
+          <a class="btn btn-ghost" href="login.html" data-auth="guest">Sign in</a>
+          <a class="btn btn-primary" href="register.html" data-auth="guest">Sign up</a>
+          <span data-auth="user" style="display: none; font-weight: 700">Hi, <span data-user-name>there</span></span>
+          <a class="btn btn-ghost" href="#" data-auth="user" data-action="logout" style="display: none">Log out</a>
         </div>
       </div>
     </header>
+    <!-- BANNER:top (thay ảnh images/banner.svg, đặt link ở href) -->
+    <div class="leaderboard-ad">
+      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Advertisement">
+        <img src="images/banner.svg?v=26" alt="Advertisement" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
+      </a>
+    </div>
+
     <main class="container">
-      <div class="auth-wrap card">
-        <h1>Create an account</h1>
-        <p class="center text-muted" style="margin-top: 0">Save your results and track your progress.</p>
-        <form id="register-form">
-          <div class="form-msg" id="msg"></div>
-          <div class="form-group">
-            <label for="username">Username</label>
-            <input class="input" type="text" id="username" required minlength="3" autocomplete="username" />
+      <div class="play-layout">
+        <div class="board-col">
+          <div class="player-bar" id="bar-top">
+            <div class="who"><span id="side-label">Find the best move</span></div>
           </div>
-          <div class="form-group">
-            <label for="email">Email</label>
-            <input class="input" type="email" id="email" required autocomplete="email" />
+          <div id="board"></div>
+          <div class="player-bar active" id="bar-bottom">
+            <div class="who"><span class="dot red"></span> <span id="turn-label">Your turn</span></div>
           </div>
-          <div class="form-group">
-            <label for="password">Password (at least 6 characters)</label>
-            <input class="input" type="password" id="password" required minlength="6" autocomplete="new-password" />
+        </div>
+
+        <aside class="side-panel">
+          <div class="panel">
+            <h3>Puzzles</h3>
+            <div id="status-msg">Loading puzzle…</div>
+            <div id="progress" class="text-muted" style="margin-top: 8px; font-size: 0.9rem"></div>
           </div>
-          <button class="btn btn-primary btn-block btn-lg" type="submit">Sign up</button>
-        </form>
-        <div class="form-foot">Already have an account? <a href="login.html">Sign in</a></div>
-          <p class="captcha-notice">
-          Protected by reCAPTCHA — Google's
-          <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Privacy Policy</a> and
-          <a href="https://policies.google.com/terms" target="_blank" rel="noopener">Terms of Service</a> apply.
-        </p>
+
+          <div class="panel">
+            <h3>Controls</h3>
+            <div class="controls">
+              <button class="btn btn-ghost" id="btn-hint">💡 Hint</button>
+              <button class="btn btn-ghost" id="btn-solution">👁 Solution</button>
+              <button class="btn btn-ghost" id="btn-retry">↺ Retry</button>
+              <button class="btn btn-primary" id="btn-next">Next puzzle →</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3>How to play</h3>
+            <p class="text-muted" style="font-size: 0.9rem; margin: 0">
+              Each puzzle is a position with <b>one best move</b> (win material or deliver mate). Click one of
+              your pieces, then click the target square. Get it right to score!
+            </p>
+          </div>
+
+          <!-- Quảng cáo -->
+          <div class="panel ad-panel" id="ad-slot">
+            <a href="#" target="_blank" rel="noopener sponsored" aria-label="Advertisement">
+              <img class="ad-image" src="images/ad.svg?v=26" alt="Advertisement" loading="lazy"
+                   onerror="var s=document.getElementById('ad-slot'); if(s) s.style.display='none';" />
+            </a>
+          </div>
+        </aside>
       </div>
     </main>
+    <!-- BANNER:bottom (thay ảnh images/banner.svg, đặt link ở href) -->
+    <div class="leaderboard-ad">
+      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Advertisement">
+        <img src="images/banner.svg?v=26" alt="Advertisement" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
+      </a>
+    </div>
 
 
     <footer class="footer">
@@ -142,38 +172,12 @@
       </div>
     </footer>
 
+    <script src="js/engine/xiangqi.js?v=26"></script>
+    <script src="js/board.js?v=26"></script>
     <script src="js/api.js?v=26"></script>
+    <script src="js/puzzles.js?v=26"></script>
 
     <script src="js/ui.js?v=26"></script>
-    <script src="js/recaptcha.js?v=26"></script>
-    <script>
-      window.Captcha.prepare();
-      document.getElementById('register-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const msg = document.getElementById('msg');
-        msg.className = 'form-msg';
-        msg.textContent = '';
-        const btn = e.target.querySelector('button[type=submit]');
-        btn.disabled = true;
-        try {
-          // Lấy token NGAY lúc bấm nút — token reCAPTCHA chỉ sống ~2 phút.
-          const captcha = await window.Captcha.token('register');
-          await window.API.register(
-            document.getElementById('username').value.trim(),
-            document.getElementById('email').value.trim(),
-            document.getElementById('password').value,
-            captcha,
-            window.UI && window.UI.getRef ? window.UI.getRef() : ''
-          );
-          if (window.UI && window.UI.clearRef) window.UI.clearRef();
-          location.href = 'profile.html';
-        } catch (err) {
-          btn.disabled = false;
-          msg.className = 'form-msg error';
-          msg.textContent = err.message || 'Sign-up failed';
-        }
-      });
-    </script>
     <script src="js/i18n.js?v=26"></script>
     <a class="tg-float" href="https://t.me/onlineservice202" target="_blank" rel="noopener" title="Support on Telegram" aria-label="Contact support on Telegram"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg><span>Support</span></a>
 

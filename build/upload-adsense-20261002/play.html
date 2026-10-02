@@ -23,25 +23,26 @@
     <link rel="icon" href="favicon.ico" sizes="32x32" />
     <link rel="icon" type="image/svg+xml" href="images/icon.svg" />
     <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
-    <title>Sign up — Chinesechess Online</title>
-    <meta name="description" content="Create a new Chinesechess Online account." />
-    <link rel="canonical" href="https://chinesechess.online/register.html" />
+    <title>Play Chinese Chess Online Against Computer</title>
+    <meta name="description" content="Play Chinese Chess online against the computer for free. Challenge smart AI, improve your Xiangqi skills, practice tactics, and enjoy instant games anytime now." />
+    <link rel="canonical" href="https://chinesechess.online/play.html" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Chinesechess Online" />
     <meta property="og:locale" content="en_US" />
-    <meta property="og:url" content="https://chinesechess.online/register.html" />
-    <meta property="og:title" content="Sign up — Chinesechess Online" />
-    <meta property="og:description" content="Create a new Chinesechess Online account." />
+    <meta property="og:url" content="https://chinesechess.online/play.html" />
+    <meta property="og:title" content="Play Chinese Chess Online Against Computer" />
+    <meta property="og:description" content="Play Chinese Chess online against the computer for free. Challenge smart AI, improve your Xiangqi skills, practice tactics, and enjoy instant games anytime now." />
     <meta property="og:image" content="https://chinesechess.online/images/og-image.png" />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Chinesechess Online - play Chinese Chess free" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Sign up — Chinesechess Online" />
-    <meta name="twitter:description" content="Create a new Chinesechess Online account." />
+    <meta name="twitter:title" content="Play Chinese Chess Online Against Computer" />
+    <meta name="twitter:description" content="Play Chinese Chess online against the computer for free. Challenge smart AI, improve your Xiangqi skills, practice tactics, and enjoy instant games anytime now." />
     <meta name="twitter:image" content="https://chinesechess.online/images/og-image.png" />
     
+    <link rel="stylesheet" href="css/board.css?v=26" />
       <style>
       /* Critical CSS: menu 2 cấp + nút nổi bật (nhúng để chạy kể cả khi style.css chưa cập nhật) */
       .has-sub{position:relative}
@@ -54,18 +55,15 @@
       .btn-puzzle{background:linear-gradient(150deg,#8b5cf6,#6d28d9);color:#fff}
       .badge-new{display:inline-block;background:#ef4444;color:#fff;font-size:.6rem;font-weight:800;line-height:1;padding:3px 6px;border-radius:999px;margin-left:4px;vertical-align:middle}
       @media(max-width:980px){.nav-menu{display:none;position:absolute;top:64px;left:0;right:0;flex-direction:column;align-items:stretch;background:var(--c-bg-soft,#16202d);border-bottom:1px solid var(--c-border,#2a3a4d);padding:10px;gap:2px}.nav-menu.open{display:flex}.sub-menu{position:static;display:block;min-width:0;padding:0 0 0 16px;margin:2px 0;background:transparent;border:none;box-shadow:none}.nav-toggle{display:inline-block}}
-      /* Ghi chú reCAPTCHA. Huy hiệu góc phải để HIỆN cho thấy captcha đang chạy —
-         muốn ẩn cho gọn thì bỏ chú thích dòng .grecaptcha-badge bên dưới
-         (Google chỉ cho ẩn khi trang có ghi chú .captcha-notice này). */
-      .captcha-notice{margin:14px 0 0;font-size:.72rem;line-height:1.5;text-align:center;opacity:.55}
-      .captcha-notice a{text-decoration:underline}
-      /* .grecaptcha-badge{visibility:hidden} */
     </style>
   </head>
   <body>
     <header class="navbar">
       <div class="container nav-inner">
-        <a class="brand" href="/"><span class="logo">將</span><span>Chinesechess Online</span></a>
+        <a class="brand" href="/">
+          <span class="logo">將</span>
+          <span>Chinesechess Online</span>
+        </a>
         <button class="nav-toggle" aria-label="Menu">☰</button>
         <ul class="nav-menu">
           <li><a href="/" data-i18n="nav.home">Home</a></li>
@@ -97,38 +95,135 @@
           <li><a href="profile.html" data-auth="user" style="display: none">Profile</a></li>
         </ul>
         <div class="nav-actions">
-          <a class="btn btn-ghost" href="login.html">Sign in</a>
+          <a class="btn btn-ghost" href="login.html" data-auth="guest">Sign in</a>
+          <a class="btn btn-primary" href="register.html" data-auth="guest">Sign up</a>
+          <span data-auth="user" style="display: none; font-weight: 700"
+            ><span data-user-name>there</span></span
+          >
+          <a class="btn btn-ghost" href="#" data-auth="user" data-action="logout" style="display: none"
+            >Log out</a
+          >
         </div>
       </div>
     </header>
+    <!-- BANNER:top (thay ảnh images/banner.svg, đặt link ở href) -->
+    <div class="leaderboard-ad">
+      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Advertisement">
+        <img src="images/banner.svg?v=26" alt="Advertisement" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
+      </a>
+    </div>
+
     <main class="container">
-      <div class="auth-wrap card">
-        <h1>Create an account</h1>
-        <p class="center text-muted" style="margin-top: 0">Save your results and track your progress.</p>
-        <form id="register-form">
-          <div class="form-msg" id="msg"></div>
-          <div class="form-group">
-            <label for="username">Username</label>
-            <input class="input" type="text" id="username" required minlength="3" autocomplete="username" />
+      <div class="play-layout">
+        <!-- Cột bàn cờ -->
+        <div class="board-col">
+          <div class="player-bar" id="bar-black">
+            <div class="who"><span class="dot black"></span> Computer (Black) — <span id="ai-level">AI</span></div>
+            <div class="captured" id="captured-black"></div>
+            <div class="clock" id="timer-black">10:00</div>
           </div>
-          <div class="form-group">
-            <label for="email">Email</label>
-            <input class="input" type="email" id="email" required autocomplete="email" />
+
+          <div id="board"></div>
+
+          <div class="player-bar active" id="bar-red">
+            <div class="who"><span class="dot red"></span> You (Red)</div>
+            <div class="captured" id="captured-red"></div>
+            <div class="clock" id="timer-red">10:00</div>
           </div>
-          <div class="form-group">
-            <label for="password">Password (at least 6 characters)</label>
-            <input class="input" type="password" id="password" required minlength="6" autocomplete="new-password" />
+        </div>
+
+        <!-- Bảng điều khiển -->
+        <aside class="side-panel">
+          <div class="panel">
+            <h3>Status</h3>
+            <div id="status-msg">Pick a difficulty to start</div>
           </div>
-          <button class="btn btn-primary btn-block btn-lg" type="submit">Sign up</button>
-        </form>
-        <div class="form-foot">Already have an account? <a href="login.html">Sign in</a></div>
-          <p class="captcha-notice">
-          Protected by reCAPTCHA — Google's
-          <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Privacy Policy</a> and
-          <a href="https://policies.google.com/terms" target="_blank" rel="noopener">Terms of Service</a> apply.
-        </p>
+
+          <div class="panel">
+            <h3>Controls</h3>
+            <div class="controls">
+              <button class="btn btn-ghost" id="btn-hint">💡 Hint</button>
+              <button class="btn btn-ghost" id="btn-undo">↶ Undo</button>
+              <button class="btn btn-ghost" id="btn-resign">🏳 Resign</button>
+              <button class="btn btn-primary" id="btn-new">＋ New game</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3>Move history</h3>
+            <div id="move-list"></div>
+          </div>
+
+          <!-- Quảng cáo: thay ảnh ở images/ad.svg (hoặc đổi src), đặt link ở href -->
+          <div class="panel ad-panel" id="ad-slot">
+            <a href="#" target="_blank" rel="noopener sponsored" aria-label="Advertisement">
+              <img
+                class="ad-image"
+                src="images/ad.svg?v=26"
+                alt="Advertisement"
+                loading="lazy"
+                onerror="var s=document.getElementById('ad-slot'); if(s) s.style.display='none';"
+              />
+            </a>
+          </div>
+        </aside>
       </div>
     </main>
+    <!-- BANNER:bottom (thay ảnh images/banner.svg, đặt link ở href) -->
+    <div class="leaderboard-ad">
+      <a href="#" target="_blank" rel="noopener sponsored" aria-label="Advertisement">
+        <img src="images/banner.svg?v=26" alt="Advertisement" loading="lazy" onerror="this.closest('.leaderboard-ad').style.display='none'" />
+      </a>
+    </div>
+
+    <!-- Overlay thiết lập ván -->
+    <div class="overlay" id="setup-overlay">
+      <div class="modal">
+        <button class="modal-close" id="btn-close-setup" aria-label="Close" title="Close">×</button>
+        <h2>♟ Game setup</h2>
+        <div class="opt-group">
+          <label>Computer difficulty</label>
+          <div class="opt-row">
+            <input type="radio" name="difficulty" id="d-easy" value="easy" />
+            <label for="d-easy">Easy</label>
+            <input type="radio" name="difficulty" id="d-med" value="medium" checked />
+            <label for="d-med">Medium</label>
+            <input type="radio" name="difficulty" id="d-hard" value="hard" />
+            <label for="d-hard">Hard</label>
+            <input type="radio" name="difficulty" id="d-expert" value="expert" />
+            <label for="d-expert">Expert</label>
+            <input type="radio" name="difficulty" id="d-master" value="master" />
+            <label for="d-master">Master</label>
+          </div>
+        </div>
+        <div class="opt-group">
+          <label>Time per side</label>
+          <div class="opt-row">
+            <input type="radio" name="time" id="t-5" value="5" />
+            <label for="t-5">5 min</label>
+            <input type="radio" name="time" id="t-10" value="10" checked />
+            <label for="t-10">10 min</label>
+            <input type="radio" name="time" id="t-15" value="15" />
+            <label for="t-15">15 min</label>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-block btn-lg" id="btn-start">Start</button>
+      </div>
+    </div>
+
+    <!-- Modal kết quả -->
+    <div class="overlay hidden" id="result-modal">
+      <div class="modal center">
+        <button class="modal-close" aria-label="Close" title="Close">×</button>
+        <h2 id="result-title">Game over</h2>
+        <p class="text-muted" id="result-reason"></p>
+        <div class="controls" style="margin-top: 18px">
+          <button class="btn btn-accent" id="btn-analyze">🔍 Analyse game</button>
+          <button class="btn btn-ghost" id="btn-again">Play again</button>
+          <a class="btn btn-primary" href="/">Back to home</a>
+        </div>
+      </div>
+    </div>
 
 
     <footer class="footer">
@@ -142,37 +237,22 @@
       </div>
     </footer>
 
+    <script src="js/engine/xiangqi.js?v=26"></script>
+    <script src="js/board.js?v=26"></script>
     <script src="js/api.js?v=26"></script>
+    <script src="js/play.js?v=26"></script>
 
     <script src="js/ui.js?v=26"></script>
-    <script src="js/recaptcha.js?v=26"></script>
     <script>
-      window.Captcha.prepare();
-      document.getElementById('register-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const msg = document.getElementById('msg');
-        msg.className = 'form-msg';
-        msg.textContent = '';
-        const btn = e.target.querySelector('button[type=submit]');
-        btn.disabled = true;
-        try {
-          // Lấy token NGAY lúc bấm nút — token reCAPTCHA chỉ sống ~2 phút.
-          const captcha = await window.Captcha.token('register');
-          await window.API.register(
-            document.getElementById('username').value.trim(),
-            document.getElementById('email').value.trim(),
-            document.getElementById('password').value,
-            captcha,
-            window.UI && window.UI.getRef ? window.UI.getRef() : ''
-          );
-          if (window.UI && window.UI.clearRef) window.UI.clearRef();
-          location.href = 'profile.html';
-        } catch (err) {
-          btn.disabled = false;
-          msg.className = 'form-msg error';
-          msg.textContent = err.message || 'Sign-up failed';
-        }
-      });
+      // hiển thị nhãn độ khó trên thanh người chơi
+      (function () {
+        const map = { easy: 'Easy', medium: 'Medium', hard: 'Hard', expert: 'Expert', master: 'Master' };
+        document.querySelectorAll('input[name="difficulty"]').forEach((r) =>
+          r.addEventListener('change', () => {
+            document.getElementById('ai-level').textContent = map[r.value] || 'AI';
+          })
+        );
+      })();
     </script>
     <script src="js/i18n.js?v=26"></script>
     <a class="tg-float" href="https://t.me/onlineservice202" target="_blank" rel="noopener" title="Support on Telegram" aria-label="Contact support on Telegram"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg><span>Support</span></a>
